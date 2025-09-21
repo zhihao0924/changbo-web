@@ -66,7 +66,7 @@ const vueConfig = {
 
     // fixed svg-loader by https://github.com/damianstasik/vue-svg-loader/issues/185#issuecomment-1126721069
     const svgRule = config.module.rule('svg')
-    // Remove regular svg config from root rules list
+    // Remove regular svg config from root rules device
     config.module.rules.delete('svg')
 
     config.module.rule('svg')

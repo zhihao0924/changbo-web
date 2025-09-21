@@ -38,7 +38,7 @@
 <script>
 import { SettingDrawer, updateTheme } from '@ant-design-vue/pro-layout'
 
-import { mapState } from 'vuex'
+import { asyncRouterMap } from '@/config/router.config'
 import { CONTENT_WIDTH_TYPE, SIDEBAR_TYPE, TOGGLE_MOBILE_TYPE } from '@/store/mutation-types'
 
 import defaultSettings from '@/config/defaultSettings'
@@ -89,18 +89,8 @@ export default {
       isMobile: false
     }
   },
-  computed: {
-    ...mapState({
-      // 动态主路由
-      mainMenu: state => state.permission.addRouters || []
-    })
-  },
   created () {
-    if (!this.mainMenu || this.mainMenu.length === 0) {
-      console.warn('mainMenu is empty, waiting for async routes to load')
-      return
-    }
-    const routes = this.mainMenu.find(item => item.path === '/')
+    const routes = asyncRouterMap.find(item => item.path === '/')
     this.menus = (routes && routes.children) || []
     // 处理侧栏收起状态
     this.$watch('collapsed', () => {

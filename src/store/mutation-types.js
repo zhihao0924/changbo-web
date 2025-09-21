@@ -1,5 +1,5 @@
-export const ACCESS_TOKEN = 'Access-Token'
-export const ADMIN_NAME = 'Admin-Name'
+export const ACCESS_TOKEN = 'Authorization'
+export const ADMIN_NAME = 'AdminName'
 
 export const SIDEBAR_TYPE = 'sidebar_type'
 export const TOGGLE_MOBILE_TYPE = 'is_mobile'

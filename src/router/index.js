@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import { constantRouterMap, asyncRouterMap } from '@/config/router.config'
+import { ACCESS_TOKEN } from '@/store/mutation-types'
 
 Vue.use(Router)
 
@@ -14,7 +15,7 @@ console.log('路由实例已创建，模式为:', router.mode)
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
   // 直接从 localStorage 读取 token，确保与 Vuex 同步
-  const token = localStorage.getItem('Access-Token')
+  const token = localStorage.getItem(ACCESS_TOKEN)
   console.log('token 状态:', token, 'to :', to, 'form:', from)
   if (!token && !to.fullPath.includes('user/login')) {
     console.log('未登录，跳转到登录页面')

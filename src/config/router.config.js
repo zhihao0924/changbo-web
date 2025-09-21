@@ -25,46 +25,31 @@ export const asyncRouterMap = [
   },
   {
     path: '/',
-    name: 'index',
+    name: '工作台',
     component: BasicLayout,
-    meta: { title: '首页' },
+    meta: { title: '工作台' },
     redirect: '/dashboard',
     children: [
       // dashboard
       {
         path: '/dashboard',
         name: '工作台',
-        redirect: '/dashboard/workplace',
-        component: RouteView,
         meta: { title: '工作台', keepAlive: true, icon: bxAnaalyse },
-        children: [
-          {
-            path: '/dashboard/workplace',
-            name: 'Workplace',
-            component: () => import('@/views/dashboard/Workplace'),
-            meta: { title: '工作台', keepAlive: true }
-          }
-        ]
+        component: () => import('@/views/dashboard/Workplace')
       },
-      // result
+      // 设备
       {
-        path: '/result',
-        name: 'result',
+        path: '/device',
+        name: '设备列表',
         component: RouteView,
-        redirect: '/result/success',
-        meta: { title: 'menu.result', icon: 'check-circle-o' },
+        meta: { title: '设备列表', keepAlive: true, icon: 'table' },
+        redirect: '/device/list',
         children: [
           {
-            path: '/result/success',
-            name: 'ResultSuccess',
-            component: () => import(/* webpackChunkName: "result" */ '@/views/result/Success'),
-            meta: { title: 'menu.result.success', keepAlive: false, hiddenHeaderContent: true }
-          },
-          {
-            path: '/result/fail',
-            name: 'ResultFail',
-            component: () => import(/* webpackChunkName: "result" */ '@/views/result/Error'),
-            meta: { title: 'menu.result.fail', keepAlive: false, hiddenHeaderContent: true }
+            path: '/device/list',
+            name: '设备列表',
+            component: () => import('@/views/device/List'),
+            meta: { title: '设备列表', keepAlive: true }
           }
         ]
       }

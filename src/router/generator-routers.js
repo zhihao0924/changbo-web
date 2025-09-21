@@ -145,7 +145,7 @@ const listToTree = (list, tree, parentId) => {
         key: item.key || item.name,
         children: []
       }
-      // 迭代 list， 找到当前菜单相符合的所有子菜单
+      // 迭代 device， 找到当前菜单相符合的所有子菜单
       listToTree(list, child.children, item.id)
       // 删掉不存在 children 值的属性
       if (child.children.length <= 0) {

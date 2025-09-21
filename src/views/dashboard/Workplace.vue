@@ -177,7 +177,7 @@ export default {
   },
   methods: {
     getProjects () {
-      // this.$http.get('/list/search/projects').then(res => {
+      // this.$http.get('/device/search/projects').then(res => {
       //   this.projects = res.result && res.result.data
       //   this.loading = false
       // })
