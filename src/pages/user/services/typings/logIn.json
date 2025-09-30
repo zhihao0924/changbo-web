@@ -1,0 +1,17 @@
+{
+  "err": 0,
+  "msg": "",
+  "res": {
+    "id": 1,
+    "name": "admin",
+    "account": "138000000000",
+    "password": "abc123456",
+    "user_id": 1,
+    "is_disabled": 0,
+    "jwtToken": {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbklkIjoxLCJleHAiOjE2NjMyMjg2MTcsImlhdCI6MTY2MzIyNTAxNywicGxhdGZvcm0iOiJQdXJjaGFzZU9yZGVyIn0.xWYX0RaevvNabQW9NU6ZMzl1tB9BgZD1-bYSkwYhh4s",
+      "access_expire": 1663228617,
+      "refresh_after": 1663226817
+    }
+  }
+}

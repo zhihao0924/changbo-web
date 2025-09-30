@@ -1,0 +1,19 @@
+.Flex(@direction: row, @justify: center, @align: center) {
+  display: flex;
+  flex-direction: @direction;
+  align-items: @align;
+  justify-content: @justify;
+}
+
+.Overflow(@clamp: 2) {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  text-overflow: ellipsis;
+
+  /*! autoprefixer: off */
+  -webkit-box-orient: vertical;
+
+  /* autoprefixer: on */
+  -webkit-line-clamp: @clamp;
+}
