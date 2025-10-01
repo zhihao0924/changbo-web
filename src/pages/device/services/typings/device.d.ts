@@ -67,6 +67,7 @@ declare namespace API_PostDeviceTypes {
 
   export interface Res {
     list: List[]
+    total: number
   }
 
   export interface List {
