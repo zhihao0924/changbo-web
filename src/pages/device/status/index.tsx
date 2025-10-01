@@ -1,23 +1,16 @@
-import {
-  PlusOutlined
-} from '@ant-design/icons'
-import type { ActionType, ProColumns } from '@ant-design/pro-components'
-import { PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button } from 'antd'
-import React, { useCallback, useMemo, useRef, useState } from 'react'
-import Services from '@/pages/device/services'
-
-type Columns = API_PostDeviceList.List
-
+import { PageContainer } from "@ant-design/pro-components"
+import { Card, Col, Row, Tag, Spin, Progress } from "antd"
+import React, { useCallback, useEffect, useState } from "react"
+import { green } from "@ant-design/colors"
+import Services from "@/pages/device/services"
 
 const DeviceStatus: React.FC = () => {
-  const actionRef = useRef<ActionType>()
-  const formRef = useRef<any>()
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
+  const [deviceList, setDeviceList] = useState<API_PostDeviceList.List[]>([])
+  const [loading, setLoading] = useState(false)
 
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
-
     if (res) {
       setDeviceTypes(res.res.list)
       return res.res.list
@@ -29,100 +22,109 @@ const DeviceStatus: React.FC = () => {
     const data = {
       page: params.current,
       limit: params.pageSize,
-      ...params
+      ...params,
     }
     delete data.current
     delete data.pageSize
 
     const res = await Services.api.postDeviceList(data)
-
     if (res) {
+      setDeviceList(res.res.list || [])
       return Promise.resolve({
         total: res.res.total,
         data: res.res.list || [],
-        success: true
+        success: true,
       })
     }
     return {}
   }, [])
 
-
-  const columns: ProColumns<Columns>[] = useMemo(() => {
-    return [
-      {
-        title: 'IP地址',
-        align: 'center',
-        dataIndex: 'ip',
-        search: {
-          transform: (value) => ({
-            order_no: value
-          })
-        }
-      },
-      {
-        key: 'name',
-        title: '设备名称',
-        align: 'center',
-        dataIndex: 'name',
-        hideInSearch: true
-      },
-      {
-        title: '设备类型',
-        align: 'center',
-        dataIndex: 'type',
-        valueType: 'select',
-        request: getDeviceTypes,
-        render: (_, record) => {
-          const findItem = deviceTypes.find((val) => val.key == record.type)
-          return findItem?.value
-        }
-      },
-      {
-        title: '安装位置',
-        align: 'center',
-        dataIndex: 'position',
-        hideInSearch: true
-      },
-      {
-        title: '设备状态',
-        align: 'center',
-        dataIndex: 'status_text',
-        hideInSearch: true
-      },
-      {
-        width: 160,
-        title: '操作',
-        align: 'center',
-        valueType: 'option'
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await Promise.all([getDeviceTypes(), getLists({ current: 1, pageSize: 100 })])
+      } finally {
       }
-    ]
-  }, [deviceTypes, getDeviceTypes])
+    }
+    fetchData()
+    const interval = setInterval(fetchData, 500)
+    return () => clearInterval(interval)
+  }, [getDeviceTypes, getLists])
+
+  const getDeviceTypeName = (typeKey: string) => {
+    return deviceTypes.find((type) => type.key === typeKey)?.value || "未知设备"
+  }
+
+  const getDeviceStatus = (device: API_PostDeviceList.List) => {
+    if (device.is_maintaining) return { color: "orange", text: "维护中", status: "maintaining" }
+    return device.voltage > 0
+      ? { color: "green", text: "运行中", status: "online" }
+      : { color: "red", text: "离线", status: "offline" }
+  }
 
   return (
     <PageContainer>
-      <ProTable<Columns>
-        actionRef={actionRef}
-        formRef={formRef}
-        columns={columns}
-        request={getLists}
-        rowKey="id"
-        pagination={{
-          showSizeChanger: true
-        }}
-        search={{
-          labelWidth: 80
-        }}
-        toolBarRender={() => [
-          <Button
-            key="button"
-            icon={<PlusOutlined />}
-            type="primary"
-          >
-            添加设备
-          </Button>
-        ]}
-      />
-
+      <Spin spinning={loading}>
+        <Row gutter={[16, 16]}>
+          {deviceList?.map((device) => {
+            const status = getDeviceStatus(device)
+            return (
+              <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
+                <Card
+                  title={`${getDeviceTypeName(device.type)}-${device.name}`}
+                  extra={<Tag color={status.color}>{status.text}</Tag>}
+                >
+                  <>
+                    设备位置: {device.position || "-"}
+                    <br />
+                    电压:
+                    {status.status === "online" ? (
+                      <Progress
+                        percent={(device.voltage * 100) / 20}
+                        steps={10}
+                        size="small"
+                        strokeColor={green[6]}
+                        showInfo={true}
+                        format={(percent) => `${((percent / 100) * 20).toFixed(2)}V`}
+                      />
+                    ) : (
+                      <>-</>
+                    )}
+                    <br />
+                    电流:{" "}
+                    {status.status === "online" ? (
+                      <Progress
+                        percent={device.current * 100}
+                        steps={10}
+                        size="small"
+                        strokeColor={green[6]}
+                        showInfo={true}
+                        format={(percent) => `${(percent / 100).toFixed(2)}A`}
+                      />
+                    ) : (
+                      <>-</>
+                    )}
+                    <br />
+                    温度:
+                    {status.status === "online" ? (
+                      <Progress
+                        percent={(device.temperature * 100) / 40}
+                        steps={10}
+                        size="small"
+                        strokeColor={green[6]}
+                        showInfo={true}
+                        format={(percent) => `${((percent / 100) * 40).toFixed(2)}℃`}
+                      />
+                    ) : (
+                      <>-</>
+                    )}
+                  </>{" "}
+                </Card>
+              </Col>
+            )
+          })}
+        </Row>
+      </Spin>
     </PageContainer>
   )
 }
