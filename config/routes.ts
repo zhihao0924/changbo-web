@@ -36,6 +36,11 @@ export default [
         name: '设备类型',
         path: '/device/types',
         component: './device/types'
+      },
+      {
+        name: '设备状态',
+        path: '/device/status',
+        component: './device/status'
       }
     ]
   },

@@ -18,28 +18,12 @@ export async function postDeviceList(
 }
 
 // 新增设备
-export async function postDeviceCreate(
+export async function postDeviceSave(
   obj: Record<string, any>,
   extParams?: PassExtParamsDescriptorMore,
 ) {
   const res: API_PostDeviceCreate.Result = await postApi(
-    "device/create",
-    { ...obj },
-    { showLoading: true, showToast: true, ...extParams },
-  ).catch((err) => {
-    console.error(err)
-    throw err
-  })
-
-  return res
-}
-
-export async function postDeviceUpdate(
-  obj: Record<string, any>,
-  extParams?: PassExtParamsDescriptorMore,
-) {
-  const res: API_PostDeviceUpdate.Result = await postApi(
-    "device/update",
+    "device/save",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
@@ -73,6 +57,22 @@ export async function postDeviceTypes(
 ) {
   const res: API_PostDeviceTypes.Result = await postApi(
     "device/types",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+// 获取设备类型
+export async function postDeviceTypeSave(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeviceTypes.Result = await postApi(
+    "device/typeSave",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {

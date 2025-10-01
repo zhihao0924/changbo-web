@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react'
-import { Button, Modal, Form, Input } from 'antd'
+import { Button, Modal, Form, Input, message } from 'antd'
 import Services from '@/pages/device/services'
 import { type ActionType, PageContainer, ProTable } from '@ant-design/pro-components'
 import { EditOutlined, PlusOutlined } from '@ant-design/icons'
@@ -30,11 +30,8 @@ const DeviceTypes: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
-      if (currentRecord) {
-        await Services.api.updateDeviceTypes({ ...currentRecord, ...values })
-      } else {
-        await Services.api.postDeviceTypes(values)
-      }
+      const res = await Services.api.postDeviceTypeSave({ ...currentRecord, type: values.key, show_type: values.value })
+      message.success(res?.msg || (currentRecord ? '更新设备类型成功' : '新增设备类型成功'))
       setVisible(false)
       form.resetFields()
       actionRef.current?.reload()
@@ -81,6 +78,7 @@ const DeviceTypes: React.FC = () => {
       <PageContainer content="">
         <div>
           <ProTable<Columns, Columns>
+            search={false}
             sticky={{
               offsetHeader: 48
             }}
@@ -92,15 +90,9 @@ const DeviceTypes: React.FC = () => {
             bordered={true}
             scroll={{ x: '100%' }}
             headerTitle=""
-            search={{
-              defaultCollapsed: false,
-              labelWidth: 100,
-              optionRender: (searchConfig, formProps, dom) => {
-                return [...dom]
-              }
-            }}
             toolBarRender={() => [
               <Button key="create" type="primary" icon={<PlusOutlined />} onClick={() => {
+                setCurrentRecord(null)
                 form.resetFields()
                 setVisible(true)
               }}>
@@ -121,8 +113,7 @@ const DeviceTypes: React.FC = () => {
         onCancel={() => setVisible(false)}
       >
         <Form form={form} layout="vertical">
-          <Form.Item hidden={true} name="id" label="设备类型"
-                     rules={[{ required: true, message: '请输入设备类型名称' }]}>
+          <Form.Item hidden={true} name="id" label="设备类型ID">
             <Input />
           </Form.Item>
           <Form.Item name="key" label="设备类型" rules={[{ required: true, message: '请输入设备类型名称' }]}>
