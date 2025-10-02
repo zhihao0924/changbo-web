@@ -41,6 +41,11 @@ export default [
         name: '设备状态',
         path: '/device/status',
         component: './device/status'
+      },
+      {
+        name: '设备状态',
+        path: '/device/topology',
+        component: './device/topology'
       }
     ]
   },
