@@ -43,7 +43,7 @@ export default [
         component: './device/status'
       },
       {
-        name: '设备状态',
+        name: '设备拓普图',
         path: '/device/topology',
         component: './device/topology'
       }

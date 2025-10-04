@@ -38,7 +38,7 @@
     "@ant-design/pro-components": "^2.6.11",
     "@dnd-kit/core": "^6.0.8",
     "@dnd-kit/sortable": "^7.0.2",
-    "@types/lodash": "^4.14.192",
+    "@types/lodash": "^4.14",
     "@wangeditor/editor": "^5.1.14",
     "@wangeditor/editor-for-react": "^1.0.4",
     "ahooks": "^3.7.0",

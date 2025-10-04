@@ -46,22 +46,6 @@ export default function TopologyPage() {
       { source: "node2", target: "node3", label: "", style: {} },
     ],
   })
-
-  const handleImageClick = (imageUrl: string) => {
-    Modal.info({
-      title: "图片预览",
-      content: (
-        <img
-          src={imageUrl}
-          alt="预览"
-          style={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
-        />
-      ),
-      okText: "关闭",
-      width: "80%",
-    })
-  }
-
   const handleZoom = useCallback((ratio: number) => {
     if (graphRef.current) {
       graphRef.current.zoom(ratio, { x: 0, y: 0 })
@@ -92,6 +76,12 @@ export default function TopologyPage() {
 
   const initGraph = useCallback(() => {
     if (!containerRef.current) return
+
+    // 清理旧的画布实例
+    if (graphRef.current) {
+      graphRef.current.destroy()
+      graphRef.current = null
+    }
 
     const graph = new G6.Graph({
       container: containerRef.current,
@@ -289,20 +279,22 @@ export default function TopologyPage() {
   }, [initGraph])
 
   const handleAddNode = useCallback(() => {
-    const newNodeId = `node${data.nodes.length + 1}`
-    const newNode = {
-      id: newNodeId,
-      x: 50,
-      y: data.nodes.length * 10,
-      type: "image",
-      image: defaultImage,
-      style: imageNodeStyle,
-    }
-    setData((prevData) => ({
-      nodes: [...prevData.nodes, newNode],
-      edges: prevData.edges,
-    }))
-  }, [data.nodes.length])
+    setData((prevData) => {
+      const newNodeId = `node_${Date.now()}`
+      const newNode = {
+        id: newNodeId,
+        x: 30,
+        y: 30,
+        type: "image",
+        image: defaultImage,
+        style: imageNodeStyle,
+      }
+      return {
+        nodes: [...prevData.nodes, newNode],
+        edges: prevData.edges,
+      }
+    })
+  }, [])
 
   const handleNodeClick = useCallback(
     (nodeId: string) => {
