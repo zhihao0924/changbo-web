@@ -5,13 +5,34 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import G6 from "@antv/g6"
 
 const imageNodeStyle = {
-  width: 40,
-  height: 40,
+  width: 60,
+  height: 60,
+  fill: "#1890ff",
+  stroke: "#096dd9",
+  lineWidth: 2,
 }
 
-const defaultImage = "https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+const images = [
+  "/assets/D1.svg",
+  "/assets/D2.svg",
+  "/assets/D3.svg",
+  "/assets/D4.svg",
+  "/assets/D5.svg",
+  "/assets/D6.svg",
+  "/assets/D7.svg",
+  "/assets/D8.svg",
+]
 
-export default function TopologyPage() {
+const edgeStyle = {
+  stroke: "#8c8c8c",
+  lineWidth: 2,
+  lineDash: undefined, // 移除虚线效果
+  endArrow: {
+    path: G6.Arrow.triangle(10, 12, 0),
+    fill: "#8c8c8c",
+  },
+}
+const TopologyPage = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const graphRef = useRef<any>(null)
   const [data, setData] = useState({
@@ -21,7 +42,7 @@ export default function TopologyPage() {
         x: 100,
         y: 100,
         type: "image",
-        image: defaultImage,
+        image: images[0],
         style: imageNodeStyle,
       },
       {
@@ -29,7 +50,7 @@ export default function TopologyPage() {
         x: 200,
         y: 100,
         type: "image",
-        image: defaultImage,
+        image: images[1],
         style: imageNodeStyle,
       },
       {
@@ -37,13 +58,13 @@ export default function TopologyPage() {
         x: 200,
         y: 300,
         type: "image",
-        image: defaultImage,
+        image: images[2],
         style: imageNodeStyle,
       },
     ],
     edges: [
-      { source: "node1", target: "node2", label: "", style: {} },
-      { source: "node2", target: "node3", label: "", style: {} },
+      { source: "node1", target: "node2", label: "", style: edgeStyle },
+      { source: "node2", target: "node3", label: "", style: edgeStyle },
     ],
   })
   const handleZoom = useCallback((ratio: number) => {
@@ -90,8 +111,38 @@ export default function TopologyPage() {
       modes: {
         default: ["drag-canvas", "drag-node"],
       },
+      defaultNode: {
+        type: "image",
+        size: [60, 60],
+        style: {
+          fill: "#1890ff",
+          stroke: "#096dd9",
+          lineWidth: 2,
+          fontWeight: 400, // 添加默认字体权重
+        },
+      },
+      nodeStateStyles: {
+        selected: {
+          stroke: "#ff4d4f", // 选中时的边框颜色
+          lineWidth: 3, // 选中时的边框宽度
+        },
+      },
+      defaultEdge: {
+        style: {
+          stroke: "#8c8c8c",
+          lineWidth: 2,
+          endArrow: {
+            path: G6.Arrow.triangle(10, 12, 0),
+            fill: "#8c8c8c",
+          },
+          fontWeight: 400, // 添加默认字体权重
+        },
+      },
       layout: {
-        type: null,
+        type: "dendrogram",
+        direction: "TB",
+        nodeSep: 50,
+        rankSep: 100,
       },
     })
 
@@ -102,6 +153,15 @@ export default function TopologyPage() {
         graph.setItemState(edge, "selected", true)
         const model = edge.getModel()
         setSelectedNodes([model.source, model.target])
+      }
+    })
+
+    graph.on("node:click", (e) => {
+      const node = e.item
+      if (node) {
+        graph.getNodes().forEach((node) => graph.clearItemStates(node, ["selected"]))
+        graph.setItemState(node, "selected", true)
+        setSelectedNodes([node.getModel().id]) // 更新选中节点的状态
       }
     })
 
@@ -175,8 +235,7 @@ export default function TopologyPage() {
 
       menu.appendChild(
         createMenuOption("修改图标", () => {
-          import("antd").then(({ Modal, Select }) => {
-            const images = [defaultImage, defaultImage]
+          import("antd").then(({ Modal }) => {
             Modal.confirm({
               title: "修改图标",
               content: (
@@ -184,7 +243,7 @@ export default function TopologyPage() {
                   {images.map((image) => (
                     <Image
                       key={image}
-                      width={80}
+                      width={60}
                       src={image}
                       preview={false}
                       style={{
@@ -197,27 +256,41 @@ export default function TopologyPage() {
                         if (select) {
                           select.setAttribute("title", image)
                         }
+                        document.querySelectorAll(".ant-image").forEach((img) => {
+                          img.style.border = "1px solid #d9d9d9"
+                        })
+                        const imgElement = document.querySelector(
+                          `img[src="${image}"]`,
+                        )?.parentElement
+                        if (imgElement) {
+                          imgElement.style.border = "2px solid #1890ff" // 选中时的边框颜色
+                        }
                       }}
                     />
                   ))}
                 </div>
               ),
               onOk: (close) => {
-                const select = document.querySelector(".ant-select-selection-item")
-                if (select) {
-                  const newIcon = select.getAttribute("title")
+                const selectedImage = document.querySelector(
+                  ".ant-image[style*='2px solid #1890ff']",
+                )
+                if (!selectedImage) {
+                  message.warning("请先选择图片")
+                  return
+                }
+                const newIcon = selectedImage.querySelector("img")?.getAttribute("src")
+                if (newIcon) {
                   setData((prevData) => ({
                     ...prevData,
                     nodes: prevData.nodes.map((n) =>
-                      n.id === model.id ? { ...n, icon: newIcon } : n,
+                      n.id === model.id ? { ...n, image: newIcon } : n,
                     ),
                   }))
+                  graph.refreshItem(node)
                 }
                 close()
                 if (menu.parentNode === document.body) {
-                  if (menu.parentNode === document.body) {
-                    document.body.removeChild(menu)
-                  }
+                  document.body.removeChild(menu)
                 }
               },
               onCancel: () => {
@@ -286,7 +359,7 @@ export default function TopologyPage() {
         x: 30,
         y: 30,
         type: "image",
-        image: defaultImage,
+        image: images[0],
         style: imageNodeStyle,
       }
       return {
@@ -305,7 +378,7 @@ export default function TopologyPage() {
           source: selectedNodes[0],
           target: nodeId,
           label: ``,
-          style: { stroke: "#faad14", lineDash: [4, 4] },
+          style: edgeStyle,
         }
         const isEdgeExist = data.edges.some(
           (edge) =>
@@ -402,3 +475,5 @@ export default function TopologyPage() {
     </PageContainer>
   )
 }
+
+export default TopologyPage
