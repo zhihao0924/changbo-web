@@ -161,18 +161,6 @@ const TopologyPage = () => {
       }
     })
 
-    graph.on("node:click", (e) => {
-      const node = e.item
-      if (node) {
-        graph.getNodes().forEach((node) => graph.clearItemStates(node, ["selected"]))
-        graph.setItemState(node, "selected", true)
-        const nodeId = node.getModel().id
-        if (nodeId) {
-          setSelectedNodes([nodeId]) // 更新选中节点的状态
-        }
-      }
-    })
-
     graph.on("node:contextmenu", (e) => {
       e.preventDefault()
       const node = e.item
@@ -409,28 +397,57 @@ const TopologyPage = () => {
   const handleNodeClick = useCallback(
     (nodeId: string) => {
       if (!isLinkingMode) return
-      setSelectedNodes((prev) => [...prev, nodeId])
+
+      console.log("当前选中节点:", nodeId)
+      console.log("已选节点列表:", selectedNodes)
+
+      // 第一次点击 - 选择源节点
+      if (selectedNodes.length === 0) {
+        console.log("选择源节点:", nodeId)
+        setSelectedNodes([nodeId])
+        return
+      }
+
+      // 第二次点击 - 选择目标节点
       if (selectedNodes.length === 1) {
-        const newEdge = {
-          source: selectedNodes[0],
-          target: nodeId,
-          label: ``,
-          style: edgeStyle,
+        console.log("选择目标节点:", nodeId)
+
+        // 检查是否选择了相同节点
+        if (nodeId === selectedNodes[0]) {
+          console.log("错误: 源节点和目标节点相同")
+          message.warning("源节点和目标节点不能相同")
+          setIsLinkingMode(false)
+          setSelectedNodes([])
+          return
         }
-        const isEdgeExist = data.edges.some(
-          (edge) =>
-            (edge.source === newEdge.source && edge.target === newEdge.target) ||
-            (edge.source === newEdge.target && edge.target === newEdge.source),
+
+        // 检查是否已存在相同方向的关联
+        // 检查是否已存在相同方向的关联
+        // 检查是否已存在相同方向的关联
+        const edgeExists = data.edges.some(
+          (edge) => edge.source === selectedNodes[0] && edge.target === nodeId,
         )
-        if (!isEdgeExist) {
-          setData((prevData) => ({
-            nodes: prevData.nodes,
-            edges: [...prevData.edges, newEdge],
-          }))
-          message.success("关联成功！")
+
+        if (edgeExists) {
+          message.warning(`从 ${selectedNodes[0]} 到 ${nodeId} 的关联已存在`)
         } else {
-          message.warning("节点已关联！")
+          // 创建新关联
+          setData((prev) => ({
+            ...prev,
+            edges: [
+              ...prev.edges,
+              {
+                source: selectedNodes[0],
+                target: nodeId,
+                label: "",
+                style: edgeStyle,
+              },
+            ],
+          }))
+          message.success(`成功创建关联`)
         }
+
+        // 重置状态
         setIsLinkingMode(false)
         setSelectedNodes([])
       }
@@ -439,9 +456,14 @@ const TopologyPage = () => {
   )
 
   const handleToggleLinkingMode = useCallback(() => {
-    setIsLinkingMode((prev) => !prev)
+    const newMode = !isLinkingMode
+    setIsLinkingMode(newMode)
     setSelectedNodes([])
-    message.info(isLinkingMode ? "已退出关联模式" : "请点击两个节点进行关联")
+    if (newMode) {
+      message.info("关联模式已开启，请先点击源节点，再点击目标节点")
+    } else {
+      message.info("已退出关联模式")
+    }
   }, [isLinkingMode])
 
   return (
@@ -478,7 +500,7 @@ const TopologyPage = () => {
           >
             <div
               ref={containerRef}
-              style={{ height: "500px", border: "1px solid #f0f0f0" }}
+              style={{ height: "500px", border: "1px solid #f0f0f0", position: "relative" }}
               onClick={(e) => {
                 if (isLinkingMode && graphRef.current) {
                   const canvasPoint = graphRef.current.getPointByClient(e.clientX, e.clientY)
