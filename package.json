@@ -5,7 +5,7 @@
   "description": "畅博管理系统",
   "author": "zhihao",
   "scripts": {
-    "clean": "rm -rf src/.umi",
+    "clean": "rm -rf node_modules .umi src/.umi",
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider UMI_ENV=dev BUILD_ENV=dev umi dev",
     "build:prod": "cross-env NODE_OPTIONS=--openssl-legacy-provider BUILD_ENV=prod umi build && yarn generate:version",
     "build:test": "cross-env NODE_OPTIONS=--openssl-legacy-provider BUILD_ENV=dev umi build && yarn generate:version",

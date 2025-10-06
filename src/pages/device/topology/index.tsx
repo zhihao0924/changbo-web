@@ -42,7 +42,7 @@ const TopologyPage = () => {
         x: 100,
         y: 100,
         type: "image",
-        image: images[0],
+        img: images[0],
         style: imageNodeStyle,
       },
       {
@@ -50,7 +50,7 @@ const TopologyPage = () => {
         x: 200,
         y: 100,
         type: "image",
-        image: images[1],
+        img: images[1],
         style: imageNodeStyle,
       },
       {
@@ -58,7 +58,7 @@ const TopologyPage = () => {
         x: 200,
         y: 300,
         type: "image",
-        image: images[2],
+        img: images[2],
         style: imageNodeStyle,
       },
     ],
@@ -78,6 +78,8 @@ const TopologyPage = () => {
 
   const [isLinkingMode, setIsLinkingMode] = useState(false)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
+  const selectedImageRef = useRef("")
+  const [selectedImage, setSelectedImage] = useState("")
 
   const handleDeleteEdge = useCallback((source: string, target: string) => {
     setData((prevData) => {
@@ -108,6 +110,14 @@ const TopologyPage = () => {
       container: containerRef.current,
       width: containerRef.current.clientWidth,
       height: 500,
+      animate: false,
+      fitView: true,
+      layout: {
+        type: "dendrogram",
+        radius: 200,
+        preventOverlap: true,
+        workerEnabled: false,
+      },
       modes: {
         default: ["drag-canvas", "drag-node"],
       },
@@ -138,12 +148,7 @@ const TopologyPage = () => {
           fontWeight: 400, // 添加默认字体权重
         },
       },
-      layout: {
-        type: "dendrogram",
-        direction: "TB",
-        nodeSep: 50,
-        rankSep: 100,
-      },
+      // 布局配置已移到graph初始化参数中
     })
 
     graph.on("edge:click", (e) => {
@@ -152,7 +157,7 @@ const TopologyPage = () => {
         graph.getEdges().forEach((edge) => graph.clearItemStates(edge, ["selected"]))
         graph.setItemState(edge, "selected", true)
         const model = edge.getModel()
-        setSelectedNodes([model.source, model.target])
+        setSelectedNodes([model.source as string, model.target as string])
       }
     })
 
@@ -161,7 +166,10 @@ const TopologyPage = () => {
       if (node) {
         graph.getNodes().forEach((node) => graph.clearItemStates(node, ["selected"]))
         graph.setItemState(node, "selected", true)
-        setSelectedNodes([node.getModel().id]) // 更新选中节点的状态
+        const nodeId = node.getModel().id
+        if (nodeId) {
+          setSelectedNodes([nodeId]) // 更新选中节点的状态
+        }
       }
     })
 
@@ -248,49 +256,61 @@ const TopologyPage = () => {
                       preview={false}
                       style={{
                         cursor: "pointer",
-                        border: "1px solid #d9d9d9",
+                        border: `1px solid ${selectedImage === image ? "#1890ff" : "#d9d9d9"}`,
                         borderRadius: "4px",
                       }}
                       onClick={() => {
-                        const select = document.querySelector(".ant-select-selection-item")
-                        if (select) {
-                          select.setAttribute("title", image)
-                        }
-                        document.querySelectorAll(".ant-image").forEach((img) => {
-                          img.style.border = "1px solid #d9d9d9"
+                        console.log("[DEBUG] Selecting image:", image)
+                        selectedImageRef.current = image
+                        setSelectedImage(image)
+                        // 更新所有图片边框样式
+                        document.querySelectorAll<HTMLElement>(".ant-image").forEach((img) => {
+                          const imgElement = img.querySelector("img")
+                          if (imgElement) {
+                            const imgSrc = imgElement.getAttribute("src")
+                            if (imgSrc) {
+                              img.style.border =
+                                imgSrc === image ? "2px solid #1890ff" : "1px solid #d9d9d9"
+                            }
+                          }
                         })
-                        const imgElement = document.querySelector(
-                          `img[src="${image}"]`,
-                        )?.parentElement
-                        if (imgElement) {
-                          imgElement.style.border = "2px solid #1890ff" // 选中时的边框颜色
-                        }
                       }}
                     />
                   ))}
                 </div>
               ),
-              onOk: (close) => {
-                const selectedImage = document.querySelector(
-                  ".ant-image[style*='2px solid #1890ff']",
-                )
-                if (!selectedImage) {
-                  message.warning("请先选择图片")
-                  return
-                }
-                const newIcon = selectedImage.querySelector("img")?.getAttribute("src")
-                if (newIcon) {
+              onOk: async (close) => {
+                try {
+                  const currentSelectedImage = selectedImageRef.current
+                  console.log("[DEBUG] onOk - selectedImageRef:", currentSelectedImage)
+
+                  if (!currentSelectedImage) {
+                    message.warning("请先选择图片")
+                    return
+                  }
+
+                  if (!images.includes(currentSelectedImage)) {
+                    message.warning("无效的图片选择")
+                    return
+                  }
+
+                  model.image = currentSelectedImage
+                  graph.refreshItem(node)
                   setData((prevData) => ({
                     ...prevData,
                     nodes: prevData.nodes.map((n) =>
-                      n.id === model.id ? { ...n, image: newIcon } : n,
+                      n.id === model.id ? { ...n, img: currentSelectedImage } : n,
                     ),
                   }))
-                  graph.refreshItem(node)
-                }
-                close()
-                if (menu.parentNode === document.body) {
-                  document.body.removeChild(menu)
+                  message.success("图标修改成功")
+                } catch (error) {
+                  console.error("修改图标失败:", error)
+                  message.error("图标修改失败")
+                } finally {
+                  close()
+                  if (menu.parentNode === document.body) {
+                    document.body.removeChild(menu)
+                  }
                 }
               },
               onCancel: () => {
@@ -335,15 +355,32 @@ const TopologyPage = () => {
           document.removeEventListener("click", closeMenu)
         }
       }
-      document.addEventListener("click", closeMenu)
+      // 延迟添加点击事件监听，确保异步操作完成
+      setTimeout(() => {
+        document.addEventListener("click", closeMenu)
+      }, 100)
     })
 
-    graph.data(data)
-    graph.render()
-    graphRef.current = graph
+    try {
+      console.log(data)
+      graph.data(data)
+      graph.render()
+      graphRef.current = graph
+    } catch (error) {
+      console.error("Graph layout failed:", error)
+      message.error("拓扑图初始化失败，请刷新页面重试")
+    }
 
     return () => {
-      graphRef.current?.destroy()
+      if (graphRef.current) {
+        try {
+          graphRef.current.destroy()
+        } catch (e) {
+          console.error("Graph destroy error:", e)
+        } finally {
+          graphRef.current = null
+        }
+      }
     }
   }, [data])
 
