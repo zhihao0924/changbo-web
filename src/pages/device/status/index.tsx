@@ -7,7 +7,6 @@ import Services from "@/pages/device/services"
 const DeviceStatus: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
   const [deviceList, setDeviceList] = useState<API_PostDeviceList.List[]>([])
-  const [loading, setLoading] = useState(false)
 
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
@@ -64,7 +63,7 @@ const DeviceStatus: React.FC = () => {
 
   return (
     <PageContainer>
-      <Spin spinning={loading}>
+      <Spin>
         <Row gutter={[16, 16]}>
           {deviceList?.map((device) => {
             const status = getDeviceStatus(device)
@@ -85,7 +84,7 @@ const DeviceStatus: React.FC = () => {
                         size="small"
                         strokeColor={green[6]}
                         showInfo={true}
-                        format={(percent) => `${((percent / 100) * 20).toFixed(2)}V`}
+                        format={(percent) => `${((percent??0 / 100) * 20).toFixed(2)}V`}
                       />
                     ) : (
                       <>-</>
@@ -99,7 +98,7 @@ const DeviceStatus: React.FC = () => {
                         size="small"
                         strokeColor={green[6]}
                         showInfo={true}
-                        format={(percent) => `${(percent / 100).toFixed(2)}A`}
+                        format={(percent) => `${(percent??0 / 100).toFixed(2)}A`}
                       />
                     ) : (
                       <>-</>
@@ -113,7 +112,7 @@ const DeviceStatus: React.FC = () => {
                         size="small"
                         strokeColor={green[6]}
                         showInfo={true}
-                        format={(percent) => `${((percent / 100) * 40).toFixed(2)}℃`}
+                        format={(percent) => `${((percent ??0/ 100) * 40).toFixed(2)}℃`}
                       />
                     ) : (
                       <>-</>

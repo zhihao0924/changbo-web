@@ -89,7 +89,6 @@ const TopologyPage = () => {
   const [isLinkingMode, setIsLinkingMode] = useState(false)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
   const selectedImageRef = useRef("")
-  const [selectedImage, setSelectedImage] = useState("")
 
   const handleDeleteEdge = useCallback((source: string, target: string) => {
     setData((prevData) => {
@@ -164,23 +163,23 @@ const TopologyPage = () => {
     graph.on("edge:click", (e) => {
       const edge = e.item
       if (edge) {
-        graph.getEdges().forEach((edge) => graph.clearItemStates(edge, ["selected"]))
+        graph.getEdges().forEach((edgeItem) => graph.clearItemStates(edgeItem, ["selected"]))
         graph.setItemState(edge, "selected", true)
         const model = edge.getModel()
         setSelectedNodes([model.source as string, model.target as string])
       }
     })
 
-    graph.on("node:contextmenu", (e) => {
-      e.preventDefault()
-      const node = e.item
+    graph.on("node:contextmenu", (iG6Event) => {
+      iG6Event.preventDefault()
+      const node = iG6Event.item
       if (!node) return
 
       const model = node.getModel()
       const menu = document.createElement("div")
       menu.style.position = "absolute"
-      menu.style.left = `${e.clientX}px`
-      menu.style.top = `${e.clientY}px`
+      menu.style.left = `${iG6Event.clientX}px`
+      menu.style.top = `${iG6Event.clientY}px`
       menu.style.background = "#fff"
       menu.style.border = "1px solid #ccc"
       menu.style.padding = "8px"
@@ -260,7 +259,6 @@ const TopologyPage = () => {
                       onClick={() => {
                         console.log("[DEBUG] Selecting image:", image)
                         selectedImageRef.current = image
-                        setSelectedImage(image)
                         // 更新所有图片边框样式
                         document.querySelectorAll<HTMLElement>(".ant-image").forEach((img) => {
                           const imgElement = img.querySelector("img")
@@ -300,7 +298,7 @@ const TopologyPage = () => {
                       n.id === model.id ? { ...n, img: currentSelectedImage } : n,
                     ),
                   }))
-                  message.success("图标修改成功")
+                  // message.success("图标修改成功")
                 } catch (error) {
                   console.error("修改图标失败:", error)
                   message.error("图标修改失败")
@@ -389,7 +387,6 @@ const TopologyPage = () => {
   const handleAddNode = useCallback(() => {
     import("antd").then(({ Modal }) => {
       selectedImageRef.current = ""
-      setSelectedImage("")
       Modal.confirm({
         title: "选择节点图标",
         content: (
@@ -408,7 +405,6 @@ const TopologyPage = () => {
                 onClick={() => {
                   console.log("[DEBUG] Selecting image:", image)
                   selectedImageRef.current = image
-                  setSelectedImage(image)
                   // 更新所有图片边框样式
                   document.querySelectorAll<HTMLElement>(".ant-image").forEach((img) => {
                     const imgElement = img.querySelector("img")
@@ -445,7 +441,7 @@ const TopologyPage = () => {
         },
       })
     })
-  }, [selectedImage])
+  }, [])
 
   const handleNodeClick = useCallback(
     (nodeId: string) => {
