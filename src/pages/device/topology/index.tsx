@@ -26,10 +26,20 @@ const images = [
 const edgeStyle = {
   stroke: "#8c8c8c",
   lineWidth: 2,
-  lineDash: undefined, // 移除虚线效果
+  lineAppendWidth: 10, // 增加可点击区域
+  // lineDash: undefined,
+  type: "polyline", // 使用折线样式
+  radius: 20, // 折线拐角半径
+  offset: 20, // 折线偏移量
+  controlPoints: [{ x: 0, y: 0 }], // 控制点
+  curveOffset: 20, // 曲线偏移量
+  curvePosition: 0.5, // 曲线位置
   endArrow: {
-    path: G6.Arrow.triangle(10, 12, 0),
-    fill: "#8c8c8c",
+    path: G6.Arrow.triangle(12, 15, 10), // 箭头尺寸
+    fill: "#8c8c8c", // 与线条颜色一致
+    stroke: "#8c8c8c", // 与线条颜色一致
+    lineWidth: 1,
+    d: 10, // 箭头偏移
   },
 }
 const TopologyPage = () => {
