@@ -254,7 +254,7 @@ const TopologyPage = () => {
                       preview={false}
                       style={{
                         cursor: "pointer",
-                        border: `1px solid ${selectedImage === image ? "#1890ff" : "#d9d9d9"}`,
+                        border: `1px solid #d9d9d9`,
                         borderRadius: "4px",
                       }}
                       onClick={() => {
