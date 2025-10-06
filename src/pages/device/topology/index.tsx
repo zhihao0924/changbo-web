@@ -387,22 +387,65 @@ const TopologyPage = () => {
   }, [initGraph])
 
   const handleAddNode = useCallback(() => {
-    setData((prevData) => {
-      const newNodeId = `node_${Date.now()}`
-      const newNode = {
-        id: newNodeId,
-        x: 30,
-        y: 30,
-        type: "image",
-        image: images[0],
-        style: imageNodeStyle,
-      }
-      return {
-        nodes: [...prevData.nodes, newNode],
-        edges: prevData.edges,
-      }
+    import("antd").then(({ Modal }) => {
+      selectedImageRef.current = ""
+      setSelectedImage("")
+      Modal.confirm({
+        title: "选择节点图标",
+        content: (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {images.map((image) => (
+              <Image
+                key={image}
+                width={60}
+                src={image}
+                preview={false}
+                style={{
+                  cursor: "pointer",
+                  border: `1px solid #d9d9d9`,
+                  borderRadius: "4px",
+                }}
+                onClick={() => {
+                  console.log("[DEBUG] Selecting image:", image)
+                  selectedImageRef.current = image
+                  setSelectedImage(image)
+                  // 更新所有图片边框样式
+                  document.querySelectorAll<HTMLElement>(".ant-image").forEach((img) => {
+                    const imgElement = img.querySelector("img")
+                    if (imgElement) {
+                      const imgSrc = imgElement.getAttribute("src")
+                      if (imgSrc) {
+                        img.style.border =
+                          imgSrc === image ? "2px solid #1890ff" : "1px solid #d9d9d9"
+                      }
+                    }
+                  })
+                }}
+              />
+            ))}
+          </div>
+        ),
+        onOk: () => {
+          const currentSelectedImage = selectedImageRef.current || images[0]
+          setData((prevData) => {
+            const newNodeId = `node_${Date.now()}`
+            const newNode = {
+              id: newNodeId,
+              x: 30,
+              y: 30,
+              type: "image",
+              img: currentSelectedImage,
+              style: imageNodeStyle,
+            }
+            return {
+              nodes: [...prevData.nodes, newNode],
+              edges: prevData.edges,
+            }
+          })
+        },
+      })
     })
-  }, [])
+  }, [selectedImage])
 
   const handleNodeClick = useCallback(
     (nodeId: string) => {
