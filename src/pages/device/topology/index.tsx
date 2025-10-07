@@ -1,8 +1,10 @@
 import React from "react"
 import { PageContainer } from "@ant-design/pro-components"
-import { Card, Button, Row, Col, Space, message, Image } from "antd"
+import { Card, Button, Row, Col, Space, message, Image, Spin } from "antd"
 import { useEffect, useRef, useState, useCallback } from "react"
 import G6 from "@antv/g6"
+import { MinusOutlined, PlusOutlined } from "@ant-design/icons"
+import Services from "@/pages/device/services"
 
 const imageNodeStyle = {
   width: 60,
@@ -45,38 +47,9 @@ const edgeStyle = {
 const TopologyPage = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const graphRef = useRef<any>(null)
-  const [data, setData] = useState({
-    nodes: [
-      {
-        id: "node1",
-        x: 100,
-        y: 100,
-        type: "image",
-        img: images[0],
-        style: imageNodeStyle,
-      },
-      {
-        id: "node2",
-        x: 200,
-        y: 100,
-        type: "image",
-        img: images[1],
-        style: imageNodeStyle,
-      },
-      {
-        id: "node3",
-        x: 200,
-        y: 300,
-        type: "image",
-        img: images[2],
-        style: imageNodeStyle,
-      },
-    ],
-    edges: [
-      { source: "node1", target: "node2", label: "", style: edgeStyle },
-      { source: "node2", target: "node3", label: "", style: edgeStyle },
-    ],
-  })
+  const [data, setData] = useState({ nodes: [], edges: [] })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const handleZoom = useCallback((ratio: number) => {
     if (graphRef.current) {
       graphRef.current.zoom(ratio, { x: 0, y: 0 })
@@ -257,7 +230,6 @@ const TopologyPage = () => {
                         borderRadius: "4px",
                       }}
                       onClick={() => {
-                        console.log("[DEBUG] Selecting image:", image)
                         selectedImageRef.current = image
                         // 更新所有图片边框样式
                         document.querySelectorAll<HTMLElement>(".ant-image").forEach((img) => {
@@ -278,7 +250,6 @@ const TopologyPage = () => {
               onOk: async (close) => {
                 try {
                   const currentSelectedImage = selectedImageRef.current
-                  console.log("[DEBUG] onOk - selectedImageRef:", currentSelectedImage)
 
                   if (!currentSelectedImage) {
                     message.warning("请先选择图片")
@@ -299,8 +270,8 @@ const TopologyPage = () => {
                     ),
                   }))
                   // message.success("图标修改成功")
-                } catch (error) {
-                  console.error("修改图标失败:", error)
+                } catch (err) {
+                  console.error("修改图标失败:", err)
                   message.error("图标修改失败")
                 } finally {
                   close()
@@ -362,8 +333,8 @@ const TopologyPage = () => {
       graph.data(data)
       graph.render()
       graphRef.current = graph
-    } catch (error) {
-      console.error("Graph layout failed:", error)
+    } catch (err) {
+      console.error("Graph layout failed:", err)
       message.error("拓扑图初始化失败，请刷新页面重试")
     }
 
@@ -381,8 +352,38 @@ const TopologyPage = () => {
   }, [data])
 
   useEffect(() => {
-    initGraph()
-  }, [initGraph])
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const result = await Services.api.postTopologyData({})
+
+        console.log(result)
+        setData({
+          nodes: result.res.nodes.map((node) => ({
+            ...node,
+            style: imageNodeStyle,
+          })),
+          edges: result.res.edges.map((edge) => ({
+            ...edge,
+            style: edgeStyle,
+          })),
+        })
+      } catch (err) {
+        setError(err)
+        message.error("获取拓扑数据失败")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    if (!loading && data.nodes.length > 0) {
+      initGraph()
+    }
+  }, [loading, data, initGraph])
 
   const handleAddNode = useCallback(() => {
     import("antd").then(({ Modal }) => {
@@ -447,32 +448,22 @@ const TopologyPage = () => {
     (nodeId: string) => {
       if (!isLinkingMode) return
 
-      console.log("当前选中节点:", nodeId)
-      console.log("已选节点列表:", selectedNodes)
-
       // 第一次点击 - 选择源节点
       if (selectedNodes.length === 0) {
-        console.log("选择源节点:", nodeId)
         setSelectedNodes([nodeId])
         return
       }
 
       // 第二次点击 - 选择目标节点
       if (selectedNodes.length === 1) {
-        console.log("选择目标节点:", nodeId)
-
         // 检查是否选择了相同节点
         if (nodeId === selectedNodes[0]) {
-          console.log("错误: 源节点和目标节点相同")
           message.warning("源节点和目标节点不能相同")
           setIsLinkingMode(false)
           setSelectedNodes([])
           return
         }
 
-        // 检查是否已存在相同方向的关联
-        // 检查是否已存在相同方向的关联
-        // 检查是否已存在相同方向的关联
         const edgeExists = data.edges.some(
           (edge) => edge.source === selectedNodes[0] && edge.target === nodeId,
         )
@@ -523,6 +514,8 @@ const TopologyPage = () => {
             title="设备拓扑图"
             extra={
               <Space>
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleZoomIn} />
+                <Button type="primary" icon={<MinusOutlined />} onClick={handleZoomOut} />
                 <Button type="primary" onClick={handleAddNode}>
                   添加节点
                 </Button>
@@ -530,7 +523,7 @@ const TopologyPage = () => {
                   type={isLinkingMode ? "primary" : "default"}
                   onClick={handleToggleLinkingMode}
                 >
-                  {isLinkingMode ? "完成关联" : "自定义关联"}
+                  {isLinkingMode ? "完成关联" : "添加关联"}
                 </Button>
                 <Button
                   danger
@@ -544,39 +537,49 @@ const TopologyPage = () => {
                 >
                   删除关联
                 </Button>
+                <Button
+                  type="primary"
+                  onClick={async () => {
+                    try {
+                      await Services.api.postSaveTopologyData(data)
+                      message.success("拓扑图保存成功")
+                    } catch (err) {
+                      message.error("保存失败")
+                    }
+                  }}
+                >
+                  保存
+                </Button>
               </Space>
             }
           >
-            <div
-              ref={containerRef}
-              style={{ height: "500px", border: "1px solid #f0f0f0", position: "relative" }}
-              onClick={(e) => {
-                if (isLinkingMode && graphRef.current) {
-                  const canvasPoint = graphRef.current.getPointByClient(e.clientX, e.clientY)
-                  const node = graphRef.current.getNodes().find((n: { getBBox: () => any }) => {
-                    const bbox = n.getBBox()
-                    if (!bbox) return false
-                    return (
-                      canvasPoint.x >= bbox.minX &&
-                      canvasPoint.x <= bbox.maxX &&
-                      canvasPoint.y >= bbox.minY &&
-                      canvasPoint.y <= bbox.maxY
-                    )
-                  })
-                  if (node) handleNodeClick(node.getModel().id)
-                }
-              }}
-            />
-            <div style={{ position: "fixed", right: "24px", bottom: "24px", zIndex: 1000 }}>
-              <Space direction="vertical">
-                <Button type="primary" shape="circle" onClick={handleZoomIn}>
-                  +
-                </Button>
-                <Button type="primary" shape="circle" onClick={handleZoomOut}>
-                  -
-                </Button>
-              </Space>
-            </div>
+            <Spin spinning={loading}>
+              <div
+                ref={containerRef}
+                style={{
+                  height: "500px",
+                  border: "1px solid #f0f0f0",
+                  position: "relative",
+                  display: loading ? "none" : "block",
+                }}
+                onClick={(e) => {
+                  if (isLinkingMode && graphRef.current) {
+                    const canvasPoint = graphRef.current.getPointByClient(e.clientX, e.clientY)
+                    const node = graphRef.current.getNodes().find((n: { getBBox: () => any }) => {
+                      const bbox = n.getBBox()
+                      if (!bbox) return false
+                      return (
+                        canvasPoint.x >= bbox.minX &&
+                        canvasPoint.x <= bbox.maxX &&
+                        canvasPoint.y >= bbox.minY &&
+                        canvasPoint.y <= bbox.maxY
+                      )
+                    })
+                    if (node) handleNodeClick(node.getModel().id)
+                  }
+                }}
+              />
+            </Spin>
           </Card>
         </Col>
       </Row>

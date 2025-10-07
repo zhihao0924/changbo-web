@@ -81,3 +81,33 @@ export async function postDeviceTypeSave(
   })
   return res
 }
+
+export async function postTopologyData(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostTopologyData.Result = await postApi(
+    "topology/getData",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postSaveTopologyData(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostSaveTopologyData.Result = await postApi(
+    "topology/saveData",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
