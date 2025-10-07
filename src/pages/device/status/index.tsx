@@ -1,5 +1,5 @@
 import { PageContainer } from "@ant-design/pro-components"
-import { Card, Col, Row, Tag, Spin, Progress } from "antd"
+import { Card, Col, Row, Tag, Progress } from "antd"
 import React, { useCallback, useEffect, useState } from "react"
 import { green } from "@ant-design/colors"
 import Services from "@/pages/device/services"

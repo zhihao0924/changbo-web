@@ -49,7 +49,6 @@ const TopologyPage = () => {
   const graphRef = useRef<any>(null)
   const [data, setData] = useState({ nodes: [], edges: [] })
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const handleZoom = useCallback((ratio: number) => {
     if (graphRef.current) {
       graphRef.current.zoom(ratio, { x: 0, y: 0 })
@@ -66,7 +65,7 @@ const TopologyPage = () => {
   const handleDeleteEdge = useCallback((source: string, target: string) => {
     setData((prevData) => {
       const newEdges = prevData.edges.filter(
-        (edge) => !(edge.source === source && edge.target === target),
+        (edge: any) => !(edge.source === source && edge.target === target),
       )
       return { ...prevData, edges: newEdges }
     })
@@ -190,9 +189,9 @@ const TopologyPage = () => {
                 return formRef.current?.validateFields().then((values: any) => {
                   model.label = values.label
                   graph.refreshItem(node)
-                  setData((prevData) => ({
+                  setData((prevData: any) => ({
                     ...prevData,
-                    nodes: prevData.nodes.map((n) =>
+                    nodes: prevData.nodes.map((n: any) =>
                       n.id === model.id ? { ...n, label: values.label } : n,
                     ),
                   }))
@@ -263,9 +262,9 @@ const TopologyPage = () => {
 
                   model.image = currentSelectedImage
                   graph.refreshItem(node)
-                  setData((prevData) => ({
+                  setData((prevData: any) => ({
                     ...prevData,
-                    nodes: prevData.nodes.map((n) =>
+                    nodes: prevData.nodes.map((n: any) =>
                       n.id === model.id ? { ...n, img: currentSelectedImage } : n,
                     ),
                   }))
@@ -292,7 +291,7 @@ const TopologyPage = () => {
 
       menu.appendChild(
         createMenuOption("删除节点", () => {
-          const hasEdges = data.edges.some((e) => {
+          const hasEdges = data.edges.some((e: any) => {
             return e.source === model.id || e.target === model.id
           })
           if (hasEdges) {
@@ -301,9 +300,11 @@ const TopologyPage = () => {
               document.body.removeChild(menu)
             }
           } else {
-            setData((prevData) => ({
-              nodes: prevData.nodes.filter((n) => n.id !== model.id),
-              edges: prevData.edges.filter((e) => e.source !== model.id && e.target !== model.id),
+            setData((prevData: any) => ({
+              nodes: prevData.nodes.filter((n: any) => n.id !== model.id),
+              edges: prevData.edges.filter(
+                (e: any) => e.source !== model.id && e.target !== model.id,
+              ),
             }))
             graph.removeItem(node)
             if (menu.parentNode === document.body) {
@@ -359,17 +360,16 @@ const TopologyPage = () => {
 
         console.log(result)
         setData({
-          nodes: result.res.nodes.map((node) => ({
+          nodes: result.res.nodes.map((node: any) => ({
             ...node,
             style: imageNodeStyle,
           })),
-          edges: result.res.edges.map((edge) => ({
+          edges: result.res.edges.map((edge: any) => ({
             ...edge,
             style: edgeStyle,
           })),
         })
       } catch (err) {
-        setError(err)
         message.error("获取拓扑数据失败")
       } finally {
         setLoading(false)
@@ -389,7 +389,6 @@ const TopologyPage = () => {
     import("antd").then(({ Modal }) => {
       selectedImageRef.current = ""
       Modal.confirm({
-        title: "选择节点图标",
         content: (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {images.map((image) => (
@@ -424,7 +423,7 @@ const TopologyPage = () => {
         ),
         onOk: () => {
           const currentSelectedImage = selectedImageRef.current || images[0]
-          setData((prevData) => {
+          setData((prevData: any) => {
             const newNodeId = `node_${Date.now()}`
             const newNode = {
               id: newNodeId,
@@ -440,6 +439,7 @@ const TopologyPage = () => {
             }
           })
         },
+        title: "选择节点图标",
       })
     })
   }, [])
@@ -541,9 +541,22 @@ const TopologyPage = () => {
                   type="primary"
                   onClick={async () => {
                     try {
-                      await Services.api.postSaveTopologyData(data)
+                      // 创建不包含循环引用的数据副本
+                      const dataToSave = JSON.parse(JSON.stringify(data, (key, value) => {
+                        // 过滤掉所有G6图表内部属性和可能导致循环引用的属性
+                        if (key === 'cfg' || key === 'parent' || 
+                            key === '_cfg' || key === 'model' ||
+                            key === 'sourceNode' || key === 'targetNode' ||
+                            key === 'item' || key === 'graph' ||
+                            key.startsWith('_')) {
+                          return undefined
+                        }
+                        return value
+                      }))
+                      await Services.api.postSaveTopologyData(dataToSave)
                       message.success("拓扑图保存成功")
                     } catch (err) {
+                      console.error('保存拓扑图失败:', err)
                       message.error("保存失败")
                     }
                   }}
