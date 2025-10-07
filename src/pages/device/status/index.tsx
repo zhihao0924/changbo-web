@@ -41,15 +41,15 @@ const DeviceStatus: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await Promise.all([getDeviceTypes(), getLists({ current: 1, pageSize: 100 })])
+        await getLists({ current: 1, pageSize: 100 })
       } finally {
       }
     }
+    getDeviceTypes()
     fetchData()
     const interval = setInterval(fetchData, 500)
     return () => clearInterval(interval)
   }, [getDeviceTypes, getLists])
-
   const getDeviceTypeName = (typeKey: string) => {
     return deviceTypes.find((type) => type.key === typeKey)?.value || "未知设备"
   }
@@ -63,67 +63,65 @@ const DeviceStatus: React.FC = () => {
 
   return (
     <PageContainer>
-      <Spin>
-        <Row gutter={[16, 16]}>
-          {deviceList?.map((device) => {
-            const status = getDeviceStatus(device)
-            return (
-              <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
-                <Card
-                  title={`${getDeviceTypeName(device.type)}-${device.name}`}
-                  extra={<Tag color={status.color}>{status.text}</Tag>}
-                >
-                  <>
-                    设备位置: {device.position || "-"}
-                    <br />
-                    电压:
-                    {status.status === "online" ? (
-                      <Progress
-                        percent={(device.voltage * 100) / 20}
-                        steps={10}
-                        size="small"
-                        strokeColor={green[6]}
-                        showInfo={true}
-                        format={(percent) => `${((percent??0 / 100) * 20).toFixed(2)}V`}
-                      />
-                    ) : (
-                      <>-</>
-                    )}
-                    <br />
-                    电流:{" "}
-                    {status.status === "online" ? (
-                      <Progress
-                        percent={device.current * 100}
-                        steps={10}
-                        size="small"
-                        strokeColor={green[6]}
-                        showInfo={true}
-                        format={(percent) => `${(percent??0 / 100).toFixed(2)}A`}
-                      />
-                    ) : (
-                      <>-</>
-                    )}
-                    <br />
-                    温度:
-                    {status.status === "online" ? (
-                      <Progress
-                        percent={(device.temperature * 100) / 40}
-                        steps={10}
-                        size="small"
-                        strokeColor={green[6]}
-                        showInfo={true}
-                        format={(percent) => `${((percent ??0/ 100) * 40).toFixed(2)}℃`}
-                      />
-                    ) : (
-                      <>-</>
-                    )}
-                  </>{" "}
-                </Card>
-              </Col>
-            )
-          })}
-        </Row>
-      </Spin>
+      <Row gutter={[16, 16]}>
+        {deviceList?.map((device) => {
+          const status = getDeviceStatus(device)
+          return (
+            <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
+              <Card
+                title={`${getDeviceTypeName(device.type)}-${device.name}`}
+                extra={<Tag color={status.color}>{status.text}</Tag>}
+              >
+                <>
+                  设备位置: {device.position || "-"}
+                  <br />
+                  电压:
+                  {status.status === "online" ? (
+                    <Progress
+                      percent={device.voltage * 8}
+                      steps={10}
+                      size="small"
+                      strokeColor={green[6]}
+                      showInfo={true}
+                      format={(percent) => `${(percent / 8 ?? 0).toFixed(2)}V`}
+                    />
+                  ) : (
+                    <>-</>
+                  )}
+                  <br />
+                  电流:{" "}
+                  {status.status === "online" ? (
+                    <Progress
+                      percent={device.current * 200}
+                      steps={10}
+                      size="small"
+                      strokeColor={green[6]}
+                      showInfo={true}
+                      format={(percent) => `${(percent / 200 ?? 0).toFixed(2)}A`}
+                    />
+                  ) : (
+                    <>-</>
+                  )}
+                  <br />
+                  温度:
+                  {status.status === "online" ? (
+                    <Progress
+                      percent={device.temperature * 2}
+                      steps={10}
+                      size="small"
+                      strokeColor={green[6]}
+                      showInfo={true}
+                      format={(percent) => `${(percent / 2 ?? 0).toFixed(2)}℃`}
+                    />
+                  ) : (
+                    <>-</>
+                  )}
+                </>{" "}
+              </Card>
+            </Col>
+          )
+        })}
+      </Row>
     </PageContainer>
   )
 }
