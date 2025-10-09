@@ -542,21 +542,29 @@ const TopologyPage = () => {
                   onClick={async () => {
                     try {
                       // 创建不包含循环引用的数据副本
-                      const dataToSave = JSON.parse(JSON.stringify(data, (key, value) => {
-                        // 过滤掉所有G6图表内部属性和可能导致循环引用的属性
-                        if (key === 'cfg' || key === 'parent' || 
-                            key === '_cfg' || key === 'model' ||
-                            key === 'sourceNode' || key === 'targetNode' ||
-                            key === 'item' || key === 'graph' ||
-                            key.startsWith('_')) {
-                          return undefined
-                        }
-                        return value
-                      }))
+                      const dataToSave = JSON.parse(
+                        JSON.stringify(data, (key, value) => {
+                          // 过滤掉所有G6图表内部属性和可能导致循环引用的属性
+                          if (
+                            key === "cfg" ||
+                            key === "parent" ||
+                            key === "_cfg" ||
+                            key === "model" ||
+                            key === "sourceNode" ||
+                            key === "targetNode" ||
+                            key === "item" ||
+                            key === "graph" ||
+                            key.startsWith("_")
+                          ) {
+                            return undefined
+                          }
+                          return value
+                        }),
+                      )
                       await Services.api.postSaveTopologyData(dataToSave)
                       message.success("拓扑图保存成功")
                     } catch (err) {
-                      console.error('保存拓扑图失败:', err)
+                      console.error("保存拓扑图失败:", err)
                       message.error("保存失败")
                     }
                   }}
