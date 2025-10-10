@@ -26,7 +26,7 @@ const DeviceStatus: React.FC = () => {
     delete data.current
     delete data.pageSize
 
-    const res = await Services.api.postDeviceList(data)
+    const res = await Services.api.postDeviceList(data, { showLoading: false, showToast: false })
     if (res) {
       setDeviceList(res.res.list || [])
       return Promise.resolve({

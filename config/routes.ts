@@ -42,11 +42,6 @@ export default [
         path: "/device/status",
         component: "./device/status",
       },
-      {
-        name: "topology",
-        path: "/device/topology",
-        component: "./device/topology",
-      },
     ],
   },
   {

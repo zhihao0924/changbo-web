@@ -2,13 +2,13 @@ import {
   EditOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
-  PlusOutlined
-} from '@ant-design/icons'
-import type { ActionType, ProColumns } from '@ant-design/pro-components'
-import { PageContainer, ProTable } from '@ant-design/pro-components'
-import { Button, Form, Input, message, Modal, Select, Switch } from 'antd'
-import React, { useCallback, useMemo, useRef, useState } from 'react'
-import Services from '@/pages/device/services'
+  PlusOutlined,
+} from "@ant-design/icons"
+import type { ActionType, ProColumns } from "@ant-design/pro-components"
+import { PageContainer, ProTable } from "@ant-design/pro-components"
+import { Button, Form, Input, message, Modal, Select, Switch } from "antd"
+import React, { useCallback, useMemo, useRef, useState } from "react"
+import Services from "@/pages/device/services"
 
 type Columns = API_PostDeviceList.List
 
@@ -45,7 +45,7 @@ const DeviceIndex: React.FC = () => {
     const data = {
       page: params.current,
       limit: params.pageSize,
-      ...params
+      ...params,
     }
     delete data.current
     delete data.pageSize
@@ -56,28 +56,31 @@ const DeviceIndex: React.FC = () => {
       return Promise.resolve({
         total: res.res.total,
         data: res.res.list || [],
-        success: true
+        success: true,
       })
     }
     return {}
   }, [])
 
-  const openModal = useCallback((record: Columns | null = null) => {
-    setCurrentDevice(record)
-    if (record) {
-      form.setFieldsValue({
-        id: record.id,
-        name: record.name,
-        ip: record.ip,
-        position: record.position,
-        type: record.type,
-        is_maintaining: record.is_maintaining
-      })
-    } else {
-      form.resetFields()
-    }
-    setModalVisible(true)
-  }, [form])
+  const openModal = useCallback(
+    (record: Columns | null = null) => {
+      setCurrentDevice(record)
+      if (record) {
+        form.setFieldsValue({
+          id: record.id,
+          name: record.name,
+          ip: record.ip,
+          position: record.position,
+          type: record.type,
+          is_maintaining: record.is_maintaining,
+        })
+      } else {
+        form.resetFields()
+      }
+      setModalVisible(true)
+    },
+    [form],
+  )
 
   const handleCancel = useCallback(() => {
     setModalVisible(false)
@@ -89,7 +92,7 @@ const DeviceIndex: React.FC = () => {
       const values = await form.validateFields()
       setSubmitLoading(true)
       const res = await Services.api.postDeviceSave(values)
-      message.success(res?.msg || (currentDevice ? '更新设备成功' : '新增设备成功'))
+      message.success(res?.msg || (currentDevice ? "更新设备成功" : "新增设备成功"))
       setModalVisible(false)
       form.resetFields()
       actionRef.current?.reload()
@@ -108,10 +111,10 @@ const DeviceIndex: React.FC = () => {
     try {
       const data = {
         id: record.id,
-        is_maintaining: !record.is_maintaining
+        is_maintaining: !record.is_maintaining,
       }
       const res = await Services.api.postToggleMaintaining(data)
-      message.success(res?.msg || '更新设备成功')
+      message.success(res?.msg || "更新设备成功")
       actionRef.current?.reload()
     } catch (error: any) {
       if (error?.errorFields) {
@@ -125,57 +128,52 @@ const DeviceIndex: React.FC = () => {
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
       {
-        title: 'IP地址',
-        align: 'center',
-        dataIndex: 'ip',
+        title: "IP地址",
+        align: "center",
+        dataIndex: "ip",
         search: {
           transform: (value) => ({
-            order_no: value
-          })
-        }
+            order_no: value,
+          }),
+        },
       },
       {
-        key: 'name',
-        title: '设备名称',
-        align: 'center',
-        dataIndex: 'name',
-        hideInSearch: true
+        key: "name",
+        title: "设备名称",
+        align: "center",
+        dataIndex: "name",
+        hideInSearch: true,
       },
       {
-        title: '设备类型',
-        align: 'center',
-        dataIndex: 'type',
-        valueType: 'select',
+        title: "设备类型",
+        align: "center",
+        dataIndex: "type",
+        valueType: "select",
         request: getDeviceTypes,
         render: (_, record) => {
           const findItem = deviceTypes.find((val) => val.key == record.type)
           return findItem?.value
-        }
+        },
       },
       {
-        title: '安装位置',
-        align: 'center',
-        dataIndex: 'position',
-        hideInSearch: true
+        title: "安装位置",
+        align: "center",
+        dataIndex: "position",
+        hideInSearch: true,
       },
       {
-        title: '设备状态',
-        align: 'center',
-        dataIndex: 'status_text',
-        hideInSearch: true
+        title: "设备状态",
+        align: "center",
+        dataIndex: "status_text",
+        hideInSearch: true,
       },
       {
         width: 160,
-        title: '操作',
-        align: 'center',
-        valueType: 'option',
+        title: "操作",
+        align: "center",
+        valueType: "option",
         render: (_, record) => [
-          <Button
-            key="edit"
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => openModal(record)}
-          >
+          <Button key="edit" type="link" icon={<EditOutlined />} onClick={() => openModal(record)}>
             修改
           </Button>,
           <Button
@@ -184,10 +182,10 @@ const DeviceIndex: React.FC = () => {
             icon={record.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
             onClick={() => handleToggleMaintaining(record)}
           >
-            {record.is_maintaining ? '启用' : '停用'}
-          </Button>
-        ]
-      }
+            {record.is_maintaining ? "启用" : "停用"}
+          </Button>,
+        ],
+      },
     ]
   }, [deviceTypes, getDeviceTypes, handleToggleMaintaining, openModal])
 
@@ -200,25 +198,20 @@ const DeviceIndex: React.FC = () => {
         request={getLists}
         rowKey="id"
         pagination={{
-          showSizeChanger: true
+          showSizeChanger: true,
         }}
         search={{
-          labelWidth: 80
+          labelWidth: 80,
         }}
         toolBarRender={() => [
-          <Button
-            key="button"
-            icon={<PlusOutlined />}
-            type="primary"
-            onClick={() => openModal()}
-          >
+          <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => openModal()}>
             添加设备
-          </Button>
+          </Button>,
         ]}
       />
 
       <Modal
-        title={currentDevice ? '修改设备' : '添加设备'}
+        title={currentDevice ? "修改设备" : "添加设备"}
         open={modalVisible}
         onOk={handleSubmit}
         confirmLoading={submitLoading}
@@ -231,7 +224,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item
             name="name"
             label="设备名称"
-            rules={[{ required: true, message: '请输入设备名称' }]}
+            rules={[{ required: true, message: "请输入设备名称" }]}
           >
             <Input />
           </Form.Item>
@@ -239,25 +232,26 @@ const DeviceIndex: React.FC = () => {
             name="ip"
             label="IP地址"
             rules={[
-              { required: true, message: '请输入IP地址' },
+              { required: true, message: "请输入IP地址" },
               {
                 pattern: /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/,
-                message: '请输入有效的IP地址'
-              }
-            ]}>
+                message: "请输入有效的IP地址",
+              },
+            ]}
+          >
             <Input />
           </Form.Item>
           <Form.Item
             name="position"
             label="安装位置"
-            rules={[{ required: true, message: '请输入安装位置' }]}
+            rules={[{ required: true, message: "请输入安装位置" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="type"
             label="设备类型"
-            rules={[{ required: true, message: '请选择设备类型' }]}
+            rules={[{ required: true, message: "请选择设备类型" }]}
           >
             <Select options={deviceTypes.map((item) => ({ label: item.value, value: item.key }))} />
           </Form.Item>

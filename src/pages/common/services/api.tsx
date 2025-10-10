@@ -20,4 +20,3 @@ export async function postUploadImage(
 
   return res
 }
-

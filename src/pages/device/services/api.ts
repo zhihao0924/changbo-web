@@ -111,3 +111,18 @@ export async function postSaveTopologyData(
   })
   return res
 }
+
+export async function postDeviceTypeConfigSave(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeviceTypeConfigSaveData.Result = await postApi(
+    "device/typeConfigSave",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
