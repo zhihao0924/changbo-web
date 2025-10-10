@@ -3,6 +3,7 @@ import { Button, Modal, Form, Input, message, Space, InputNumber } from "antd"
 import Services from "@/pages/device/services"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
 import { forEach } from "lodash"
+import { EditOutlined, SettingOutlined } from "@ant-design/icons"
 
 type Columns = API_PostDeviceList.List
 
@@ -99,18 +100,18 @@ const DeviceTypes: React.FC = () => {
         <Space>
           <Button
             type="primary"
-            // icon={<EditOutlined />}
+            icon={<EditOutlined />}
             onClick={() => {
               setCurrentRecord(record)
               nameForm.setFieldsValue(record)
               setNameModalVisible(true)
             }}
           >
-            修改名称
+            展示名称
           </Button>
           <Button
             type="primary"
-            // icon={<EditOutlined />}
+            icon={<SettingOutlined />}
             onClick={() => {
               setCurrentRecord(record)
               forEach(record?.configs, (item) => {

@@ -21,7 +21,7 @@ export default [
   {
     name: "device",
     path: "/device",
-    icon: "shoppingCart",
+    // icon: "shoppingCart",
     routes: [
       {
         path: "/device",
