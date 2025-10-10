@@ -1,6 +1,6 @@
 import { PageContainer } from "@ant-design/pro-components"
 import { Card, Col, Row, Tag, Progress, Form, Input, Select, Button, Pagination } from "antd"
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState, useRef } from "react"
 import { green } from "@ant-design/colors"
 import Services from "@/pages/device/services"
 
@@ -13,6 +13,22 @@ const DeviceStatus: React.FC = () => {
     total: 0,
   })
   const [form] = Form.useForm()
+  const timerRef = useRef<NodeJS.Timeout>()
+
+  const startPolling = useCallback(() => {
+    // 清除现有定时器
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+    }
+    // 启动新轮询
+    timerRef.current = setInterval(() => {
+      getLists({
+        page: pagination.current,
+        limit: pagination.pageSize,
+        ...form.getFieldsValue(),
+      }) // 标记为轮询请求
+    }, 3000)
+  }, [pagination.current, pagination.pageSize, form])
 
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
@@ -24,16 +40,21 @@ const DeviceStatus: React.FC = () => {
   }, [])
 
   const getLists = useCallback(async (queryParams) => {
+    console.log("请求参数:", JSON.stringify(queryParams, null, 2))
     const res = await Services.api.postDeviceList(queryParams, {
       showLoading: false,
       showToast: false,
     })
+    console.log("响应数据:", res?.res)
     if (res) {
-      setPagination({
-        ...pagination,
-        total: res.res.total,
-      })
       setDeviceList(res.res.list || [])
+      // 仅当不是轮询请求时更新分页状态
+      setPagination((prev) => ({
+        ...prev,
+        current: queryParams.page || 1,
+        pageSize: queryParams.limit,
+        total: res.res.total,
+      }))
       return Promise.resolve({
         total: res.res.total,
         data: res.res.list || [],
@@ -44,19 +65,22 @@ const DeviceStatus: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await getLists({
-          page: pagination.current,
-          limit: pagination.pageSize,
-        })
-      } finally {
+    // 初始加载数据
+    getLists({
+      page: pagination.current,
+      limit: pagination.pageSize,
+      ...form.getFieldsValue(),
+    })
+
+    // 启动轮询
+    startPolling()
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
       }
     }
-    fetchData()
-    const interval = setInterval(fetchData, 1000)
-    return () => clearInterval(interval)
-  }, [pagination.current, pagination.pageSize])
+  }, [pagination.current, pagination.pageSize, form])
 
   useEffect(() => {
     getDeviceTypes()
@@ -180,9 +204,14 @@ const DeviceStatus: React.FC = () => {
           pageSize={pagination.pageSize}
           total={pagination.total}
           onChange={(page, pageSize) => {
-            setPagination({ ...pagination, current: page, pageSize })
+            setPagination({
+              ...pagination,
+              current: page,
+              pageSize: pageSize,
+            })
+            // clearInterval(timerRef.current)
             getLists({
-              page: page,
+              page,
               limit: pageSize,
               ...form.getFieldsValue(),
             })
