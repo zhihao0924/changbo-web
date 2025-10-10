@@ -1,6 +1,6 @@
 import { PageContainer } from "@ant-design/pro-components"
 import { Card, Col, Row, Tag, Progress, Form, Input, Select, Button, Pagination } from "antd"
-import React, { useCallback, useEffect, useState, useRef } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { green } from "@ant-design/colors"
 import Services from "@/pages/device/services"
 
@@ -13,23 +13,6 @@ const DeviceStatus: React.FC = () => {
     total: 0,
   })
   const [form] = Form.useForm()
-  const timerRef = useRef<NodeJS.Timeout>()
-
-  const startPolling = useCallback(() => {
-    // 清除现有定时器
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-    }
-    // 启动新轮询
-    timerRef.current = setInterval(() => {
-      getLists({
-        page: pagination.current,
-        limit: pagination.pageSize,
-        ...form.getFieldsValue(),
-      }) // 标记为轮询请求
-    }, 3000)
-  }, [pagination.current, pagination.pageSize, form])
-
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
     if (res) {
@@ -39,68 +22,74 @@ const DeviceStatus: React.FC = () => {
     return []
   }, [])
 
-  const getLists = useCallback(async (queryParams) => {
-    console.log("请求参数:", JSON.stringify(queryParams, null, 2))
-    const res = await Services.api.postDeviceList(queryParams, {
-      showLoading: false,
-      showToast: false,
-    })
-    console.log("响应数据:", res?.res)
-    if (res) {
-      setDeviceList(res.res.list || [])
-      // 仅当不是轮询请求时更新分页状态
-      setPagination((prev) => ({
-        ...prev,
-        current: queryParams.page || 1,
-        pageSize: queryParams.limit,
-        total: res.res.total,
-      }))
-      return Promise.resolve({
-        total: res.res.total,
-        data: res.res.list || [],
-        success: true,
-      })
-    }
-    return {}
-  }, [])
-
+  const getLists = useCallback(
+    async (queryParams: { page?: number; limit?: number; type?: string; ip?: string }) => {
+      try {
+        const res = await Services.api.postDeviceList(queryParams, {
+          showLoading: false,
+          showToast: false,
+        })
+        if (res?.res) {
+          setDeviceList(res.res.list || [])
+          setPagination({
+            current: queryParams.page || 1,
+            pageSize: queryParams.limit || pagination.pageSize,
+            total: res.res.total || 0,
+          })
+          return {
+            total: res.res.total,
+            data: res.res.list || [],
+            success: true,
+          }
+        }
+        return { success: false }
+      } catch (error) {
+        console.error("Failed to fetch device list:", error)
+        return { success: false }
+      }
+    },
+    [pagination.pageSize],
+  )
   useEffect(() => {
-    // 初始加载数据
-    getLists({
-      page: pagination.current,
-      limit: pagination.pageSize,
-      ...form.getFieldsValue(),
-    })
-
-    // 启动轮询
-    startPolling()
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
+    const fetchData = async () => {
+      try {
+        await Promise.all([
+          getLists({
+            page: pagination.current,
+            limit: pagination.pageSize,
+          }),
+          getDeviceTypes(),
+        ])
+      } catch (error) {
+        console.error("Failed to fetch device data:", error)
       }
     }
-  }, [pagination.current, pagination.pageSize, form])
-
-  useEffect(() => {
-    getDeviceTypes()
-  }, [getDeviceTypes])
+    fetchData()
+  }, [])
 
   const getDeviceTypeName = (typeKey: string) => {
     return deviceTypes.find((type) => type.key === typeKey)?.value || "未知设备"
   }
 
-  const getDeviceStatus = (device: API_PostDeviceList.List) => {
-    if (device.is_maintaining) return { color: "orange", text: "维护中", status: "maintaining" }
+  type DeviceStatus = {
+    color: string
+    text: string
+    status: "online" | "offline" | "maintaining"
+  }
+
+  const getDeviceStatus = (device: API_PostDeviceList.List): DeviceStatus => {
+    if (device.is_maintaining) {
+      return { color: "orange", text: "维护中", status: "maintaining" }
+    }
     return device.voltage > 0
       ? { color: "green", text: "运行中", status: "online" }
       : { color: "red", text: "离线", status: "offline" }
   }
 
-  const onSearch = (values: any) => {
+  const onSearch = (values: { type?: string; ip?: string }) => {
     getLists({
-      page: values.page,
-      limit: values.pageSize,
+      page: 1,
+      limit: pagination.pageSize,
       ...values,
     })
   }
@@ -118,7 +107,14 @@ const DeviceStatus: React.FC = () => {
                   label: type.value,
                   value: type.key,
                 }))}
+                filterOption={(input, option) => (option?.label ?? "").includes(input.trim())}
+                showSearch
               />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item name="ip" label="ip地址">
+              <Input placeholder="请输入ip地址" />
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
@@ -128,8 +124,8 @@ const DeviceStatus: React.FC = () => {
                 onClick={() => {
                   onSearch({
                     ...form.getFieldsValue(),
-                    current: 1,
-                    pageSize: pagination.pageSize,
+                    page: 1,
+                    limit: pagination.pageSize,
                   })
                 }}
               >
@@ -209,11 +205,10 @@ const DeviceStatus: React.FC = () => {
               current: page,
               pageSize: pageSize,
             })
-            // clearInterval(timerRef.current)
             getLists({
+              ...form.getFieldsValue(),
               page,
               limit: pageSize,
-              ...form.getFieldsValue(),
             })
           }}
           pageSizeOptions={[8, 12, 16, 32]}
