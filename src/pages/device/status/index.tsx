@@ -1,5 +1,17 @@
 import { PageContainer } from "@ant-design/pro-components"
-import { Card, Col, Row, Tag, Progress, Form, Input, Select, Button, Pagination } from "antd"
+import {
+  Card,
+  Col,
+  Row,
+  Tag,
+  Progress,
+  Form,
+  Input,
+  Select,
+  Button,
+  Pagination,
+  Switch,
+} from "antd"
 import React, { useCallback, useEffect, useState } from "react"
 import { green } from "@ant-design/colors"
 import Services from "@/pages/device/services"
@@ -13,6 +25,16 @@ const DeviceStatus: React.FC = () => {
     total: 0,
   })
   const [form] = Form.useForm()
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [refreshInterval, setRefreshInterval] = useState(5)
+  const refreshOptions = [
+    { label: "1秒", value: 1 },
+    { label: "3秒", value: 3 },
+    { label: "5秒", value: 5 },
+    { label: "10秒", value: 10 },
+    { label: "30秒", value: 30 },
+    { label: "60秒", value: 60 },
+  ]
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
     if (res) {
@@ -94,6 +116,22 @@ const DeviceStatus: React.FC = () => {
     })
   }
 
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout
+    if (autoRefresh) {
+      intervalId = setInterval(() => {
+        getLists({
+          page: pagination.current,
+          limit: pagination.pageSize,
+          ...form.getFieldsValue(),
+        })
+      }, refreshInterval * 1000)
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+    }
+  }, [autoRefresh, refreshInterval, form, getLists, pagination])
+
   return (
     <PageContainer>
       <Form form={form}>
@@ -131,6 +169,18 @@ const DeviceStatus: React.FC = () => {
               >
                 搜索
               </Button>
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item label="自动刷新">
+              <Switch checked={autoRefresh} onChange={(checked) => setAutoRefresh(checked)} />
+              <Select
+                style={{ width: 80, marginLeft: 8 }}
+                value={refreshInterval}
+                onChange={(value) => setRefreshInterval(value)}
+                options={refreshOptions}
+                disabled={!autoRefresh}
+              />
             </Form.Item>
           </Col>
         </Row>
