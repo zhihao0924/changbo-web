@@ -1,16 +1,15 @@
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useMemo, useRef } from "react"
 import Services from "@/pages/device/services"
 import moment from "moment"
-import { Input, InputNumber } from "antd"
+import DeviceNameSelect from "@/components/DeviceNameSelect"
 
 type Columns = API_PostDeviceList.List
 
 const DeviceLog: React.FC = () => {
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
-  const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
 
   const getLists = useCallback(async (params: any) => {
     const data = {
@@ -37,7 +36,6 @@ const DeviceLog: React.FC = () => {
     const res = await Services.api.postDeviceTypes({})
 
     if (res) {
-      setDeviceTypes(res.res.list)
       return res.res.list
     }
     return []
@@ -77,7 +75,12 @@ const DeviceLog: React.FC = () => {
         dataIndex: "id",
         hideInTable: true,
         valueType: "select",
-        renderFormItem: (text, props) => <InputNumber />,
+        renderFormItem: () => <DeviceNameSelect />,
+        search: {
+          transform: (value) => ({
+            device_id: value,
+          }),
+        },
       },
       {
         title: "设备名称",

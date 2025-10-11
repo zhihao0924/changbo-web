@@ -15,6 +15,7 @@ import {
 import React, { useCallback, useEffect, useState } from "react"
 import { green } from "@ant-design/colors"
 import Services from "@/pages/device/services"
+import DeviceNameSelect from "@/components/DeviceNameSelect"
 
 const DeviceStatus: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
@@ -151,8 +152,8 @@ const DeviceStatus: React.FC = () => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="ip" label="ip地址">
-              <Input placeholder="请输入ip地址" />
+            <Form.Item name="id_list" label="设备名称">
+              <DeviceNameSelect />
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>

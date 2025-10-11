@@ -1,12 +1,12 @@
 import { postApi } from "@/utils/request"
 
 // 上传图片
-export async function postUploadImage(
+export async function postDeviceSelectOptions(
   obj: Record<string, any>,
   extParams?: PassExtParamsDescriptorMore,
 ) {
-  const res: API_PostUploadImage.Result = await postApi(
-    "api/upload",
+  const res: API_PostDeviceSelectOptions.Result = await postApi(
+    "device/selectOptions",
     { ...obj },
     {
       showLoading: true,
