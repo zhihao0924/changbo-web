@@ -30,8 +30,8 @@ declare namespace API_PostDeviceList {
   export interface Configs {
     config_type: number
     config_type_name: string
-    min_value: number
-    max_value: number
+    filter_operator: string
+    val: number
     unit: string
     sort: number
   }

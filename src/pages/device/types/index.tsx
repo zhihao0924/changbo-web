@@ -56,13 +56,12 @@ const DeviceTypes: React.FC = () => {
     try {
       const values = await configForm.validateFields()
 
-      const configs: { config_type: number; min_value: number; max_value: number }[] = []
+      const configs: { config_type: number; val: number }[] = []
       forEach(values.configs, (item, key) => {
-        if (!item.min && !item.max) return
+        if (!item.val) return
         configs.push({
           config_type: parseInt(key),
-          min_value: item.min,
-          max_value: item.max,
+          val: item.val,
         })
       })
       await Services.api.postDeviceTypeConfigSave({
@@ -115,17 +114,8 @@ const DeviceTypes: React.FC = () => {
             onClick={() => {
               setCurrentRecord(record)
               forEach(record?.configs, (item) => {
-                if (item.min_value != undefined) {
-                  configForm.setFieldValue(
-                    ["configs", `${item.config_type}`, "min"],
-                    item.min_value,
-                  )
-                }
-                if (item.max_value != undefined) {
-                  configForm.setFieldValue(
-                    ["configs", `${item.config_type}`, "max"],
-                    item.max_value,
-                  )
+                if (item.val != undefined) {
+                  configForm.setFieldValue(["configs", `${item.config_type}`, "val"], item.val)
                 }
               })
               setConfigNameModalVisible(true)
@@ -214,62 +204,24 @@ const DeviceTypes: React.FC = () => {
           {currentRecord?.configs?.map((item) => {
             return (
               <Form.Item label={item.config_type_name}>
-                <Space>
-                  <Form.Item
-                    name={["configs", `${item.config_type}`, "min"]}
-                    initialValue={item.min_value ?? undefined}
-                    rules={[
-                      {
-                        validator: (_, value) => {
-                          const maxValue = configForm.getFieldValue([
-                            "configs",
-                            item.config_type,
-                            "max",
-                          ])
-                          if (value !== undefined && maxValue !== undefined && value >= maxValue) {
-                            return Promise.reject(`最小值必须小于最大值`)
-                          }
-                          return Promise.resolve()
-                        },
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      step={0.1}
-                      precision={1}
-                      addonBefore="最小"
-                      addonAfter={item.unit}
-                      style={{ width: "100%" }}
-                    />
-                  </Form.Item>
-                  <Form.Item
-                    name={["configs", `${item.config_type}`, "max"]}
-                    initialValue={item.max_value ?? undefined}
-                    rules={[
-                      {
-                        validator: (_, value) => {
-                          const minValue = configForm.getFieldValue([
-                            "configs",
-                            item.config_type,
-                            "min",
-                          ])
-                          if (value !== undefined && minValue !== undefined && value <= minValue) {
-                            return Promise.reject(`最大值必须大于最小值`)
-                          }
-                          return Promise.resolve()
-                        },
-                      },
-                    ]}
-                  >
-                    <InputNumber
-                      step={0.1}
-                      precision={1}
-                      addonBefore="最大"
-                      addonAfter={item.unit}
-                      style={{ width: "100%" }}
-                    />
-                  </Form.Item>
-                </Space>
+                <Form.Item
+                  name={["configs", `${item.config_type}`, "val"]}
+                  initialValue={item.val ?? undefined}
+                >
+                  <InputNumber
+                    step={0.1}
+                    // precision={1}
+                    addonBefore={`${
+                      item.filter_operator === "GT"
+                        ? "大于"
+                        : item.filter_operator === "LT"
+                        ? "小于"
+                        : ""
+                    }`}
+                    addonAfter={item.unit}
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
               </Form.Item>
             )
           })}
