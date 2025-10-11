@@ -7,7 +7,8 @@ export default {
   "menu.device.list": "设备列表",
   "menu.device.types": "设备类型",
   "menu.device.status": "设备拓扑图",
+  "menu.device.logs": "设备日志",
   // "menu.device.topology": "设备拓扑图",
 
-  "app.copyright.produced": "app.copyright.produced",
+  // "app.copyright.produced": "app.copyright.produced",
 }

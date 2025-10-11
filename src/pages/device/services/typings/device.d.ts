@@ -122,3 +122,24 @@ declare namespace API_PostDeviceTypeConfigSaveData {
     res: any
   }
 }
+
+declare namespace API_PostLogList {
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+
+  export interface Res {
+    has_more: number
+    next_page: number
+    total: number
+    list: List[]
+  }
+
+  export interface List {
+    id: number
+    content: string
+    created_at: string
+  }
+}

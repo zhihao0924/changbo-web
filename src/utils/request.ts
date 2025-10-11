@@ -223,7 +223,7 @@ export const request = async (
 
     if (typeof document !== "undefined") {
       extParams.showLoading && message.destroy()
-      let errorInfo = info.msg || "未知错误222"
+      let errorInfo = info.msg || "未知错误"
       extParams.showToast && message.error(errorInfo)
 
       if (info.err == -999999) {

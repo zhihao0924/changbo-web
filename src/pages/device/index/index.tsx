@@ -182,7 +182,7 @@ const DeviceIndex: React.FC = () => {
             icon={record.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
             onClick={() => handleToggleMaintaining(record)}
           >
-            {record.is_maintaining ? "启用" : "停用"}
+            {record.is_maintaining ? "维护结束" : "开始维护"}
           </Button>,
         ],
       },
@@ -199,6 +199,7 @@ const DeviceIndex: React.FC = () => {
         rowKey="id"
         pagination={{
           showSizeChanger: true,
+          size: "default",
         }}
         search={{
           labelWidth: 80,

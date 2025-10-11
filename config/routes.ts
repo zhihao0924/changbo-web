@@ -42,6 +42,11 @@ export default [
         path: "/device/status",
         component: "./device/status",
       },
+      {
+        name: "logs",
+        path: "/device/log",
+        component: "./device/log",
+      },
     ],
   },
   {

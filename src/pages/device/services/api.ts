@@ -126,3 +126,18 @@ export async function postDeviceTypeConfigSave(
   })
   return res
 }
+
+export async function postDeviceLogList(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLogList.Result = await postApi(
+    "device/logList",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}

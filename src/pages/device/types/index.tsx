@@ -210,7 +210,6 @@ const DeviceTypes: React.FC = () => {
                 >
                   <InputNumber
                     step={0.1}
-                    // precision={1}
                     addonBefore={`${
                       item.filter_operator === "GT"
                         ? "大于"

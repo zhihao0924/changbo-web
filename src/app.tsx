@@ -115,11 +115,11 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
   return {
     rightContentRender: () => <RightContent />,
     disableContentMargin: false,
-    footerRender: () => <Footer />,
+    // footerRender: () => <Footer />,
     menuHeaderRender: undefined,
-    menuFooterRender: (menuProps: any) => {
-      return <MenuFooter collapsed={menuProps.collapsed} />
-    },
+    // menuFooterRender: (menuProps: any) => {
+    //   return <MenuFooter collapsed={menuProps.collapsed} />
+    // },
     // waterMarkProps: {
     //   content: initialState?.currentUser?.name,
     //   zIndex: 0,
