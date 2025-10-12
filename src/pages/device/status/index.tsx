@@ -6,7 +6,6 @@ import {
   Tag,
   Progress,
   Form,
-  Input,
   Select,
   Button,
   Pagination,
@@ -152,7 +151,7 @@ const DeviceStatus: React.FC = () => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="id_list" label="设备名称">
+            <Form.Item name="id_list" label="设备编号">
               <DeviceNameSelect />
             </Form.Item>
           </Col>

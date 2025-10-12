@@ -139,7 +139,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "name",
-        title: "设备名称",
+        title: "设备编号",
         align: "center",
         dataIndex: "name",
         hideInSearch: true,
@@ -150,10 +150,10 @@ const DeviceIndex: React.FC = () => {
         dataIndex: "type",
         valueType: "select",
         request: getDeviceTypes,
-        render: (_, record) => {
-          const findItem = deviceTypes.find((val) => val.key == record.type)
-          return findItem?.value
-        },
+        // render: (_, record) => {
+        //   const findItem = deviceTypes.find((val) => val.key == record.type)
+        //   return findItem?.value
+        // },
       },
       {
         title: "安装位置",
@@ -187,7 +187,7 @@ const DeviceIndex: React.FC = () => {
         ],
       },
     ]
-  }, [deviceTypes, getDeviceTypes, handleToggleMaintaining, openModal])
+  }, [getDeviceTypes, handleToggleMaintaining, openModal])
 
   return (
     <PageContainer>
@@ -218,16 +218,16 @@ const DeviceIndex: React.FC = () => {
         confirmLoading={submitLoading}
         onCancel={handleCancel}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form}>
           <Form.Item name="id" hidden>
             <Input />
           </Form.Item>
           <Form.Item
             name="name"
-            label="设备名称"
-            rules={[{ required: true, message: "请输入设备名称" }]}
+            label="设备编号"
+            rules={[{ required: true, message: "请输入设备编号" }]}
           >
-            <Input />
+            <Input readOnly disabled />
           </Form.Item>
           <Form.Item
             name="ip"
@@ -240,7 +240,17 @@ const DeviceIndex: React.FC = () => {
               },
             ]}
           >
-            <Input />
+            <Input
+              onChange={(e) => {
+                const ip = e.target.value
+                if (
+                  /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/.test(ip)
+                ) {
+                  const ipParts = ip.split(".")
+                  form.setFieldsValue({ name: ipParts[3] })
+                }
+              }}
+            />
           </Form.Item>
           <Form.Item
             name="position"
@@ -254,9 +264,9 @@ const DeviceIndex: React.FC = () => {
             label="设备类型"
             rules={[{ required: true, message: "请选择设备类型" }]}
           >
-            <Select options={deviceTypes.map((item) => ({ label: item.value, value: item.key }))} />
+            <Select options={deviceTypes.map((item) => ({ label: item.key, value: item.key }))} />
           </Form.Item>
-          <Form.Item name="is_maintaining" label="是否停用" valuePropName="checked">
+          <Form.Item name="is_maintaining" label="是否维护中" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

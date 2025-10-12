@@ -70,7 +70,7 @@ const DeviceLog: React.FC = () => {
         },
       },
       {
-        title: "设备名称",
+        title: "设备编号",
         align: "center",
         dataIndex: "id",
         hideInTable: true,
@@ -83,15 +83,15 @@ const DeviceLog: React.FC = () => {
         },
       },
       {
-        title: "设备名称",
+        title: "设备编号",
         align: "center",
         dataIndex: "device_name",
         hideInSearch: true,
       },
       {
-        title: "设备名称",
+        title: "日志",
         align: "center",
-        dataIndex: "device_name",
+        dataIndex: "content",
         hideInSearch: true,
       },
       {

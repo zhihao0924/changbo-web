@@ -25,3 +25,12 @@ declare namespace API_USER {
     refresh_after: number
   }
 }
+
+namespace API_PostChangePassword {
+
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+}

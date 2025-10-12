@@ -1,5 +1,5 @@
-import { LogoutOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons"
-import { Avatar, Spin } from "antd"
+import { LogoutOutlined, SettingOutlined, UserOutlined, LockOutlined } from "@ant-design/icons"
+import { Avatar, Spin, Modal, Form, Input, message } from "antd"
 // import type { ItemType } from "antd/lib/menu/hooks/useItems"
 import type { MenuProps } from "antd"
 import { stringify } from "querystring"
@@ -7,6 +7,7 @@ import type { MenuInfo } from "rc-menu/lib/interface"
 import React, { useCallback } from "react"
 import { history, useModel } from "umi"
 import { removeUserInfo } from "@/utils/biz"
+import { changePassword } from "@/pages/user/services/api"
 import { LOGINPATH } from "@/constants"
 import HeaderDropdown from "../HeaderDropdown"
 import styles from "./index.less"
@@ -38,10 +39,32 @@ const loginOut = async () => {
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   const { initialState, setInitialState } = useModel("@@initialState")
+  const [visible, setVisible] = React.useState(false)
+  const [form] = Form.useForm()
+
+  const handleChangePassword = () => {
+    form.validateFields().then(async (values) => {
+      try {
+        await changePassword({
+          oldPassword: values.oldPassword,
+          newPassword: values.newPassword,
+        })
+        message.success("密码修改成功")
+        setVisible(false)
+        form.resetFields()
+      } catch (error) {
+        message.error("密码修改失败")
+      }
+    })
+  }
 
   const onClick: MenuProps["onClick"] = useCallback(
     async (event: MenuInfo) => {
       const { key } = event
+      if (key === "changePassword") {
+        setVisible(true)
+        return
+      }
       if (key === "logout") {
         await setInitialState((s: any) => {
           return {
@@ -99,6 +122,11 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
         ]
       : []),
     {
+      key: "changePassword",
+      icon: <LockOutlined />,
+      label: "修改密码",
+    },
+    {
       key: "logout",
       icon: <LogoutOutlined />,
       label: "退出登录",
@@ -106,12 +134,76 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   ]
 
   return (
-    <HeaderDropdown menu={{ items, onClick }}>
-      <span className={`${styles.action} ${styles.account}`}>
-        <Avatar size="small" className={styles.avatar} icon={<UserOutlined />} alt="avatar" />
-        <span className={`${styles.name} anticon`}>{currentUser.name}</span>
-      </span>
-    </HeaderDropdown>
+    <>
+      <Modal
+        title="修改密码"
+        open={visible}
+        onOk={handleChangePassword}
+        onCancel={() => setVisible(false)}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="oldPassword"
+            label="旧密码"
+            rules={[{ required: true, message: "请输入旧密码" }]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            name="newPassword"
+            label="新密码"
+            rules={[
+              { required: true, message: "请输入新密码" },
+              { min: 8, message: "密码长度至少8位" },
+              {
+                validator: (_, value) => {
+                  // 检查是否包含非法字符
+                  if (/[^a-zA-Z0-9!@#$%^&*]/.test(value)) {
+                    return Promise.reject(new Error("密码只能包含字母、数字和!@#$%^&*"))
+                  }
+
+                  const hasLetter = /[a-zA-Z]/.test(value)
+                  const hasNumber = /\d/.test(value)
+                  const hasPunctuation = /[!@#$%^&*]/.test(value)
+                  const typesCount = [hasLetter, hasNumber, hasPunctuation].filter(Boolean).length
+
+                  if (typesCount >= 2) {
+                    return Promise.resolve()
+                  }
+                  return Promise.reject(new Error("密码需包含字母、数字及!@#$%^&*中的两种及以上"))
+                },
+              },
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="确认密码"
+            dependencies={["newPassword"]}
+            rules={[
+              { required: true, message: "请确认新密码" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("newPassword") === value) {
+                    return Promise.resolve()
+                  }
+                  return Promise.reject(new Error("两次输入的密码不一致"))
+                },
+              }),
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+        </Form>
+      </Modal>
+      <HeaderDropdown menu={{ items, onClick }}>
+        <span className={`${styles.action} ${styles.account}`}>
+          <Avatar size="small" className={styles.avatar} icon={<UserOutlined />} alt="avatar" />
+          <span className={`${styles.name} anticon`}>{currentUser.name}</span>
+        </span>
+      </HeaderDropdown>
+    </>
   )
 }
 

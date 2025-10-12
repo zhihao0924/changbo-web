@@ -1,6 +1,6 @@
 import { postApi } from "@/utils/request"
 
-// 上传图片
+
 export async function postDeviceSelectOptions(
   obj: Record<string, any>,
   extParams?: PassExtParamsDescriptorMore,
@@ -20,3 +20,4 @@ export async function postDeviceSelectOptions(
 
   return res
 }
+

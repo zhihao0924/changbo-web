@@ -24,16 +24,6 @@ declare namespace API_PostDeviceList {
     current: number
     voltage: number
     is_maintaining: boolean
-    configs: Configs[]
-  }
-
-  export interface Configs {
-    config_type: number
-    config_type_name: string
-    filter_operator: string
-    val: number
-    unit: string
-    sort: number
   }
 }
 
@@ -81,6 +71,27 @@ declare namespace API_PostDeviceTypes {
   export interface List {
     key: string
     value: string
+    configs: Configs[]
+    alters: Alters[]
+    shows: Shows[]
+  }
+  export interface Configs {
+    config_type: number
+    config_type_name: string
+    filter_operator: string
+    val: number
+    unit: string
+    sort: number
+  }
+  export interface Alters {
+    config_type: number
+    config_type_name: string
+    is_selected: boolean
+  }
+  export interface Shows {
+    config_type: number
+    config_type_name: string
+    is_selected: boolean
   }
 }
 
@@ -108,6 +119,13 @@ declare namespace API_PostTopologyData {
 }
 
 declare namespace API_PostDeviceTypeSave {
+  export interface Result {
+    err: number
+    msg: string
+    res: any
+  }
+}
+declare namespace API_PostSaveTopologyData {
   export interface Result {
     err: number
     msg: string
