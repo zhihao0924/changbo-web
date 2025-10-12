@@ -297,7 +297,7 @@ const DeviceTypes: React.FC = () => {
                 if (checkedValues.length > maxSelected) {
                   const lastSelected = checkedValues[checkedValues.length - 1]
                   checkedValues = checkedValues.filter((v) => v !== lastSelected)
-                  message.warning(`最多只能选择${maxSelected}个项目`)
+                  message.warning(`展示项目最多只能选择${maxSelected}个`)
                 }
                 alterForm.setFieldValue("shows", checkedValues)
               }}
