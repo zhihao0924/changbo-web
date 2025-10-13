@@ -128,32 +128,30 @@ const DeviceStatus: React.FC = () => {
                 }}
               >
                 <Descriptions column={1}>
-                  {device?.metric_items?.map((metricItem) => {
-                    return (
-                      metricItem.show_in_list && (
-                        <Descriptions.Item
-                          label={metricItem.config_type_name}
-                          key={metricItem.config_type}
-                          style={{ display: "flex", alignItems: "center" }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <Progress
-                              percent={(metricItem.current_val * 100) / metricItem.threshold_val}
-                              steps={10}
-                              size="small"
-                              showInfo={true}
-                              format={() =>
-                                `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
-                              }
-                              strokeColor={
-                                metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
-                              }
-                            />
-                          </div>
-                        </Descriptions.Item>
-                      )
-                    )
-                  })}
+                  {device?.metric_items
+                    ?.filter((metricItem) => metricItem.show_in_list)
+                    .map((metricItem) => (
+                      <Descriptions.Item
+                        label={metricItem.config_type_name}
+                        key={metricItem.config_type}
+                        style={{ display: "flex", alignItems: "center" }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <Progress
+                            percent={(metricItem.current_val * 100) / metricItem.threshold_val}
+                            steps={10}
+                            size="small"
+                            showInfo={true}
+                            format={() =>
+                              `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
+                            }
+                            strokeColor={
+                              metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
+                            }
+                          />
+                        </div>
+                      </Descriptions.Item>
+                    ))}
                 </Descriptions>
               </Card>
             </Col>

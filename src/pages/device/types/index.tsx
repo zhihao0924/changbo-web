@@ -93,7 +93,7 @@ const DeviceTypes: React.FC = () => {
           alters: values.alters,
         })
         .then(() => {
-          message.success(`${currentRecord?.key} 告警配置保存成功`, 1, () => {
+          message.success(`${currentRecord?.value} 告警配置保存成功`, 1, () => {
             setAlterModalVisible(false)
             alterForm.resetFields()
             actionRef.current?.reload()
@@ -113,7 +113,7 @@ const DeviceTypes: React.FC = () => {
           shows: values.shows,
         })
         .then(() => {
-          message.success(`${currentRecord?.key} 展示配置保存成功`, 1, () => {
+          message.success(`${currentRecord?.value} 展示配置保存成功`, 1, () => {
             setShowModalVisible(false)
             showForm.resetFields()
             actionRef.current?.reload()
@@ -142,7 +142,7 @@ const DeviceTypes: React.FC = () => {
       title: "操作",
       key: "action",
       hideInSearch: true,
-      render: (_: any, record: API_PostDeviceTypes.List ) => (
+      render: (_: any, record: API_PostDeviceTypes.List) => (
         <Space>
           <Button
             type="primary"
@@ -318,7 +318,7 @@ const DeviceTypes: React.FC = () => {
         onCancel={() => setAlterModalVisible(false)}
       >
         <Form form={alterForm}>
-          <Form.Item name={"alters"} label={"告警项目"}>
+          <Form.Item name={"alters"}>
             <Checkbox.Group key="alters">
               <Row>
                 {currentRecord?.alters?.map((item) => {
@@ -343,9 +343,9 @@ const DeviceTypes: React.FC = () => {
         onCancel={() => setShowModalVisible(false)}
       >
         <Form form={showForm}>
-          <Form.Item name={"shows"} label={"展示项目"}>
+          <Form.Item name={"shows"} labelCol={{ span: 6 }}>
             <Checkbox.Group
-              key="shows"
+              key={"shows"}
               onChange={(checkedValues) => {
                 const maxSelected = 3
                 if (checkedValues.length > maxSelected) {
