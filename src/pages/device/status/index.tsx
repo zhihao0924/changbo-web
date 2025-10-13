@@ -1,7 +1,6 @@
 import { PageContainer } from "@ant-design/pro-components"
 import { Card, Col, Row, Tag, Progress, Form, Select, Modal, Descriptions } from "antd"
 import React, { useCallback, useEffect, useState } from "react"
-import { green } from "@ant-design/colors"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 const pageSize = 300
@@ -10,7 +9,7 @@ const DeviceStatus: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
   const [deviceList, setDeviceList] = useState<API_PostDeviceList.List[]>([])
   const [form] = Form.useForm()
-  const [deviceKey, setDeviceKey] = useState<number | null>(null)
+  const [deviceId, setDeviceId] = useState<number | null>(null)
   const [showModalVisible, setShowModalVisible] = useState(false)
 
   const getDeviceTypes = useCallback(async () => {
@@ -45,25 +44,6 @@ const DeviceStatus: React.FC = () => {
     },
     [],
   )
-
-  const getDeviceTypeName = (typeKey: string) => {
-    return deviceTypes.find((type) => type.key === typeKey)?.value || "未知设备"
-  }
-
-  type DeviceStatus = {
-    color: string
-    text: string
-    status: "online" | "offline" | "maintaining"
-  }
-
-  const getDeviceStatus = (device: API_PostDeviceList.List): DeviceStatus => {
-    if (device.is_maintaining) {
-      return { color: "orange", text: "维护中", status: "maintaining" }
-    }
-    return device.voltage > 0
-      ? { color: "green", text: "运行中", status: "online" }
-      : { color: "red", text: "离线", status: "offline" }
-  }
 
   // const onSearch = (values: { type?: string; ip?: string }) => {
   //   getLists({
@@ -137,62 +117,44 @@ const DeviceStatus: React.FC = () => {
       </Form>
       <Row gutter={[24, 24]}>
         {deviceList?.map((device) => {
-          const status = getDeviceStatus(device)
           return (
             <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
               <Card
-                title={`编号：${device.name}`}
-                extra={<Tag color={status.color}>{status.text}</Tag>}
+                title={`${device.type_name}:${device.name}`}
+                extra={<Tag color={device.tag_color}>{device.status_text}</Tag>}
                 onDoubleClick={() => {
-                  setDeviceKey(device.id)
+                  setDeviceId(device.id)
                   setShowModalVisible(true)
                 }}
               >
-                <>
-                  设备位置: {device.position || "-"}
-                  <br />
-                  电压:
-                  {status.status === "online" ? (
-                    <Progress
-                      percent={device.voltage * 8}
-                      steps={10}
-                      size="small"
-                      strokeColor={green[6]}
-                      showInfo={true}
-                      format={(percent) => `${((percent ?? 0) / 8).toFixed(2)}V`}
-                    />
-                  ) : (
-                    <>-</>
-                  )}
-                  <br />
-                  电流:{" "}
-                  {status.status === "online" ? (
-                    <Progress
-                      percent={device.current * 200}
-                      steps={10}
-                      size="small"
-                      strokeColor={green[6]}
-                      showInfo={true}
-                      format={(percent) => `${((percent ?? 0) / 200).toFixed(2)}A`}
-                    />
-                  ) : (
-                    <>-</>
-                  )}
-                  <br />
-                  温度:
-                  {status.status === "online" ? (
-                    <Progress
-                      percent={device.temperature * 2}
-                      steps={10}
-                      size="small"
-                      strokeColor={green[6]}
-                      showInfo={true}
-                      format={(percent) => `${((percent ?? 0) / 2).toFixed(2)}℃`}
-                    />
-                  ) : (
-                    <>-</>
-                  )}
-                </>{" "}
+                <Descriptions column={1}>
+                  {device?.metric_items?.map((metricItem) => {
+                    return (
+                      metricItem.show_in_list && (
+                        <Descriptions.Item
+                          label={metricItem.config_type_name}
+                          key={metricItem.config_type}
+                          style={{ display: "flex", alignItems: "center" }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <Progress
+                              percent={(metricItem.current_val * 100) / metricItem.threshold_val}
+                              steps={10}
+                              size="small"
+                              showInfo={true}
+                              format={() =>
+                                `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
+                              }
+                              strokeColor={
+                                metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
+                              }
+                            />
+                          </div>
+                        </Descriptions.Item>
+                      )
+                    )
+                  })}
+                </Descriptions>
               </Card>
             </Col>
           )
@@ -206,14 +168,37 @@ const DeviceStatus: React.FC = () => {
         footer={null}
       >
         <Descriptions column={1} key={1}>
-          {deviceList.map((device) => {
-            if (device.id === deviceKey) {
-              return (
-                <Descriptions.Item label="设备编号" key={1}>
-                  {device.name}
-                </Descriptions.Item>
-              )
-            }
+          <Descriptions.Item label="设备编号">
+            {deviceList.find((d) => d.id === deviceId)?.name}
+          </Descriptions.Item>
+          {deviceList?.map((device) => {
+            return (
+              device.id === deviceId &&
+              device.metric_items?.map((metricItem) => {
+                return (
+                  <Descriptions.Item
+                    label={metricItem.config_type_name}
+                    key={metricItem.config_type}
+                    style={{ display: "flex", alignItems: "center" }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <Progress
+                        percent={(metricItem.current_val * 100) / metricItem.threshold_val}
+                        steps={10}
+                        size="small"
+                        showInfo={true}
+                        format={() =>
+                          `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
+                        }
+                        strokeColor={
+                          metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
+                        }
+                      />
+                    </div>
+                  </Descriptions.Item>
+                )
+              })
+            )
           })}
         </Descriptions>
       </Modal>

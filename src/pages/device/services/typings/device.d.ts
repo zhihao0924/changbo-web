@@ -18,12 +18,21 @@ declare namespace API_PostDeviceList {
     name: string
     position: string
     type: string
+    type_name: string
     status: bigint
     status_text: string
-    temperature: number
-    current: number
-    voltage: number
-    is_maintaining: boolean
+    tag_color: string
+    metric_items: MetricItems[]
+  }
+
+  export interface MetricItems {
+    //
+    config_type: number
+    config_type_name: string
+    current_val: number
+    show_in_list: string
+    unit: string
+    threshold_val: number
   }
 }
 
