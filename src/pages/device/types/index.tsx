@@ -15,6 +15,8 @@ const DeviceTypes: React.FC = () => {
   const [configModalVisible, setConfigModalVisible] = useState(false)
   const [alterForm] = Form.useForm()
   const [alterModalVisible, setAlterModalVisible] = useState(false)
+  const [showForm] = Form.useForm()
+  const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
 
   const getDeviceTypes = useCallback(async () => {
@@ -65,15 +67,18 @@ const DeviceTypes: React.FC = () => {
           val: item.val,
         })
       })
-      await Services.api.postDeviceTypeConfigSave({
-        type: currentRecord?.key,
-        configs: configs,
-      })
-      message.success("保存成功", 1, () => {
-        setConfigModalVisible(false)
-        configForm.resetFields()
-        actionRef.current?.reload()
-      })
+      await Services.api
+        .postDeviceTypeConfigSave({
+          type: currentRecord?.key,
+          configs: configs,
+        })
+        .then(() => {
+          message.success("保存成功", 1, () => {
+            setConfigModalVisible(false)
+            configForm.resetFields()
+            actionRef.current?.reload()
+          })
+        })
     } catch (error) {
       console.error("操作失败:", error)
     }
@@ -81,17 +86,40 @@ const DeviceTypes: React.FC = () => {
 
   const handleAlterSubmit = async () => {
     try {
-      // const values = await nameForm.validateFields()
-      // const res = await Services.api.postDeviceTypeSave({
-      //   ...currentRecord,
-      //   type: values.key,
-      //   show_type: values.value,
-      // })
-      message.success(currentRecord ? "更新设备类型成功" : "新增设备类型成功", 1, () => {
-        setAlterModalVisible(false)
-        alterForm.resetFields()
-        actionRef.current?.reload()
-      })
+      const values = await alterForm.validateFields()
+      await Services.api
+        .postDeviceTypeAlterSave({
+          type: currentRecord?.key,
+          alters: values.alters,
+        })
+        .then(() => {
+          message.success(`${currentRecord?.key} 告警配置保存成功`, 1, () => {
+            setAlterModalVisible(false)
+            alterForm.resetFields()
+            actionRef.current?.reload()
+          })
+          return {}
+        })
+    } catch (error) {
+      console.error("操作失败:", error)
+    }
+  }
+  const handleShowSubmit = async () => {
+    try {
+      const values = await showForm.validateFields()
+      await Services.api
+        .postDeviceTypeShowSave({
+          type: currentRecord?.key,
+          shows: values.shows,
+        })
+        .then(() => {
+          message.success(`${currentRecord?.key} 展示配置保存成功`, 1, () => {
+            setShowModalVisible(false)
+            showForm.resetFields()
+            actionRef.current?.reload()
+          })
+          return {}
+        })
     } catch (error) {
       console.error("操作失败:", error)
     }
@@ -114,7 +142,7 @@ const DeviceTypes: React.FC = () => {
       title: "操作",
       key: "action",
       hideInSearch: true,
-      render: (_: any, record: React.SetStateAction<API_PostDeviceTypes.List | null>) => (
+      render: (_: any, record: API_PostDeviceTypes.List ) => (
         <Space>
           <Button
             type="primary"
@@ -153,29 +181,30 @@ const DeviceTypes: React.FC = () => {
                   alterData.push(item.config_type)
                 }
               })
+
+              alterForm.setFieldsValue({ alters: alterData })
+              setAlterModalVisible(true)
+            }}
+          >
+            告警
+          </Button>
+          <Button
+            type="primary"
+            // icon={<SettingOutlined />}
+            onClick={() => {
+              setCurrentRecord(record)
               const showData: any[] = []
               forEach(record?.shows, (item) => {
                 if (item.is_selected) {
                   showData.push(item.config_type)
                 }
               })
-              alterForm.setFieldsValue({ alters: alterData, shows: showData })
-              setAlterModalVisible(true)
+              showForm.setFieldsValue({ shows: showData })
+              setShowModalVisible(true)
             }}
           >
-            告警
+            展示
           </Button>
-          {/*<Button*/}
-          {/*  type="primary"*/}
-          {/*  // icon={<SettingOutlined />}*/}
-          {/*  onClick={() => {*/}
-          {/*    setCurrentRecord(record)*/}
-          {/*    nameForm.setFieldsValue(record)*/}
-          {/*    setNameModalVisible(true)*/}
-          {/*  }}*/}
-          {/*>*/}
-          {/* 展示 */}
-          {/*</Button>*/}
         </Space>
       ),
     },
@@ -283,27 +312,16 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.value || currentRecord?.key}-项目`}
+        title={`${currentRecord?.value || currentRecord?.key}-告警设置`}
         open={alterModalVisible}
         onOk={handleAlterSubmit}
         onCancel={() => setAlterModalVisible(false)}
       >
         <Form form={alterForm}>
-          <Form.Item name={"shows"} label={"展示项目"}>
-            <Checkbox.Group
-              key="shows"
-              onChange={(checkedValues) => {
-                const maxSelected = 3
-                if (checkedValues.length > maxSelected) {
-                  const lastSelected = checkedValues[checkedValues.length - 1]
-                  checkedValues = checkedValues.filter((v) => v !== lastSelected)
-                  message.warning(`展示项目最多只能选择${maxSelected}个`)
-                }
-                alterForm.setFieldValue("shows", checkedValues)
-              }}
-            >
+          <Form.Item name={"alters"} label={"告警项目"}>
+            <Checkbox.Group key="alters">
               <Row>
-                {currentRecord?.shows?.map((item) => {
+                {currentRecord?.alters?.map((item) => {
                   return (
                     <Col span={8} key={item.config_type}>
                       <Checkbox key={item.config_type} value={item.config_type}>
@@ -315,10 +333,31 @@ const DeviceTypes: React.FC = () => {
               </Row>
             </Checkbox.Group>
           </Form.Item>
-          <Form.Item name={"alters"} label={"告警项目"}>
-            <Checkbox.Group key="alters">
+        </Form>
+      </Modal>
+
+      <Modal
+        title={`${currentRecord?.value || currentRecord?.key}-展示设置`}
+        open={showModalVisible}
+        onOk={handleShowSubmit}
+        onCancel={() => setShowModalVisible(false)}
+      >
+        <Form form={showForm}>
+          <Form.Item name={"shows"} label={"展示项目"}>
+            <Checkbox.Group
+              key="shows"
+              onChange={(checkedValues) => {
+                const maxSelected = 3
+                if (checkedValues.length > maxSelected) {
+                  const lastSelected = checkedValues[checkedValues.length - 1]
+                  checkedValues = checkedValues.filter((v) => v !== lastSelected)
+                  message.warning(`展示项目最多只能选择${maxSelected}个`)
+                }
+                showForm.setFieldValue("shows", checkedValues)
+              }}
+            >
               <Row>
-                {currentRecord?.alters?.map((item) => {
+                {currentRecord?.shows?.map((item) => {
                   return (
                     <Col span={8} key={item.config_type}>
                       <Checkbox key={item.config_type} value={item.config_type}>

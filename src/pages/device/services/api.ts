@@ -65,6 +65,7 @@ export async function postDeviceTypes(
   })
   return res
 }
+postDeviceTypeSave
 
 // 获取设备类型
 export async function postDeviceTypeSave(
@@ -118,6 +119,36 @@ export async function postDeviceTypeConfigSave(
 ) {
   const res: API_PostDeviceTypeConfigSaveData.Result = await postApi(
     "device/typeConfigSave",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postDeviceTypeAlterSave(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeviceTypeAlterSaveData.Result = await postApi(
+    "device/typeAlterSave",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postDeviceTypeShowSave(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeviceTypeShowSaveData.Result = await postApi(
+    "device/typeShowSave",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {

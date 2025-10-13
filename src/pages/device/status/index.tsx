@@ -1,16 +1,5 @@
 import { PageContainer } from "@ant-design/pro-components"
-import {
-  Card,
-  Col,
-  Row,
-  Tag,
-  Progress,
-  Form,
-  Select,
-  Button,
-  Pagination,
-  Switch,
-} from "antd"
+import { Card, Col, Row, Tag, Progress, Form, Select, Button, Pagination, Switch } from "antd"
 import React, { useCallback, useEffect, useState } from "react"
 import { green } from "@ant-design/colors"
 import Services from "@/pages/device/services"
@@ -205,7 +194,7 @@ const DeviceStatus: React.FC = () => {
                       size="small"
                       strokeColor={green[6]}
                       showInfo={true}
-                      format={(percent) => `${(percent / 8 ?? 0).toFixed(2)}V`}
+                      format={(percent) => `${((percent ?? 0) / 8).toFixed(2)}V`}
                     />
                   ) : (
                     <>-</>
@@ -219,7 +208,7 @@ const DeviceStatus: React.FC = () => {
                       size="small"
                       strokeColor={green[6]}
                       showInfo={true}
-                      format={(percent) => `${(percent / 200 ?? 0).toFixed(2)}A`}
+                      format={(percent) => `${((percent ?? 0) / 200).toFixed(2)}A`}
                     />
                   ) : (
                     <>-</>
@@ -233,7 +222,7 @@ const DeviceStatus: React.FC = () => {
                       size="small"
                       strokeColor={green[6]}
                       showInfo={true}
-                      format={(percent) => `${(percent / 2 ?? 0).toFixed(2)}℃`}
+                      format={(percent) => `${((percent ?? 0) / 2).toFixed(2)}℃`}
                     />
                   ) : (
                     <>-</>

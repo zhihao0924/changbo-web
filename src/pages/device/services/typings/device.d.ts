@@ -141,6 +141,22 @@ declare namespace API_PostDeviceTypeConfigSaveData {
   }
 }
 
+declare namespace API_PostDeviceTypeAlterSaveData {
+  export interface Result {
+    err: number
+    msg: string
+    res: any
+  }
+}
+
+declare namespace API_PostDeviceTypeShowSaveData {
+  export interface Result {
+    err: number
+    msg: string
+    res: any
+  }
+}
+
 declare namespace API_PostLogList {
   export interface Result {
     err: number
