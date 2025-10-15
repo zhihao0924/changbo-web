@@ -19,6 +19,11 @@ export default [
     component: "./user/callback",
   },
   {
+    name: "dashboard",
+    path: "/dashboard",
+    component: "./dashboard",
+  },
+  {
     name: "device",
     path: "/device",
     // icon: "shoppingCart",
@@ -51,7 +56,7 @@ export default [
   },
   {
     path: "/",
-    redirect: "/device/index",
+    redirect: "/dashboard",
   },
   {
     component: "./404",
