@@ -67,6 +67,9 @@ const DeviceLog: React.FC = () => {
         render: (_, row) => {
           return row.device_type_alias
         },
+        fieldProps: {
+          showSearch: true,
+        },
       },
       {
         title: "设备编号",

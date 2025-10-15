@@ -162,6 +162,9 @@ const DeviceIndex: React.FC = () => {
         render: (_, record) => {
           return `${record.device_type_group}[${record.device_type}]`
         },
+        fieldProps: {
+          showSearch: true,
+        },
       },
       {
         title: "安装位置",
@@ -273,10 +276,11 @@ const DeviceIndex: React.FC = () => {
             rules={[{ required: true, message: "请选择设备类型" }]}
           >
             <Select
-              options={deviceTypes.map((item) => ({
-                label: `${item.device_type_group}[${item.device_type}]`,
-                value: item.id,
-              }))}
+              options={deviceTypes}
+              showSearch={true}
+              filterOption={(inputValue, option) => {
+                return option?.label.includes(inputValue)
+              }}
             />
           </Form.Item>
           <Form.Item name="is_maintaining" label="维护状态" valuePropName="checked">
