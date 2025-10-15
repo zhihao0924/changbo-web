@@ -58,14 +58,18 @@ const DeviceLog: React.FC = () => {
           const res = await getDeviceTypes()
           return res.map((item) => {
             return {
-              value: item.key,
-              label: item.value,
+              value: item.id,
+              label: `${
+                item.device_type_alias
+                  ? item.device_type_alias
+                  : item.device_type_group + "[" + item.device_type + "]"
+              }`,
             }
           })
         },
         search: {
           transform: (value) => ({
-            device_type: value,
+            device_type_id: value,
           }),
         },
       },

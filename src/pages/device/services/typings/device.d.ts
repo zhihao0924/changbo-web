@@ -17,11 +17,15 @@ declare namespace API_PostDeviceList {
     ip: string
     name: string
     position: string
-    type: string
-    type_name: string
+    device_type_group: string
+    device_type_id: number
+    device_type: string
+    device_type_alias: string
     status: bigint
     status_text: string
     tag_color: string
+    is_maintaining: boolean
+    is_online: boolean
     metric_items: MetricItems[]
   }
 
@@ -78,8 +82,10 @@ declare namespace API_PostDeviceTypes {
   }
 
   export interface List {
-    key: string
-    value: string
+    id: number
+    device_type_group: string
+    device_type: string
+    device_type_alias: string
     configs: Configs[]
     alters: Alters[]
     shows: Shows[]

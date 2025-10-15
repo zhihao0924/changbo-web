@@ -38,9 +38,10 @@ const DeviceTypes: React.FC = () => {
       const values = await nameForm.validateFields()
       const res = await Services.api.postDeviceTypeSave({
         ...currentRecord,
-        type: values.key,
-        show_type: values.value,
+        device_type: values.device_type,
+        device_type_alias: values.device_type_alias,
       })
+
       message.success(
         res?.msg || (currentRecord ? "更新设备类型成功" : "新增设备类型成功"),
         1,
@@ -69,7 +70,7 @@ const DeviceTypes: React.FC = () => {
       })
       await Services.api
         .postDeviceTypeConfigSave({
-          type: currentRecord?.key,
+          device_type_id: currentRecord?.id,
           configs: configs,
         })
         .then(() => {
@@ -89,11 +90,11 @@ const DeviceTypes: React.FC = () => {
       const values = await alterForm.validateFields()
       await Services.api
         .postDeviceTypeAlterSave({
-          type: currentRecord?.key,
+          type: currentRecord?.id,
           alters: values.alters,
         })
         .then(() => {
-          message.success(`${currentRecord?.value} 告警配置保存成功`, 1, () => {
+          message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
             setAlterModalVisible(false)
             alterForm.resetFields()
             actionRef.current?.reload()
@@ -109,11 +110,11 @@ const DeviceTypes: React.FC = () => {
       const values = await showForm.validateFields()
       await Services.api
         .postDeviceTypeShowSave({
-          type: currentRecord?.key,
+          device_type_id: currentRecord?.id,
           shows: values.shows,
         })
         .then(() => {
-          message.success(`${currentRecord?.value} 展示配置保存成功`, 1, () => {
+          message.success(`${currentRecord?.device_type} 展示配置保存成功`, 1, () => {
             setShowModalVisible(false)
             showForm.resetFields()
             actionRef.current?.reload()
@@ -128,14 +129,17 @@ const DeviceTypes: React.FC = () => {
   const columns = [
     {
       title: "设备类型",
-      dataIndex: "key",
-      key: "key",
+      dataIndex: "device_type",
+      key: "device_type",
       hideInSearch: true,
+      render: (_: any, row: { device_type_group: any; device_type: any }) => {
+        return `${row.device_type_group}[${row.device_type}]`
+      },
     },
     {
       title: "类型别名",
-      dataIndex: "value",
-      key: "value",
+      dataIndex: "device_type_alias",
+      key: "device_type_alias",
       hideInSearch: true,
     },
     {
@@ -255,11 +259,8 @@ const DeviceTypes: React.FC = () => {
         onCancel={() => setNameModalVisible(false)}
       >
         <Form form={nameForm}>
-          <Form.Item hidden={true} name="id" label="设备类型ID" key="id">
-            <Input />
-          </Form.Item>
           <Form.Item
-            name="key"
+            name="device_type"
             label="设备类型"
             hidden={true}
             rules={[{ required: true, message: "请输入设备类型名称" }]}
@@ -267,10 +268,10 @@ const DeviceTypes: React.FC = () => {
             <Input readOnly={true} />
           </Form.Item>
           <Form.Item
-            name="value"
+            name="device_type_alias"
             label="类型别名"
             rules={[{ required: true, message: "请输入类型别名" }]}
-            key={"value"}
+            key={"device_type_alias"}
           >
             <Input />
           </Form.Item>
@@ -278,7 +279,7 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.value || currentRecord?.key}-阈值设置`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} 设置`}
         open={configModalVisible}
         onOk={handleConfigSubmit}
         onCancel={() => setConfigModalVisible(false)}
@@ -312,7 +313,7 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.value || currentRecord?.key}-告警设置`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} 设置`}
         open={alterModalVisible}
         onOk={handleAlterSubmit}
         onCancel={() => setAlterModalVisible(false)}
@@ -337,7 +338,7 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.value || currentRecord?.key}-展示设置`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} 设置`}
         open={showModalVisible}
         onOk={handleShowSubmit}
         onCancel={() => setShowModalVisible(false)}

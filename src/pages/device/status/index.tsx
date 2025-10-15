@@ -79,13 +79,17 @@ const DeviceStatus: React.FC = () => {
       <Form form={form}>
         <Row gutter={[24, 24]}>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="type" label="设备类型">
+            <Form.Item name="device_type_id" label="设备类型">
               <Select
                 placeholder="请选择类型"
                 allowClear
                 options={deviceTypes.map((type) => ({
-                  label: type.value,
-                  value: type.key,
+                  label: `${
+                    type.device_type_alias
+                      ? type.device_type_alias
+                      : type.device_type_group + "[" + type.device_type + "]"
+                  }`,
+                  value: type.id,
                 }))}
                 filterOption={(input, option) => (option?.label ?? "").includes(input.trim())}
                 showSearch
@@ -120,7 +124,11 @@ const DeviceStatus: React.FC = () => {
           return (
             <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
               <Card
-                title={`${device.type_name}:${device.name}`}
+                title={`${
+                  device.device_type_alias
+                    ? device.device_type_alias
+                    : device.device_type_group + "[" + device.device_type + "]"
+                }:${device.name}`}
                 extra={<Tag color={device.tag_color}>{device.status_text}</Tag>}
                 onDoubleClick={() => {
                   setDeviceId(device.id)
@@ -166,6 +174,9 @@ const DeviceStatus: React.FC = () => {
         footer={null}
       >
         <Descriptions column={1} key={1}>
+          <Descriptions.Item label="设备类型">
+            {deviceList.find((d) => d.id === deviceId)?.device_type_alias}
+          </Descriptions.Item>
           <Descriptions.Item label="设备编号">
             {deviceList.find((d) => d.id === deviceId)?.name}
           </Descriptions.Item>

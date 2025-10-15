@@ -65,7 +65,6 @@ export async function postDeviceTypes(
   })
   return res
 }
-postDeviceTypeSave
 
 // 获取设备类型
 export async function postDeviceTypeSave(

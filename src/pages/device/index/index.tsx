@@ -17,7 +17,7 @@ type CreateFormValues = {
   name: string
   ip: string
   position: string
-  type: string
+  device_type_id: number
   is_maintaining: boolean
 }
 
@@ -35,8 +35,15 @@ const DeviceIndex: React.FC = () => {
     const res = await Services.api.postDeviceTypes({})
 
     if (res) {
-      setDeviceTypes(res.res.list)
-      return res.res.list
+      const enums: any[] = []
+      res.res.list.forEach((item) => {
+        enums.push({
+          value: item.id,
+          label: `${item.device_type_group}[${item.device_type}]`,
+        })
+      })
+      setDeviceTypes(enums)
+      return enums
     }
     return []
   }, [])
@@ -67,12 +74,14 @@ const DeviceIndex: React.FC = () => {
       setCurrentDevice(record)
       if (record) {
         form.setFieldsValue({
-          id: record.id,
-          name: record.name,
-          ip: record.ip,
-          position: record.position,
-          type: record.type,
-          is_maintaining: record.is_maintaining,
+          ...record,
+          // id: record.id,
+          // name: record.name,
+          // ip: record.ip,
+          // position: record.position,
+          // device_type_id: record.device_type_id,
+          // is_maintaining: record.is_maintaining,
+          // is_online:record.is_online
         })
       } else {
         form.resetFields()
@@ -147,13 +156,12 @@ const DeviceIndex: React.FC = () => {
       {
         title: "设备类型",
         align: "center",
-        dataIndex: "type",
+        dataIndex: "device_type_id",
         valueType: "select",
         request: getDeviceTypes,
-        // render: (_, record) => {
-        //   const findItem = deviceTypes.find((val) => val.key == record.type)
-        //   return findItem?.value
-        // },
+        render: (_, record) => {
+          return `${record.device_type_group}[${record.device_type}]`
+        },
       },
       {
         title: "安装位置",
@@ -260,13 +268,21 @@ const DeviceIndex: React.FC = () => {
             <Input />
           </Form.Item>
           <Form.Item
-            name="type"
+            name="device_type_id"
             label="设备类型"
             rules={[{ required: true, message: "请选择设备类型" }]}
           >
-            <Select options={deviceTypes.map((item) => ({ label: item.key, value: item.key }))} />
+            <Select
+              options={deviceTypes.map((item) => ({
+                label: `${item.device_type_group}[${item.device_type}]`,
+                value: item.id,
+              }))}
+            />
           </Form.Item>
-          <Form.Item name="is_maintaining" label="是否维护中" valuePropName="checked">
+          <Form.Item name="is_maintaining" label="维护状态" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+          <Form.Item name="is_online" label="在线状态" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
