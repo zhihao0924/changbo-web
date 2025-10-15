@@ -1,6 +1,6 @@
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import React, { useCallback, useMemo, useRef } from "react"
+import React, { useCallback, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
@@ -36,7 +36,16 @@ const DeviceLog: React.FC = () => {
     const res = await Services.api.postDeviceTypes({})
 
     if (res) {
-      return res.res.list
+      const enums: any[] = []
+      res.res.list.forEach((item) => {
+        enums.push({
+          value: item.id,
+          label: item.device_type_alias
+            ? item.device_type_alias
+            : `${item.device_type_group}[${item.device_type}]`,
+        })
+      })
+      return enums
     }
     return []
   }, [])
@@ -52,25 +61,11 @@ const DeviceLog: React.FC = () => {
       {
         title: "设备类型",
         align: "center",
-        dataIndex: "device_type_name",
+        dataIndex: "device_type_id",
         valueType: "select",
-        request: async () => {
-          const res = await getDeviceTypes()
-          return res.map((item) => {
-            return {
-              value: item.id,
-              label: `${
-                item.device_type_alias
-                  ? item.device_type_alias
-                  : item.device_type_group + "[" + item.device_type + "]"
-              }`,
-            }
-          })
-        },
-        search: {
-          transform: (value) => ({
-            device_type_id: value,
-          }),
+        request: getDeviceTypes,
+        render: (_, row) => {
+          return row.device_type_alias
         },
       },
       {
