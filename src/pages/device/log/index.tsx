@@ -42,7 +42,8 @@ const DeviceLog: React.FC = () => {
           value: item.id,
           label: item.device_type_alias
             ? item.device_type_alias
-            : `${item.device_type_group}[${item.device_type}]`,
+            : // : `${item.device_type_group}[${item.device_type}]`,
+              item.device_type,
         })
       })
       return enums

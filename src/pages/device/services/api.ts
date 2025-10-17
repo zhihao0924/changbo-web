@@ -127,12 +127,12 @@ export async function postDeviceTypeConfigSave(
   return res
 }
 
-export async function postDeviceTypeAlterSave(
+export async function postDeviceTypeAlarmSave(
   obj: Record<string, any>,
   extParams?: PassExtParamsDescriptorMore,
 ) {
-  const res: API_PostDeviceTypeAlterSaveData.Result = await postApi(
-    "device/typeAlterSave",
+  const res: API_PostDeviceTypeAlarmSaveData.Result = await postApi(
+    "device/typeAlarmSave",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {

@@ -13,8 +13,8 @@ const DeviceTypes: React.FC = () => {
   const [nameModalVisible, setNameModalVisible] = useState(false)
   const [configForm] = Form.useForm()
   const [configModalVisible, setConfigModalVisible] = useState(false)
-  const [alterForm] = Form.useForm()
-  const [alterModalVisible, setAlterModalVisible] = useState(false)
+  const [alarmForm] = Form.useForm()
+  const [alarmModalVisible, setAlarmModalVisible] = useState(false)
   const [showForm] = Form.useForm()
   const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
@@ -85,18 +85,18 @@ const DeviceTypes: React.FC = () => {
     }
   }
 
-  const handleAlterSubmit = async () => {
+  const handleAlarmSubmit = async () => {
     try {
-      const values = await alterForm.validateFields()
+      const values = await alarmForm.validateFields()
       await Services.api
-        .postDeviceTypeAlterSave({
+        .postDeviceTypeAlarmSave({
           type: currentRecord?.id,
           alters: values.alters,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
-            setAlterModalVisible(false)
-            alterForm.resetFields()
+            setAlarmModalVisible(false)
+            alarmForm.resetFields()
             actionRef.current?.reload()
           })
           return {}
@@ -111,7 +111,8 @@ const DeviceTypes: React.FC = () => {
       await Services.api
         .postDeviceTypeShowSave({
           device_type_id: currentRecord?.id,
-          shows: values.shows,
+          show_in_list: values.show_in_list,
+          show_in_detail: values.show_in_detail,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 展示配置保存成功`, 1, () => {
@@ -128,13 +129,16 @@ const DeviceTypes: React.FC = () => {
 
   const columns = [
     {
+      title: "设备名称",
+      dataIndex: "device_type_group",
+      key: "device_type_group",
+      hideInSearch: true,
+    },
+    {
       title: "设备类型",
       dataIndex: "device_type",
       key: "device_type",
       hideInSearch: true,
-      render: (_: any, row: { device_type_group: any; device_type: any }) => {
-        return `${row.device_type_group}[${row.device_type}]`
-      },
     },
     {
       title: "类型别名",
@@ -186,8 +190,8 @@ const DeviceTypes: React.FC = () => {
                 }
               })
 
-              alterForm.setFieldsValue({ alters: alterData })
-              setAlterModalVisible(true)
+              alarmForm.setFieldsValue({ alters: alterData })
+              setAlarmModalVisible(true)
             }}
           >
             告警
@@ -197,13 +201,18 @@ const DeviceTypes: React.FC = () => {
             // icon={<SettingOutlined />}
             onClick={() => {
               setCurrentRecord(record)
-              const showData: any[] = []
+              const showListData: any[] = []
+              const showDetailData: any[] = []
               forEach(record?.shows, (item) => {
-                if (item.is_selected) {
-                  showData.push(item.config_type)
+                if (item.is_show_in_list) {
+                  showListData.push(item.config_type)
+                }
+                if (item.is_show_in_detail) {
+                  showDetailData.push(item.config_type)
                 }
               })
-              showForm.setFieldsValue({ shows: showData })
+              showForm.setFieldsValue({ show_in_list: showListData })
+              showForm.setFieldsValue({ show_in_detail: showDetailData })
               setShowModalVisible(true)
             }}
           >
@@ -267,12 +276,7 @@ const DeviceTypes: React.FC = () => {
           >
             <Input readOnly={true} />
           </Form.Item>
-          <Form.Item
-            name="device_type_alias"
-            label="类型别名"
-            rules={[{ required: true, message: "请输入类型别名" }]}
-            key={"device_type_alias"}
-          >
+          <Form.Item name="device_type_alias" label="类型别名" key={"device_type_alias"}>
             <Input />
           </Form.Item>
         </Form>
@@ -297,9 +301,9 @@ const DeviceTypes: React.FC = () => {
                 <InputNumber
                   step={0.1}
                   addonBefore={`${
-                    item.filter_operator === "GT"
+                    item.alarm_operator === "GT"
                       ? "大于"
-                      : item.filter_operator === "LT"
+                      : item.alarm_operator === "LT"
                       ? "小于"
                       : ""
                   }`}
@@ -314,15 +318,15 @@ const DeviceTypes: React.FC = () => {
 
       <Modal
         title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} 设置`}
-        open={alterModalVisible}
-        onOk={handleAlterSubmit}
-        onCancel={() => setAlterModalVisible(false)}
+        open={alarmModalVisible}
+        onOk={handleAlarmSubmit}
+        onCancel={() => setAlarmModalVisible(false)}
       >
-        <Form form={alterForm}>
+        <Form form={alarmForm}>
           <Form.Item name={"alters"}>
             <Checkbox.Group key="alters">
               <Row>
-                {currentRecord?.alters?.map((item) => {
+                {currentRecord?.alarms?.map((item) => {
                   return (
                     <Col span={8} key={item.config_type}>
                       <Checkbox key={item.config_type} value={item.config_type}>
@@ -343,10 +347,10 @@ const DeviceTypes: React.FC = () => {
         onOk={handleShowSubmit}
         onCancel={() => setShowModalVisible(false)}
       >
-        <Form form={showForm}>
-          <Form.Item name={"shows"} labelCol={{ span: 6 }}>
+        <Form form={showForm} layout={"vertical"}>
+          <Form.Item name={"show_in_list"} labelCol={{ span: 6 }} label={"列表中展示"}>
             <Checkbox.Group
-              key={"shows"}
+              key={"show_in_list"}
               onChange={(checkedValues) => {
                 const maxSelected = 3
                 if (checkedValues.length > maxSelected) {
@@ -354,9 +358,24 @@ const DeviceTypes: React.FC = () => {
                   checkedValues = checkedValues.filter((v) => v !== lastSelected)
                   message.warning(`展示项目最多只能选择${maxSelected}个`)
                 }
-                showForm.setFieldValue("shows", checkedValues)
+                showForm.setFieldValue("show_in_list", checkedValues)
               }}
             >
+              <Row>
+                {currentRecord?.shows?.map((item) => {
+                  return (
+                    <Col span={8} key={item.config_type}>
+                      <Checkbox key={item.config_type} value={item.config_type}>
+                        {item.config_type_name}
+                      </Checkbox>
+                    </Col>
+                  )
+                })}
+              </Row>
+            </Checkbox.Group>
+          </Form.Item>
+          <Form.Item name={"show_in_detail"} labelCol={{ span: 6 }} label={"详情中展示"}>
+            <Checkbox.Group key={"show_in_detail"}>
               <Row>
                 {currentRecord?.shows?.map((item) => {
                   return (

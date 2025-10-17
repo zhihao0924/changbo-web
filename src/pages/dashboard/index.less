@@ -1,20 +1,64 @@
 .container {
   padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
   
   .ant-typography {
     margin-bottom: 0;
+    color: #1a1a1a;
+    
+    &.ant-typography-secondary {
+      color: #595959;
+    }
   }
   
   .ant-card {
     margin-bottom: 16px;
     height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.85);
+    
+    .ant-card-head-title {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
     
     .ant-progress {
       margin-top: 12px;
+    }
+    
+    .ant-statistic-title {
+      color: #595959;
+    }
+    
+    .ant-statistic-content {
+      color: #1a1a1a;
+      font-weight: 500;
     }
   }
 
   .chart-container {
     height: 300px;
+    
+    .g2-tooltip {
+      background: rgba(255, 255, 255, 0.9) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    }
+  }
+  
+  .ant-tag {
+    &.ant-tag-success {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+    }
+    &.ant-tag-warning {
+      background: #fffbe6;
+      border-color: #ffe58f;
+    }
+    &.ant-tag-error {
+      background: #fff2f0;
+      border-color: #ffccc7;
+    }
   }
 }

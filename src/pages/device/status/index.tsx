@@ -85,9 +85,8 @@ const DeviceStatus: React.FC = () => {
                 allowClear
                 options={deviceTypes.map((type) => ({
                   label: `${
-                    type.device_type_alias
-                      ? type.device_type_alias
-                      : type.device_type_group + "[" + type.device_type + "]"
+                    type.device_type_alias ? type.device_type_alias : type.device_type
+                    // : type.device_type_group + "[" + type.device_type + "]"
                   }`,
                   value: type.id,
                 }))}
@@ -134,6 +133,12 @@ const DeviceStatus: React.FC = () => {
                   setDeviceId(device.id)
                   setShowModalVisible(true)
                 }}
+                style={{
+                  boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.1)",
+                  transition: "0.3s",
+                  borderRadius: "8px",
+                }}
+                hoverable
               >
                 <Descriptions column={1}>
                   {device?.metric_items
@@ -183,30 +188,32 @@ const DeviceStatus: React.FC = () => {
           {deviceList?.map((device) => {
             return (
               device.id === deviceId &&
-              device.metric_items?.map((metricItem) => {
-                return (
-                  <Descriptions.Item
-                    label={metricItem.config_type_name}
-                    key={metricItem.config_type}
-                    style={{ display: "flex", alignItems: "center" }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <Progress
-                        percent={(metricItem.current_val * 100) / metricItem.threshold_val}
-                        steps={10}
-                        size="small"
-                        showInfo={true}
-                        format={() =>
-                          `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
-                        }
-                        strokeColor={
-                          metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
-                        }
-                      />
-                    </div>
-                  </Descriptions.Item>
-                )
-              })
+              device.metric_items
+                .filter((metricItem) => metricItem.show_in_detail)
+                ?.map((metricItem) => {
+                  return (
+                    <Descriptions.Item
+                      label={metricItem.config_type_name}
+                      key={metricItem.config_type}
+                      style={{ display: "flex", alignItems: "center" }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <Progress
+                          percent={(metricItem.current_val * 100) / metricItem.threshold_val}
+                          steps={10}
+                          size="small"
+                          showInfo={true}
+                          format={() =>
+                            `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
+                          }
+                          strokeColor={
+                            metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
+                          }
+                        />
+                      </div>
+                    </Descriptions.Item>
+                  )
+                })
             )
           })}
         </Descriptions>

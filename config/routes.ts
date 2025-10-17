@@ -22,11 +22,12 @@ export default [
     name: "dashboard",
     path: "/dashboard",
     component: "./dashboard",
+    icon: "barChart",
   },
   {
     name: "device",
     path: "/device",
-    // icon: "shoppingCart",
+    icon: "hdd",
     routes: [
       {
         path: "/device",

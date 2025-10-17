@@ -21,6 +21,19 @@ type CreateFormValues = {
   is_maintaining: boolean
 }
 
+const groups = [
+  { label: "发射合路器", value: "发射合路器" },
+  { label: "接收分路器", value: "接收分路器" },
+  { label: "带通双工器", value: "带通双工器" },
+  { label: "上行信号剥离器", value: "上行信号剥离器" },
+  { label: "下行信号剥离器", value: "下行信号剥离器" },
+  { label: "数字近端机", value: "数字近端机" },
+  { label: "数字远端机", value: "数字远端机" },
+  { label: "模拟近端机", value: "模拟近端机" },
+  { label: "模拟远端机", value: "模拟远端机" },
+  { label: "干线放大器", value: "干线放大器" },
+]
+
 const DeviceIndex: React.FC = () => {
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
@@ -29,6 +42,7 @@ const DeviceIndex: React.FC = () => {
   const [currentDevice, setCurrentDevice] = useState<Columns | null>(null)
   const [form] = Form.useForm<CreateFormValues>()
 
+  const [allDeviceTypes, setAllDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
 
   const getDeviceTypes = useCallback(async () => {
@@ -39,10 +53,11 @@ const DeviceIndex: React.FC = () => {
       res.res.list.forEach((item) => {
         enums.push({
           value: item.id,
-          label: `${item.device_type_group}[${item.device_type}]`,
+          label: item.device_type,
+          group: item.device_type_group,
         })
       })
-      setDeviceTypes(enums)
+      setAllDeviceTypes(enums)
       return enums
     }
     return []
@@ -73,22 +88,16 @@ const DeviceIndex: React.FC = () => {
     (record: Columns | null = null) => {
       setCurrentDevice(record)
       if (record) {
+        setDeviceTypes(allDeviceTypes.filter((item) => item.group == record.device_type_group))
         form.setFieldsValue({
           ...record,
-          // id: record.id,
-          // name: record.name,
-          // ip: record.ip,
-          // position: record.position,
-          // device_type_id: record.device_type_id,
-          // is_maintaining: record.is_maintaining,
-          // is_online:record.is_online
         })
       } else {
         form.resetFields()
       }
       setModalVisible(true)
     },
-    [form],
+    [form, allDeviceTypes],
   )
 
   const handleCancel = useCallback(() => {
@@ -154,14 +163,17 @@ const DeviceIndex: React.FC = () => {
         hideInSearch: true,
       },
       {
+        title: "设备名称",
+        align: "center",
+        dataIndex: "device_type_group",
+        hideInSearch: true,
+      },
+      {
         title: "设备类型",
         align: "center",
         dataIndex: "device_type_id",
         valueType: "select",
         request: getDeviceTypes,
-        render: (_, record) => {
-          return `${record.device_type_group}[${record.device_type}]`
-        },
         fieldProps: {
           showSearch: true,
         },
@@ -238,7 +250,7 @@ const DeviceIndex: React.FC = () => {
             label="设备编号"
             rules={[{ required: true, message: "请输入设备编号" }]}
           >
-            <Input readOnly disabled />
+            <Input />
           </Form.Item>
           <Form.Item
             name="ip"
@@ -271,17 +283,24 @@ const DeviceIndex: React.FC = () => {
             <Input />
           </Form.Item>
           <Form.Item
+            name="device_type_group"
+            label="设备名称"
+            rules={[{ required: true, message: "请选择设备名称" }]}
+          >
+            <Select
+              options={groups}
+              onChange={(item) => {
+                form.setFieldValue("device_type_id", undefined)
+                setDeviceTypes(allDeviceTypes.filter((types) => types.group == item))
+              }}
+            />
+          </Form.Item>
+          <Form.Item
             name="device_type_id"
             label="设备类型"
             rules={[{ required: true, message: "请选择设备类型" }]}
           >
-            <Select
-              options={deviceTypes}
-              showSearch={true}
-              filterOption={(inputValue, option) => {
-                return option?.label.includes(inputValue)
-              }}
-            />
+            <Select options={deviceTypes} />
           </Form.Item>
           <Form.Item name="is_maintaining" label="维护状态" valuePropName="checked">
             <Switch />

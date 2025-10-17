@@ -35,6 +35,7 @@ declare namespace API_PostDeviceList {
     config_type_name: string
     current_val: number
     show_in_list: string
+    show_in_detail: string
     unit: string
     threshold_val: number
   }
@@ -87,18 +88,18 @@ declare namespace API_PostDeviceTypes {
     device_type: string
     device_type_alias: string
     configs: Configs[]
-    alters: Alters[]
+    alarms: Alarms[]
     shows: Shows[]
   }
   export interface Configs {
     config_type: number
     config_type_name: string
-    filter_operator: string
+    alarm_operator: string
     val: number
     unit: string
     sort: number
   }
-  export interface Alters {
+  export interface Alarms {
     config_type: number
     config_type_name: string
     is_selected: boolean
@@ -106,7 +107,8 @@ declare namespace API_PostDeviceTypes {
   export interface Shows {
     config_type: number
     config_type_name: string
-    is_selected: boolean
+    is_show_in_list: boolean
+    is_show_in_detail: boolean
   }
 }
 
@@ -156,7 +158,7 @@ declare namespace API_PostDeviceTypeConfigSaveData {
   }
 }
 
-declare namespace API_PostDeviceTypeAlterSaveData {
+declare namespace API_PostDeviceTypeAlarmSaveData {
   export interface Result {
     err: number
     msg: string
