@@ -61,18 +61,15 @@ const checkAndRefreshToken = async () => {
   const accessToken = localStorage.getItem(ACCESS_TOKEN)
 
   // 如果没有token或过期时间，直接返回
-  if (!accessToken || !accessTokenExpire) {
+  if (!accessToken || !accessTokenExpire || !refreshAfter) {
     return false
   }
 
   const now = Math.round(Date.now() / 1000)
-  const expireTime = parseInt(accessTokenExpire)
+  const refreshAfterTime = parseInt(refreshAfter)
 
-  // 提前5分钟刷新token，避免过期后请求失败
-  const refreshThreshold = 5 * 60 // 5分钟
-
-  // 如果token即将过期（剩余时间小于5分钟），需要刷新token
-  if (expireTime - now <= refreshThreshold) {
+  // 如果当前时间超过了refresh_after时间，需要刷新token
+  if (now >= refreshAfterTime) {
     try {
       const res = await refreshToken({ showToast: false })
 
@@ -92,7 +89,7 @@ const checkAndRefreshToken = async () => {
           localStorage.setItem("userinfo", JSON.stringify(userInfo))
         }
 
-        console.log("Token refreshed successfully before expiration")
+        console.log("Token refreshed successfully after refresh_after time")
         return true
       }
     } catch (error) {
