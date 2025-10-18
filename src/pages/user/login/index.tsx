@@ -48,6 +48,8 @@ const Login: React.FC = () => {
       const { jwtToken, name, account } = info
 
       localStorage.setItem(ACCESS_TOKEN, jwtToken.access_token)
+      localStorage.setItem('ACCESS_TOKEN_EXPIRE', jwtToken.access_expire.toString())
+      localStorage.setItem('REFRESH_AFTER', jwtToken.refresh_after.toString())
       localStorage.setItem(USER_INFO, JSON.stringify({ jwtToken, name, account }))
 
       await setInitialState((s: any) => {
@@ -108,13 +110,11 @@ const Login: React.FC = () => {
           /** 此方法会跳转到 redirect 参数所在的位置 */
           if (!history) return
 
-          if (!loading) {
-            setTimeout(() => {
-              const { query } = history.location
-              const { redirect } = query as { redirect: string }
-              history.push(redirect || "/")
-            }, 300)
-          }
+          setTimeout(() => {
+            const { query } = history.location
+            const { redirect } = query as { redirect: string }
+            history.push(redirect || "/")
+          }, 300)
 
           return
         }

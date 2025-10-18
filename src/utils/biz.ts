@@ -7,6 +7,8 @@ import { ACCESS_TOKEN, USER_INFO } from "@/constants"
 // 退出登录
 export const removeUserInfo = () => {
   localStorage.removeItem(ACCESS_TOKEN)
+  localStorage.removeItem('ACCESS_TOKEN_EXPIRE')
+  localStorage.removeItem('REFRESH_AFTER')
   localStorage.removeItem(USER_INFO)
 }
 

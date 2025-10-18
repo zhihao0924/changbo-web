@@ -17,8 +17,13 @@ import { removeUserInfo } from "@/utils/biz"
 import { history } from "umi"
 import { stringify } from "querystring"
 import { reject } from "lodash"
+import { refreshToken } from "@/pages/user/services/api"
 
 // params 仅仅包含常用 url method headers description
+
+// 防抖机制，避免频繁调用刷新token
+let lastRefreshTime = 0
+const REFRESH_DEBOUNCE_TIME = 30000 // 30秒防抖时间
 
 // const notify = (msg: string, title="提示") => {
 //   notification.error({
@@ -49,6 +54,59 @@ let controller = new AbortController()
 //   },
 // )
 
+// 检查token是否需要刷新
+const checkAndRefreshToken = async () => {
+  const refreshAfter = localStorage.getItem("REFRESH_AFTER")
+  const accessTokenExpire = localStorage.getItem("ACCESS_TOKEN_EXPIRE")
+  const accessToken = localStorage.getItem(ACCESS_TOKEN)
+
+  // 如果没有token或过期时间，直接返回
+  if (!accessToken || !accessTokenExpire) {
+    return false
+  }
+
+  const now = Math.round(Date.now() / 1000)
+  const expireTime = parseInt(accessTokenExpire)
+
+  // 提前5分钟刷新token，避免过期后请求失败
+  const refreshThreshold = 5 * 60 // 5分钟
+
+  // 如果token即将过期（剩余时间小于5分钟），需要刷新token
+  if (expireTime - now <= refreshThreshold) {
+    try {
+      const res = await refreshToken({ showToast: false })
+
+      // refreshToken API 返回标准格式 {err, msg, res}
+      if (res && res.err === 0 && res.res) {
+        const jwtToken = res.res
+        // 更新本地存储的token信息
+        localStorage.setItem(ACCESS_TOKEN, jwtToken.access_token)
+        localStorage.setItem("ACCESS_TOKEN_EXPIRE", jwtToken.access_expire.toString())
+        localStorage.setItem("REFRESH_AFTER", jwtToken.refresh_after.toString())
+
+        // 更新USER_INFO中的jwtToken
+        const userInfoStr = localStorage.getItem("userinfo")
+        if (userInfoStr) {
+          const userInfo = JSON.parse(userInfoStr)
+          userInfo.jwtToken = jwtToken
+          localStorage.setItem("userinfo", JSON.stringify(userInfo))
+        }
+
+        console.log("Token refreshed successfully before expiration")
+        return true
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error)
+      // 刷新失败，清除用户信息并跳转到登录页
+      removeUserInfo()
+      history.replace(redirectLoginPath)
+      throw error
+    }
+  }
+
+  return false
+}
+
 export const request = async (
   url: string,
   params: Record<string, any> = {},
@@ -62,6 +120,16 @@ export const request = async (
     process.env.NODE_ENV === "development"
       ? gateway + url
       : (process.env.BUILD_ENV && proxy[process.env.BUILD_ENV][gateway].target) + url
+
+  // 检查并刷新token（排除刷新token接口本身）
+  if (url !== "/api/admin/refreshToken" && !extParams?.gateway) {
+    const now = Date.now()
+    // 添加防抖机制，避免频繁调用刷新token
+    if (now - lastRefreshTime > REFRESH_DEBOUNCE_TIME) {
+      await checkAndRefreshToken()
+      lastRefreshTime = now
+    }
+  }
 
   const prepareEnv = () => {
     if (typeof document !== "undefined") {
@@ -131,7 +199,7 @@ export const request = async (
     }
   }
 
-  const res = await axios(axiosInfo).catch((err: AxiosError) => {
+  const res = await axios(axiosInfo).catch(async (err: AxiosError) => {
     // http 层面异常
     console.error(
       "Axios Http Error",
@@ -161,10 +229,38 @@ export const request = async (
       }
 
       if (err?.response?.status == 401) {
-        setTimeout(() => {
-          removeUserInfo()
-          history.replace(redirectLoginPath)
-        }, 300)
+        // 先尝试刷新token
+        try {
+          const res = await refreshToken({ showToast: false })
+
+          // refreshToken API 返回标准格式 {err, msg, res}
+          if (res && res.err === 0 && res.res) {
+            const jwtToken = res.res
+            // 更新本地存储的token信息
+            localStorage.setItem(ACCESS_TOKEN, jwtToken.access_token)
+            localStorage.setItem("ACCESS_TOKEN_EXPIRE", jwtToken.access_expire.toString())
+            localStorage.setItem("REFRESH_AFTER", jwtToken.refresh_after.toString())
+
+            // 更新USER_INFO中的jwtToken
+            const userInfoStr = localStorage.getItem("userinfo")
+            if (userInfoStr) {
+              const userInfo = JSON.parse(userInfoStr)
+              userInfo.jwtToken = jwtToken
+              localStorage.setItem("userinfo", JSON.stringify(userInfo))
+            }
+
+            console.log("Token refreshed after 401 error")
+            // 刷新成功后重新发送原始请求
+            return request(url, params, extParams, ctx)
+          }
+        } catch (refreshError) {
+          console.error("Token refresh failed after 401:", refreshError)
+          // 刷新失败，清除用户信息并跳转到登录页
+          setTimeout(() => {
+            removeUserInfo()
+            history.replace(redirectLoginPath)
+          }, 300)
+        }
       }
 
       extParams.finallyCallback?.()

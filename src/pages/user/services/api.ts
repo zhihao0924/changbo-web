@@ -1,4 +1,5 @@
 import { postApi } from "@/utils/request"
+import { ACCESS_TOKEN } from "@/constants"
 
 export async function logIn(obj: Record<string, any>, extParams?: PassExtParamsDescriptorMore) {
   const res: API_USER.Result = await postApi(
@@ -31,4 +32,26 @@ export async function changePassword(
   })
 
   return res
+}
+
+export async function refreshToken(extParams?: PassExtParamsDescriptorMore) {
+  const accessToken = localStorage.getItem(ACCESS_TOKEN)
+  
+  try {
+    const res: API_RefreshToken.Result = await postApi(
+      "admin/refreshToken",
+      {
+        token: accessToken
+      },
+      {
+        showLoading: false,
+        showToast: false,
+        ...extParams,
+      },
+    )
+    return res
+  } catch (error) {
+    console.error('Refresh token API error:', error)
+    throw error
+  }
 }
