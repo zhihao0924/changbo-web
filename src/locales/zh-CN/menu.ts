@@ -8,6 +8,8 @@ export default {
   "menu.device.types": "设备类型",
   "menu.device.status": "设备拓扑图",
   "menu.device.logs": "设备日志",
+  "menu.admin": "用户管理",
+  "menu.admin.list": "用户列表",
   "menu.dashboard": "仪表盘",
 
   // "app.copyright.produced": "app.copyright.produced",

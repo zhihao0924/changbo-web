@@ -1,5 +1,11 @@
 import Footer from "@/components/Footer"
-import { ACCESS_TOKEN, DEFAULT_NAME, USER_INFO } from "@/constants"
+import {
+  ACCESS_TOKEN,
+  ACCESS_TOKEN_EXPIRE,
+  DEFAULT_NAME,
+  REFRESH_AFTER,
+  USER_INFO,
+} from "@/constants"
 import Services from "@/pages/user/services"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { LoginFormPage, ProFormText } from "@ant-design/pro-form"
@@ -8,7 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { history, useModel } from "umi"
 import styles from "./index.less"
 
-type LoginType = "mobile" | "account" | "feishu"
+type LoginType = "account"
 
 const LoginMessage: React.FC<{
   content: string
@@ -45,17 +51,17 @@ const Login: React.FC = () => {
 
   const fetchUserInfo = useCallback(
     async (info) => {
-      const { jwtToken, name, account } = info
+      const { jwtToken, name, account, role } = info
 
       localStorage.setItem(ACCESS_TOKEN, jwtToken.access_token)
-      localStorage.setItem('ACCESS_TOKEN_EXPIRE', jwtToken.access_expire.toString())
-      localStorage.setItem('REFRESH_AFTER', jwtToken.refresh_after.toString())
-      localStorage.setItem(USER_INFO, JSON.stringify({ jwtToken, name, account }))
+      localStorage.setItem(ACCESS_TOKEN_EXPIRE, jwtToken.access_expire.toString())
+      localStorage.setItem(REFRESH_AFTER, jwtToken.refresh_after.toString())
+      localStorage.setItem(USER_INFO, JSON.stringify({ jwtToken, name, account, role }))
 
       await setInitialState((s: any) => {
         return {
           ...s,
-          currentUser: { jwtToken, name, account },
+          currentUser: { jwtToken, name, account, role },
         }
       })
     },

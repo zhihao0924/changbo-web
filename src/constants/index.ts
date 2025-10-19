@@ -4,6 +4,8 @@ export const VERSION_DATE = "2025.10.01"
 
 export const USER_INFO = "userinfo"
 export const ACCESS_TOKEN = "token"
+export const ACCESS_TOKEN_EXPIRE = "access_token_expire"
+export const REFRESH_AFTER = "refresh_after"
 export const REFRESH_TOKEN = "refresh-token"
 
 export const LOGINPATH = "/user/login"

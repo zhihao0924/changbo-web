@@ -7,7 +7,7 @@
 /**
  * Universal request
  */
-import { ACCESS_TOKEN, LOGINPATH } from "@/constants"
+import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRE, LOGINPATH, REFRESH_AFTER, USER_INFO } from "@/constants"
 import { message } from "antd"
 import type { AxiosError, AxiosRequestConfig } from "axios"
 import axios from "axios"
@@ -16,7 +16,6 @@ import proxy from "config/proxy"
 import { removeUserInfo } from "@/utils/biz"
 import { history } from "umi"
 import { stringify } from "querystring"
-import { reject } from "lodash"
 import { refreshToken } from "@/pages/user/services/api"
 
 // params 仅仅包含常用 url method headers description
@@ -56,8 +55,8 @@ let controller = new AbortController()
 
 // 检查token是否需要刷新
 const checkAndRefreshToken = async () => {
-  const refreshAfter = localStorage.getItem("REFRESH_AFTER")
-  const accessTokenExpire = localStorage.getItem("ACCESS_TOKEN_EXPIRE")
+  const refreshAfter = localStorage.getItem(REFRESH_AFTER)
+  const accessTokenExpire = localStorage.getItem(ACCESS_TOKEN_EXPIRE)
   const accessToken = localStorage.getItem(ACCESS_TOKEN)
 
   // 如果没有token或过期时间，直接返回
@@ -78,11 +77,11 @@ const checkAndRefreshToken = async () => {
         const jwtToken = res.res
         // 更新本地存储的token信息
         localStorage.setItem(ACCESS_TOKEN, jwtToken.access_token)
-        localStorage.setItem("ACCESS_TOKEN_EXPIRE", jwtToken.access_expire.toString())
-        localStorage.setItem("REFRESH_AFTER", jwtToken.refresh_after.toString())
+        localStorage.setItem(ACCESS_TOKEN_EXPIRE, jwtToken.access_expire.toString())
+        localStorage.setItem(REFRESH_AFTER, jwtToken.refresh_after.toString())
 
         // 更新USER_INFO中的jwtToken
-        const userInfoStr = localStorage.getItem("userinfo")
+        const userInfoStr = localStorage.getItem(USER_INFO)
         if (userInfoStr) {
           const userInfo = JSON.parse(userInfoStr)
           userInfo.jwtToken = jwtToken
@@ -235,8 +234,8 @@ export const request = async (
             const jwtToken = res.res
             // 更新本地存储的token信息
             localStorage.setItem(ACCESS_TOKEN, jwtToken.access_token)
-            localStorage.setItem("ACCESS_TOKEN_EXPIRE", jwtToken.access_expire.toString())
-            localStorage.setItem("REFRESH_AFTER", jwtToken.refresh_after.toString())
+            localStorage.setItem(ACCESS_TOKEN_EXPIRE, jwtToken.access_expire.toString())
+            localStorage.setItem(REFRESH_AFTER, jwtToken.refresh_after.toString())
 
             // 更新USER_INFO中的jwtToken
             const userInfoStr = localStorage.getItem("userinfo")

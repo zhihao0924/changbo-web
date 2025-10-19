@@ -1,6 +1,6 @@
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import React, { useCallback, useMemo, useRef, useState } from "react"
+import React, { useCallback, useMemo, useRef } from "react"
 import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"

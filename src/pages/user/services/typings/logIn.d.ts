@@ -37,9 +37,14 @@ namespace API_PostChangePassword {
 
 
 namespace API_RefreshToken {
-  export interface Result { 
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+  export interface Res {
     access_token: string
-    access_expire: number 
+    access_expire: number
     refresh_after: number
   }
 }

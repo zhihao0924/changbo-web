@@ -55,6 +55,23 @@ export default [
       },
     ],
   },
+
+  {
+    name: "admin",
+    path: "/admin",
+    icon: "user",
+    routes: [
+      {
+        path: "/admin",
+        redirect: "/admin/list",
+      },
+      {
+        name: "list",
+        path: "/admin/list",
+        component: "./admin/list",
+      },
+    ],
+  },
   {
     path: "/",
     redirect: "/dashboard",
