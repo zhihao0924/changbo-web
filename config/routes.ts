@@ -32,16 +32,19 @@ export default [
       {
         path: "/device",
         redirect: "/device/index",
+        access: "canAccessAdmin",
       },
       {
         name: "list",
         path: "/device/index",
         component: "./device/index",
+        access: "canAccessAdmin",
       },
       {
         name: "types",
         path: "/device/types",
         component: "./device/types",
+        access: "canAccessAdmin",
       },
       {
         name: "status",
@@ -60,6 +63,7 @@ export default [
     name: "admin",
     path: "/admin",
     icon: "user",
+    access: "canAccessAdmin", // 只有admin角色才能访问
     routes: [
       {
         path: "/admin",

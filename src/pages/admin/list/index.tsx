@@ -112,10 +112,16 @@ const UserIndex: React.FC = () => {
       title: "确认禁用",
       content: "确认禁用该账号？",
       onOk: async () => {
-        const res = await Services.api.postDisableAdmin({
-          target_admin_id: record?.id,
-          is_disabled: !record?.is_disabled,
-        })
+        await Services.api
+          .postDisableAdmin({
+            target_admin_id: record?.id,
+            is_disabled: !record?.is_disabled,
+          })
+          .then((res) => {
+            if (res.err == 0) {
+              actionRef.current?.reload()
+            }
+          })
       },
       onCancel() {},
     })
@@ -173,7 +179,7 @@ const UserIndex: React.FC = () => {
                   handleDisabledAdmin(record)
                 }}
               >
-                禁用
+                {record.is_disabled ? "启用" : "禁用"}
               </Button>
               <Button type={"primary"} onClick={() => openResetPwdModal(record)}>
                 重置密码

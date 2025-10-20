@@ -90,8 +90,8 @@ const DeviceTypes: React.FC = () => {
       const values = await alarmForm.validateFields()
       await Services.api
         .postDeviceTypeAlarmSave({
-          type: currentRecord?.id,
-          alters: values.alters,
+          device_type_id: currentRecord?.id,
+          alarms: values.alarms,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
@@ -183,14 +183,14 @@ const DeviceTypes: React.FC = () => {
             // icon={<SettingOutlined />}
             onClick={() => {
               setCurrentRecord(record)
-              const alterData: any[] = []
-              forEach(record?.alters, (item) => {
+              const alarms: any[] = []
+              forEach(record?.alarms, (item) => {
                 if (item.is_selected) {
-                  alterData.push(item.config_type)
+                  alarms.push(item.config_type)
                 }
               })
 
-              alarmForm.setFieldsValue({ alters: alterData })
+              alarmForm.setFieldsValue({ alarms: alarms })
               setAlarmModalVisible(true)
             }}
           >
@@ -323,8 +323,8 @@ const DeviceTypes: React.FC = () => {
         onCancel={() => setAlarmModalVisible(false)}
       >
         <Form form={alarmForm}>
-          <Form.Item name={"alters"}>
-            <Checkbox.Group key="alters">
+          <Form.Item name={"alarms"}>
+            <Checkbox.Group key="alarms">
               <Row>
                 {currentRecord?.alarms?.map((item) => {
                   return (

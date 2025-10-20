@@ -126,7 +126,7 @@ const DeviceStatus: React.FC = () => {
                 title={`${
                   device.device_type_alias
                     ? device.device_type_alias
-                    : device.device_type_group + "[" + device.device_type + "]"
+                    : device.device_type_group
                 }:${device.name}`}
                 extra={<Tag color={device.tag_color}>{device.status_text}</Tag>}
                 onDoubleClick={() => {
