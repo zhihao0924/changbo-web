@@ -16,6 +16,7 @@ declare namespace API_USER {
     password: string
     user_id: number
     is_disabled: number
+    role: string
     jwtToken: JwtToken
   }
 
@@ -27,14 +28,12 @@ declare namespace API_USER {
 }
 
 namespace API_PostChangePassword {
-
   export interface Result {
     err: number
     msg: string
     res: Res
   }
 }
-
 
 namespace API_RefreshToken {
   export interface Result {

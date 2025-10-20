@@ -46,12 +46,19 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     form.validateFields().then(async (values) => {
       try {
         await changePassword({
-          oldPassword: values.oldPassword,
-          newPassword: values.newPassword,
+          old_password: values.oldPassword,
+          new_password: values.newPassword,
+        }).then((res) => {
+          if (res?.err === 0) {
+            message.success("密码修改成功", 1, () => {
+              loginOut()
+            })
+            setVisible(false)
+            form.resetFields()
+          } else {
+            message.error(res?.msg || "密码修改失败")
+          }
         })
-        message.success("密码修改成功")
-        setVisible(false)
-        form.resetFields()
       } catch (error) {
         message.error("密码修改失败")
       }

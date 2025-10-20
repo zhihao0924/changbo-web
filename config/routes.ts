@@ -32,19 +32,19 @@ export default [
       {
         path: "/device",
         redirect: "/device/index",
-        access: "canAccessAdmin",
+        access: "adminRouteFilter",
       },
       {
         name: "list",
         path: "/device/index",
         component: "./device/index",
-        access: "canAccessAdmin",
+        access: "adminRouteFilter",
       },
       {
         name: "types",
         path: "/device/types",
         component: "./device/types",
-        access: "canAccessAdmin",
+        access: "adminRouteFilter",
       },
       {
         name: "status",
@@ -63,7 +63,7 @@ export default [
     name: "admin",
     path: "/admin",
     icon: "user",
-    access: "canAccessAdmin", // 只有admin角色才能访问
+    access: "adminRouteFilter", // 只有admin角色才能访问
     routes: [
       {
         path: "/admin",
