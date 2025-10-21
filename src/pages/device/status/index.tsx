@@ -70,7 +70,7 @@ const DeviceStatus: React.FC = () => {
         limit: pageSize,
         ...form.getFieldsValue(),
       })
-    }, 5000)
+    }, 500)
     return () => {
       if (intervalId) clearInterval(intervalId)
     }
@@ -155,7 +155,10 @@ const DeviceStatus: React.FC = () => {
                               `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
                             }
                             strokeColor={
-                              metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
+                              metricItem.current_val <= metricItem.threshold_val ||
+                              metricItem.threshold_val == 0
+                                ? "green"
+                                : "red"
                             }
                           />
                         </Col>
@@ -167,9 +170,7 @@ const DeviceStatus: React.FC = () => {
                             alignItems: "center",
                           }}
                         >
-                          {device?.alarm_items.find(
-                            (item) => item.config_type === metricItem.config_type,
-                          )?.is_alarm ? (
+                          {metricItem.current_val > 0 && metricItem.threshold_val > 0 ? (
                             metricItem.current_val <= metricItem.threshold_val ? (
                               <CheckCircleOutlined style={{ color: "green" }} />
                             ) : (
@@ -196,57 +197,65 @@ const DeviceStatus: React.FC = () => {
       >
         <Row justify="center" align="middle" style={{ width: "100%" }}>
           <Col span={8}>设备类型</Col>
-          <Col span={16}>{deviceList.find((d) => d.id === deviceId)?.device_type_alias}</Col>
+          <Col span={16}>
+            {deviceList && deviceList?.find((d) => d.id === deviceId)?.device_type_alias}
+          </Col>
           <Col span={8}>设备编号</Col>
-          <Col span={16}>{deviceList.find((d) => d.id === deviceId)?.name}</Col>
-          {deviceList?.map((device) => {
-            return (
-              device.id === deviceId &&
-              device.metric_items
-                .filter((metricItem) => metricItem.show_in_detail)
-                ?.map((metricItem) => {
-                  return (
-                    <>
-                      <Col span={8}>{metricItem.config_type_name}</Col>
-                      <Col span={12}>
-                        <Progress
-                          percent={(metricItem.current_val * 100) / metricItem.threshold_val}
-                          steps={10}
-                          size="small"
-                          showInfo={true}
-                          format={() =>
-                            `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
-                          }
-                          strokeColor={
-                            metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
-                          }
-                        />
-                      </Col>
-                      <Col
-                        span={4}
-                        style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        {device?.alarm_items.find(
-                          (item) => item.config_type === metricItem.config_type,
-                        )?.is_alarm ? (
-                          metricItem.current_val <= metricItem.threshold_val ? (
-                            <CheckCircleOutlined style={{ color: "green" }} />
+          <Col span={16}>{deviceList && deviceList?.find((d) => d.id === deviceId)?.name}</Col>
+          {deviceList &&
+            deviceList?.map((device) => {
+              return (
+                device?.id === deviceId &&
+                device.metric_items
+                  ?.filter((metricItem) => metricItem.show_in_detail)
+                  ?.map((metricItem) => {
+                    return (
+                      <>
+                        <Col span={8}>{metricItem.config_type_name}</Col>
+                        <Col span={12}>
+                          <Progress
+                            percent={(metricItem.current_val * 100) / metricItem.threshold_val}
+                            steps={10}
+                            size="small"
+                            showInfo={true}
+                            format={() =>
+                              `${
+                                metricItem.current_val === 0
+                                  ? "-"
+                                  : (metricItem.current_val ?? 0).toFixed(2) + metricItem.unit
+                              }`
+                            }
+                            strokeColor={
+                              metricItem.current_val <= metricItem.threshold_val ||
+                              metricItem.threshold_val == 0
+                                ? "green"
+                                : "red"
+                            }
+                          />
+                        </Col>
+                        <Col
+                          span={4}
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          {metricItem.current_val > 0 && metricItem.threshold_val > 0 ? (
+                            metricItem.current_val <= metricItem.threshold_val ? (
+                              <CheckCircleOutlined style={{ color: "green" }} />
+                            ) : (
+                              <CloseCircleOutlined style={{ color: "red" }} />
+                            )
                           ) : (
-                            <CloseCircleOutlined style={{ color: "red" }} />
-                          )
-                        ) : (
-                          <></>
-                        )}
-                      </Col>
-                    </>
-                  )
-                })
-            )
-          })}
+                            <></>
+                          )}
+                        </Col>
+                      </>
+                    )
+                  })
+              )
+            })}
         </Row>{" "}
       </Modal>
     </PageContainer>

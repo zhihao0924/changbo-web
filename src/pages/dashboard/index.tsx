@@ -347,9 +347,7 @@ const AlertStatsCard: React.FC<{
   alarmDevice: []
 }> = ({ alertCount, isBeeping, onToggleBeep, loading, alarmDevice }) => {
   // 按告警时间排序，最新的在前
-  const sortedAlarmDevices =
-    alarmDevice?.sort((a, b) => new Date(b.alarm_at).getTime() - new Date(a.alarm_at).getTime()) ||
-    []
+  const sortedAlarmDevices = alarmDevice
 
   return (
     <Card
@@ -658,7 +656,7 @@ const Dashboard: React.FC = () => {
             <Card title="设备类型统计" loading={loading}>
               <Row gutter={16}>
                 {dashboardData.type_statistic.map((item: unknown, index: any) => (
-                  <Col key={item.type} xs={24} sm={12} md={8} lg={6}>
+                  <Col key={item.type} xs={24} sm={12} md={8} lg={4}>
                     <DeviceStatusCard data={item} />
                   </Col>
                 ))}
