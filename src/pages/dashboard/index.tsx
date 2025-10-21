@@ -151,16 +151,18 @@ const useBeep = (alarmDeviceCount: number = 0) => {
 
     console.log("尝试启动滴滴声定时器，告警设备数量:", alarmDeviceCount)
 
-    // 只有在有告警设备时才启动定时器
+    // 设置滴滴声状态为开启
+    setIsBeeping(true)
+
+    // 只有在有告警设备时才启动定时器播放声音
     if (alarmDeviceCount > 0) {
       beepIntervalRef.current = setInterval(playBeep, DASHBOARD_CONFIG.beepInterval)
-      setIsBeeping(true)
       console.log("滴滴声定时器已启动，间隔:", DASHBOARD_CONFIG.beepInterval, "ms")
 
       // 立即播放一次滴滴声
       setTimeout(playBeep, 100)
     } else {
-      console.log("没有告警设备，不启动滴滴声")
+      console.log("没有告警设备，滴滴声状态已开启但不会播放声音")
     }
   }, [playBeep, alarmDeviceCount])
 
@@ -175,33 +177,43 @@ const useBeep = (alarmDeviceCount: number = 0) => {
 
   // 切换状态
   const toggleBeep = useCallback(() => {
-    isBeeping ? stopBeep() : startBeep()
+    if (isBeeping) {
+      stopBeep()
+    } else {
+      // 用户手动开启滴滴声，状态可以开启，但只有有告警设备时才播放声音
+      startBeep()
+    }
   }, [isBeeping, startBeep, stopBeep])
 
   // 当告警设备数量变化时自动处理滴滴声
   useEffect(() => {
     console.log("告警设备数量变化:", alarmDeviceCount, "滴滴声状态:", isBeeping)
 
-    if (alarmDeviceCount <= 0 && isBeeping) {
-      // 如果没有告警设备但滴滴声在播放，则停止
-      console.log("告警设备数量为0，停止滴滴声")
-      stopBeep()
-    } else if (alarmDeviceCount > 0 && isBeeping) {
-      // 如果有告警设备且滴滴声在播放，则重新启动（确保定时器正确）
-      console.log("有告警设备且滴滴声开启，确保定时器运行")
-      startBeep()
+    if (isBeeping) {
+      if (alarmDeviceCount <= 0) {
+        // 如果滴滴声状态开启但没有告警设备，停止定时器但不改变状态
+        if (beepIntervalRef.current) {
+          clearInterval(beepIntervalRef.current)
+          beepIntervalRef.current = null
+          console.log("告警设备数量为0，停止滴滴声播放但保持开启状态")
+        }
+      } else if (alarmDeviceCount > 0) {
+        // 如果有告警设备且滴滴声状态开启，则启动定时器播放声音
+        if (!beepIntervalRef.current) {
+          beepIntervalRef.current = setInterval(playBeep, DASHBOARD_CONFIG.beepInterval)
+          console.log("有告警设备且滴滴声状态开启，启动定时器播放声音")
+          // 立即播放一次滴滴声
+          setTimeout(playBeep, 100)
+        }
+      }
     }
-    // 移除自动开启逻辑：只有当用户手动开启时才会播放滴滴声
-  }, [alarmDeviceCount, isBeeping, startBeep, stopBeep])
+  }, [alarmDeviceCount, isBeeping, playBeep])
 
-  // 组件挂载时自动启动滴滴声（如果有告警设备）
+  // 组件挂载时，滴滴声状态默认为关闭
   useEffect(() => {
-    console.log("组件挂载，检查告警设备数量:", alarmDeviceCount)
-    if (alarmDeviceCount > 0) {
-      console.log("挂载时有告警设备，启动滴滴声")
-      startBeep()
-    }
-  }, []) // 只在挂载时执行一次
+    console.log("组件挂载，滴滴声状态初始化为关闭")
+    setIsBeeping(false)
+  }, [])
 
   // 清理
   useEffect(() => {
