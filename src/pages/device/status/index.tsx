@@ -1,8 +1,9 @@
 import { PageContainer } from "@ant-design/pro-components"
-import { Card, Col, Row, Tag, Progress, Form, Select, Modal, Descriptions } from "antd"
+import { Card, Col, Row, Tag, Progress, Form, Select, Modal } from "antd"
 import React, { useCallback, useEffect, useState } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons"
 const pageSize = 300
 
 const DeviceStatus: React.FC = () => {
@@ -138,16 +139,13 @@ const DeviceStatus: React.FC = () => {
                 }}
                 hoverable
               >
-                <Descriptions column={2}>
+                <Row>
                   {device?.metric_items
                     ?.filter((metricItem) => metricItem.show_in_list)
                     .map((metricItem) => (
-                      <Descriptions.Item
-                        label={metricItem.config_type_name}
-                        key={metricItem.config_type}
-                        style={{ display: "flex", alignItems: "center" }}
-                      >
-                        <div style={{ flex: 1 }}>
+                      <>
+                        <Col span={8}>{metricItem.config_type_name}</Col>
+                        <Col span={12}>
                           <Progress
                             percent={(metricItem.current_val * 100) / metricItem.threshold_val}
                             steps={10}
@@ -160,10 +158,30 @@ const DeviceStatus: React.FC = () => {
                               metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
                             }
                           />
-                        </div>
-                      </Descriptions.Item>
+                        </Col>
+                        <Col
+                          span={4}
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          {device?.alarm_items.find(
+                            (item) => item.config_type === metricItem.config_type,
+                          )?.is_alarm ? (
+                            metricItem.current_val <= metricItem.threshold_val ? (
+                              <CheckCircleOutlined style={{ color: "green" }} />
+                            ) : (
+                              <CloseCircleOutlined style={{ color: "red" }} />
+                            )
+                          ) : (
+                            <></>
+                          )}
+                        </Col>
+                      </>
                     ))}
-                </Descriptions>
+                </Row>
               </Card>
             </Col>
           )
@@ -176,13 +194,11 @@ const DeviceStatus: React.FC = () => {
         onCancel={() => setShowModalVisible(false)}
         footer={null}
       >
-        <Descriptions column={1} key={1}>
-          <Descriptions.Item label="设备类型">
-            {deviceList.find((d) => d.id === deviceId)?.device_type_alias}
-          </Descriptions.Item>
-          <Descriptions.Item label="设备编号">
-            {deviceList.find((d) => d.id === deviceId)?.name}
-          </Descriptions.Item>
+        <Row justify="center" align="middle" style={{ width: "100%" }}>
+          <Col span={8}>设备类型</Col>
+          <Col span={16}>{deviceList.find((d) => d.id === deviceId)?.device_type_alias}</Col>
+          <Col span={8}>设备编号</Col>
+          <Col span={16}>{deviceList.find((d) => d.id === deviceId)?.name}</Col>
           {deviceList?.map((device) => {
             return (
               device.id === deviceId &&
@@ -190,12 +206,9 @@ const DeviceStatus: React.FC = () => {
                 .filter((metricItem) => metricItem.show_in_detail)
                 ?.map((metricItem) => {
                   return (
-                    <Descriptions.Item
-                      label={metricItem.config_type_name}
-                      key={metricItem.config_type}
-                      style={{ display: "flex", alignItems: "center" }}
-                    >
-                      <div style={{ flex: 1 }}>
+                    <>
+                      <Col span={8}>{metricItem.config_type_name}</Col>
+                      <Col span={12}>
                         <Progress
                           percent={(metricItem.current_val * 100) / metricItem.threshold_val}
                           steps={10}
@@ -208,13 +221,33 @@ const DeviceStatus: React.FC = () => {
                             metricItem.current_val <= metricItem.threshold_val ? "green" : "red"
                           }
                         />
-                      </div>
-                    </Descriptions.Item>
+                      </Col>
+                      <Col
+                        span={4}
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        {device?.alarm_items.find(
+                          (item) => item.config_type === metricItem.config_type,
+                        )?.is_alarm ? (
+                          metricItem.current_val <= metricItem.threshold_val ? (
+                            <CheckCircleOutlined style={{ color: "green" }} />
+                          ) : (
+                            <CloseCircleOutlined style={{ color: "red" }} />
+                          )
+                        ) : (
+                          <></>
+                        )}
+                      </Col>
+                    </>
                   )
                 })
             )
           })}
-        </Descriptions>
+        </Row>{" "}
       </Modal>
     </PageContainer>
   )
