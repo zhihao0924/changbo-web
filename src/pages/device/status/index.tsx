@@ -124,9 +124,7 @@ const DeviceStatus: React.FC = () => {
             <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
               <Card
                 title={`${
-                  device.device_type_alias
-                    ? device.device_type_alias
-                    : device.device_type_group
+                  device.device_type_alias ? device.device_type_alias : device.device_type_group
                 }:${device.name}`}
                 extra={<Tag color={device.tag_color}>{device.status_text}</Tag>}
                 onDoubleClick={() => {
@@ -140,7 +138,7 @@ const DeviceStatus: React.FC = () => {
                 }}
                 hoverable
               >
-                <Descriptions column={1}>
+                <Descriptions column={2}>
                   {device?.metric_items
                     ?.filter((metricItem) => metricItem.show_in_list)
                     .map((metricItem) => (

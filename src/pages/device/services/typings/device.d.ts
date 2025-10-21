@@ -27,6 +27,7 @@ declare namespace API_PostDeviceList {
     is_maintaining: boolean
     is_online: boolean
     metric_items: MetricItems[]
+    alarm_items: AlarmItems[]
   }
 
   export interface MetricItems {
@@ -38,6 +39,12 @@ declare namespace API_PostDeviceList {
     show_in_detail: string
     unit: string
     threshold_val: number
+  }
+  export interface AlarmItems {
+    config_type: number 
+    config_type_name: string
+    current_val: number
+    is_alarm: boolean
   }
 }
 

@@ -1,277 +1,672 @@
-import React, { useState, useEffect } from "react"
-import { Card, Row, Col, Statistic, Tag, Progress, Typography } from "antd"
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import { Card, Row, Col, Typography, Tooltip, Button, Space, Statistic } from "antd"
+import { Line, Pie } from "@ant-design/charts"
+import styles from "./index.less"
+import Services from "@/pages/dashboard/services"
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
-  ExclamationCircleOutlined,
+  DatabaseOutlined,
+  WarningOutlined,
+  SoundOutlined,
+  SoundFilled,
+  ThunderboltOutlined,
+  AlertOutlined,
 } from "@ant-design/icons"
-import { Pie, Column, Sunburst } from "@ant-design/charts"
-import styles from "./index.less"
 
 const { Title } = Typography
 
-const deviceData = [
-  { name: "发射合路器", total: 15, running: 12, status: "normal" },
-  { name: "接收分路器", total: 8, running: 7, status: "normal" },
-  { name: "带通双工器", total: 5, running: 4, status: "warning" },
-  { name: "上行信号剥离器", total: 3, running: 3, status: "normal" },
-  { name: "下行信号剥离器", total: 6, running: 5, status: "normal" },
-  { name: "数字近端机", total: 10, running: 8, status: "normal" },
-  { name: "数字远端机", total: 11, running: 9, status: "normal" },
-  { name: "模拟近端机", total: 4, running: 3, status: "error" },
-  { name: "模拟远端机", total: 12, running: 10, status: "warning" },
-  { name: "干线放大器", total: 2, running: 2, status: "normal" },
-]
+// 常量配置
+const DASHBOARD_CONFIG = {
+  refreshInterval: 3000, // 3秒刷新一次数据
+  beepInterval: 1000, // 1秒播放一次滴滴声
+  chartColors: ["#30BF78", "#FAAD14", "#F4664A", "#D9D9D9"],
+  lineChartColor: "#30BF78",
+}
 
-const getStatusTag = (status: string) => {
-  switch (status) {
-    case "normal":
-      return (
-        <Tag icon={<CheckCircleOutlined />} color="success">
-          运行正常
-        </Tag>
-      )
-    case "warning":
-      return (
-        <Tag icon={<ExclamationCircleOutlined />} color="warning">
-          部分异常
-        </Tag>
-      )
-    case "error":
-      return (
-        <Tag icon={<CloseCircleOutlined />} color="error">
-          故障
-        </Tag>
-      )
-    default:
-      return <Tag>未知</Tag>
-  }
+// 自定义Hook：滴滴声功能
+const useBeep = (alarmDeviceCount: number = 0) => {
+  const beepIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const [isBeeping, setIsBeeping] = useState(false)
+
+  // 初始化音频上下文
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      console.log("音频上下文已创建")
+    }
+    return audioContextRef.current
+  }, [])
+
+  // 播放滴滴声
+  const playBeep = useCallback(() => {
+    // 只有在有告警设备时才播放声音
+    if (alarmDeviceCount <= 0) {
+      console.log("没有告警设备，跳过播放")
+      return
+    }
+
+    console.log("尝试播放滴滴声，告警设备数量:", alarmDeviceCount)
+
+    try {
+      const audioContext = getAudioContext()
+
+      // 尝试自动激活音频上下文
+      if (audioContext.state === "suspended") {
+        console.log("音频上下文被暂停，尝试自动激活")
+
+        // 方法1: 尝试直接恢复
+        audioContext
+          .resume()
+          .then(() => {
+            console.log("音频上下文自动激活成功")
+            // 激活后立即播放一次滴滴声
+            playBeep()
+          })
+          .catch((error) => {
+            console.log("自动激活失败，尝试其他方法:", error)
+
+            // 方法2: 模拟用户交互
+            const clickEvent = new MouseEvent("click", {
+              view: window,
+              bubbles: true,
+              cancelable: true,
+            })
+
+            // 尝试在文档上触发点击事件
+            document.dispatchEvent(clickEvent)
+
+            // 再次尝试恢复
+            setTimeout(() => {
+              audioContext
+                .resume()
+                .then(() => {
+                  console.log("通过模拟点击激活音频上下文")
+                  playBeep()
+                })
+                .catch(console.error)
+            }, 100)
+          })
+
+        return
+      }
+
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      oscillator.frequency.value = 800
+      oscillator.type = "sine"
+      gainNode.gain.value = 0.1
+
+      oscillator.start()
+      oscillator.stop(audioContext.currentTime + 0.1)
+
+      console.log("滴滴声播放成功")
+
+      // 清理资源
+      setTimeout(() => {
+        oscillator.disconnect()
+        gainNode.disconnect()
+      }, 200)
+    } catch (error) {
+      console.error("播放滴滴声失败:", error)
+
+      // 尝试使用HTML5 Audio作为备选方案
+      try {
+        const beepSound = new Audio(
+          "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA",
+        )
+        beepSound.volume = 0.1
+
+        // 尝试自动播放，如果失败则静音播放
+        beepSound.play().catch(() => {
+          console.log("HTML5 Audio自动播放被阻止，尝试静音播放")
+          beepSound.muted = true
+          beepSound
+            .play()
+            .then(() => {
+              console.log("静音播放成功")
+              // 播放后取消静音
+              setTimeout(() => {
+                beepSound.muted = false
+              }, 100)
+            })
+            .catch(console.error)
+        })
+
+        console.log("使用HTML5 Audio播放滴滴声")
+      } catch (fallbackError) {
+        console.error("备选方案也失败:", fallbackError)
+      }
+    }
+  }, [alarmDeviceCount, getAudioContext])
+
+  // 开始定时播放
+  const startBeep = useCallback(() => {
+    if (beepIntervalRef.current) clearInterval(beepIntervalRef.current)
+
+    console.log("尝试启动滴滴声定时器，告警设备数量:", alarmDeviceCount)
+
+    // 只有在有告警设备时才启动定时器
+    if (alarmDeviceCount > 0) {
+      beepIntervalRef.current = setInterval(playBeep, DASHBOARD_CONFIG.beepInterval)
+      setIsBeeping(true)
+      console.log("滴滴声定时器已启动，间隔:", DASHBOARD_CONFIG.beepInterval, "ms")
+
+      // 立即播放一次滴滴声
+      setTimeout(playBeep, 100)
+    } else {
+      console.log("没有告警设备，不启动滴滴声")
+    }
+  }, [playBeep, alarmDeviceCount])
+
+  // 停止播放
+  const stopBeep = useCallback(() => {
+    if (beepIntervalRef.current) {
+      clearInterval(beepIntervalRef.current)
+      beepIntervalRef.current = null
+    }
+    setIsBeeping(false)
+  }, [])
+
+  // 切换状态
+  const toggleBeep = useCallback(() => {
+    isBeeping ? stopBeep() : startBeep()
+  }, [isBeeping, startBeep, stopBeep])
+
+  // 当告警设备数量变化时自动处理滴滴声
+  useEffect(() => {
+    console.log("告警设备数量变化:", alarmDeviceCount, "滴滴声状态:", isBeeping)
+
+    if (alarmDeviceCount <= 0 && isBeeping) {
+      // 如果没有告警设备但滴滴声在播放，则停止
+      console.log("告警设备数量为0，停止滴滴声")
+      stopBeep()
+    } else if (alarmDeviceCount > 0 && isBeeping) {
+      // 如果有告警设备且滴滴声在播放，则重新启动（确保定时器正确）
+      console.log("有告警设备且滴滴声开启，确保定时器运行")
+      startBeep()
+    }
+    // 移除自动开启逻辑：只有当用户手动开启时才会播放滴滴声
+  }, [alarmDeviceCount, isBeeping, startBeep, stopBeep])
+
+  // 组件挂载时自动启动滴滴声（如果有告警设备）
+  useEffect(() => {
+    console.log("组件挂载，检查告警设备数量:", alarmDeviceCount)
+    if (alarmDeviceCount > 0) {
+      console.log("挂载时有告警设备，启动滴滴声")
+      startBeep()
+    }
+  }, []) // 只在挂载时执行一次
+
+  // 清理
+  useEffect(() => {
+    return () => {
+      stopBeep()
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        console.log("音频上下文已关闭")
+      }
+    }
+  }, [stopBeep])
+
+  return { isBeeping, toggleBeep, startBeep, stopBeep }
+}
+
+// 饼图配置
+const usePieConfig = (data: any[], total: number, isFirstRender: boolean) => {
+  return useMemo(
+    () => ({
+      data: data || [],
+      angleField: "value",
+      colorField: "type",
+      radius: 0.8,
+      innerRadius: 0.5,
+      label: {
+        type: "inner",
+        content: "{value}",
+        style: { fontSize: 12, textAlign: "center" },
+      },
+      color: DASHBOARD_CONFIG.chartColors,
+      tooltip: {
+        formatter: (item: any) => ({
+          name: item.type,
+          value: `${item.value} 个 (${((item.value * 100) / (total || 1)).toFixed(2)}%)`,
+        }),
+      },
+      statistic: {
+        title: { formatter: () => "健康率", style: { fontSize: 14 } },
+        content: {
+          style: { fontSize: 24, fontWeight: "bold", color: "#30BF78" },
+          content: `${total || 0}%`,
+        },
+      },
+      interactions: [{ type: "element-active" }, { type: "element-selected" }],
+      legend: {
+        position: "right",
+        itemName: {
+          formatter: (text: string, item: any, index: number) => {
+            const itemData = data?.[index]
+            return text === "总数"
+              ? `总数: ${data?.reduce((sum: number, item: any) => sum + (item.value || 0), 0) || 0}`
+              : `${text.substring(0, 2)}: ${itemData?.value || 0}`
+          },
+        },
+        marker: { symbol: "circle", style: { r: 6 } },
+        layout: "vertical",
+        maxRow: 10,
+        maxHeight: 200,
+        itemHeight: 20,
+        itemSpacing: 4,
+        flipPage: true,
+      },
+      height: 200,
+      animation: isFirstRender,
+    }),
+    [data, total, isFirstRender],
+  )
+}
+
+// 折线图配置
+const useLineConfig = (data: any[]) => {
+  return useMemo(
+    () => ({
+      data: data || [],
+      xField: "type",
+      yField: "value",
+      padding: "auto",
+      height: 200,
+      tooltip: {
+        formatter: (item: any) => ({
+          name: item.type,
+          value: `${item.value?.toFixed(2) || 0} wh`,
+        }),
+      },
+      lineStyle: {
+        stroke: DASHBOARD_CONFIG.lineChartColor,
+        lineWidth: 2,
+      },
+      animation: false,
+    }),
+    [data],
+  )
+}
+
+// 设备状态卡片组件
+const DeviceStatusCard: React.FC<{ data: any }> = ({ data }) => (
+  <Card title={data.name} style={{ height: "100%" }}>
+    <Row justify="center" align="middle" style={{ textAlign: "center", marginBottom: 8 }}>
+      <Col span={6}>
+        <Tooltip title="设备总数">
+          <DatabaseOutlined style={{ color: "#30BF78" }} />
+        </Tooltip>
+      </Col>
+      <Col span={6}>
+        <Tooltip title="在线设备">
+          <CheckCircleOutlined style={{ color: "#30BF78" }} />
+        </Tooltip>
+      </Col>
+      <Col span={6}>
+        <Tooltip title="离线设备">
+          <CloseCircleOutlined style={{ color: "#F4664A" }} />
+        </Tooltip>
+      </Col>
+      <Col span={6}>
+        <Tooltip title="告警设备">
+          <WarningOutlined style={{ color: "#FAAD14" }} />
+        </Tooltip>
+      </Col>
+    </Row>
+    <Row justify="center" align="middle" style={{ textAlign: "center" }}>
+      <Col span={6}>
+        <Statistic value={data.total_num} valueStyle={{ fontSize: 16 }} />
+      </Col>
+      <Col span={6}>
+        <Statistic value={data.online_num} valueStyle={{ fontSize: 16 }} />
+      </Col>
+      <Col span={6}>
+        <Statistic value={data.offline_num} valueStyle={{ fontSize: 16 }} />
+      </Col>
+      <Col span={6}>
+        <Statistic value={data.alarm_num} valueStyle={{ fontSize: 16 }} />
+      </Col>
+    </Row>
+  </Card>
+)
+
+// 告警统计卡片
+const AlertStatsCard: React.FC<{
+  alertCount: number
+  isBeeping: boolean
+  onToggleBeep: () => void
+  loading?: boolean
+  alarmDevice: []
+}> = ({ alertCount, isBeeping, onToggleBeep, loading, alarmDevice }) => {
+  // 按告警时间排序，最新的在前
+  const sortedAlarmDevices =
+    alarmDevice?.sort((a, b) => new Date(b.alarm_at).getTime() - new Date(a.alarm_at).getTime()) ||
+    []
+
+  return (
+    <Card
+      title={
+        <Space>
+          <AlertOutlined />
+          <span>告警统计</span>
+          {alertCount > 0 && (
+            <span
+              style={{
+                background: "#ff4d4f",
+                color: "white",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontSize: "12px",
+                fontWeight: "500",
+              }}
+            >
+              {alertCount}
+            </span>
+          )}
+        </Space>
+      }
+      loading={loading}
+      extra={
+        <Tooltip title={isBeeping ? "停止滴滴声" : "开始滴滴声"}>
+          <span
+            onClick={onToggleBeep}
+            style={{
+              cursor: "pointer",
+              fontSize: "16px",
+              color: isBeeping ? "#1890ff" : "#d9d9d9",
+              transition: "color 0.3s ease",
+            }}
+          >
+            {isBeeping ? <SoundOutlined /> : <SoundFilled />}
+          </span>
+        </Tooltip>
+      }
+      style={{ height: "100%" }}
+    >
+      {alertCount === 0 ? (
+        <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <CheckCircleOutlined style={{ fontSize: 48, color: "#52c41a", marginBottom: 16 }} />
+          <div style={{ color: "#52c41a", fontSize: 16, fontWeight: 500 }}>系统运行正常</div>
+          <div style={{ color: "#8c8c8c", fontSize: 14, marginTop: 8 }}>暂无告警设备</div>
+        </div>
+      ) : (
+        <>
+          {/* 告警概览 */}
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <div
+              style={{
+                fontSize: 32,
+                fontWeight: "bold",
+                color: "#ff4d4f",
+                marginBottom: 4,
+              }}
+            >
+              {alertCount}
+            </div>
+            <div style={{ fontSize: 14, color: "#8c8c8c" }}>告警设备总数</div>
+          </div>
+
+          {/* 告警列表 */}
+          <div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 500,
+                marginBottom: 12,
+                color: "#262626",
+              }}
+            >
+              最新告警 ({sortedAlarmDevices.length})
+            </div>
+
+            {sortedAlarmDevices.slice(0, 3).map((item, index) => (
+              <div
+                key={item.device_id}
+                style={{
+                  padding: "12px",
+                  marginBottom: 8,
+                  borderRadius: "6px",
+                  background: index % 2 === 0 ? "#fafafa" : "transparent",
+                  border: "1px solid #f0f0f0",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: 6,
+                  }}
+                >
+                  <div style={{ fontWeight: 500, fontSize: 13, color: "#262626" }}>
+                    {item.device_type} - {item.device_id}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#8c8c8c" }}>{item.alarm_at_str}</div>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#ff4d4f",
+                    fontWeight: 500,
+                    marginBottom: 4,
+                  }}
+                >
+                  {item.alarm_txt}
+                </div>
+
+                {item.suggested_action && (
+                  <div style={{ fontSize: 11, color: "#595959", lineHeight: 1.4 }}>
+                    {item.suggested_action}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {sortedAlarmDevices.length > 3 && (
+              <div style={{ textAlign: "center", marginTop: 12 }}>
+                <span style={{ fontSize: 12, color: "#8c8c8c" }}>
+                  还有 {sortedAlarmDevices.length - 3} 条告警未显示
+                </span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </Card>
+  )
 }
 
 const Dashboard: React.FC = () => {
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [dashboardData, setDashboardData] = useState<API_PostDashboard.Result>()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isFirstRender, setIsFirstRender] = useState(true)
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-    return () => clearInterval(timer)
+  // 计算告警设备数量
+  const alarmDeviceCount = useMemo(() => {
+    const count = dashboardData?.alarm_device?.length || 0
+    return count
+  }, [dashboardData?.alarm_device])
+
+  const { isBeeping, toggleBeep } = useBeep(alarmDeviceCount)
+
+  // 获取数据
+  const getDashboardData = useCallback(async () => {
+    try {
+      setError(null)
+      const res = await Services.api.postDashboardData({}, { showLoading: false, showToast: false })
+
+      if (res?.res) {
+        setDashboardData(res.res)
+      } else {
+        setError("获取数据失败")
+      }
+    } catch (error) {
+      console.error("获取仪表盘数据失败:", error)
+      setError("网络请求失败")
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  // 状态分布数据
-  const statusData = [
-    { type: "正常", value: deviceData.filter((d) => d.status === "normal").length },
-    { type: "警告", value: deviceData.filter((d) => d.status === "warning").length },
-    { type: "故障", value: deviceData.filter((d) => d.status === "error").length },
-  ]
+  // 定时刷新数据
+  useEffect(() => {
+    getDashboardData()
 
-  const sunburstData = {
-    name: "设备统计",
-    children: [
-      {
-        name: "发射合路器",
-        children: [
-          {
-            name: "B2",
-            value: 3,
-          },
-          {
-            name: "B3",
-            value: 3,
-          },
-          {
-            name: "B4",
-            value: 3,
-          },
-          {
-            name: "B6",
-            value: 3,
-          },
-          {
-            name: "B8",
-            value: 3,
-          },
-        ],
-      },
-      {
-        name: "接收分路器",
-        children: [
-          { name: "C4", value: 2 },
-          { name: "C6", value: 3 },
-          { name: "C8", value: 3 },
-        ],
-      },
-      {
-        name: "带通双工器",
-        children: [{ name: "DE", value: 2 }],
-      },
-      {
-        name: "上行信号剥离器",
-        children: [
-          { name: "F4", value: 2 },
-          { name: "F8", value: 8 },
-        ],
-      },
-      {
-        name: "下行信号剥离器",
-        children: [],
-      },
-      {
-        name: "数字近端机",
-        children: [],
-      },
-      {
-        name: "数字远端机",
-        children: [],
-      },
-      {
-        name: "模拟近端机",
-        children: [],
-      },
-      {
-        name: "模拟远端机",
-        children: [],
-      },
-      {
-        name: "干线放大器",
-        children: [],
-      },
-    ],
+    const timer = setInterval(getDashboardData, DASHBOARD_CONFIG.refreshInterval)
+
+    return () => clearInterval(timer)
+  }, [getDashboardData])
+
+  // 处理首次渲染标记
+  useEffect(() => {
+    if (dashboardData && isFirstRender) {
+      setIsFirstRender(false)
+    }
+  }, [dashboardData, isFirstRender])
+
+  // 图表配置
+  const pieConfig = usePieConfig(
+    dashboardData?.statistic || [],
+    dashboardData?.total_healthy || 0,
+    isFirstRender,
+  )
+  const lineConfig = useLineConfig(dashboardData?.energy_consumption || [])
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingContainer}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 48, color: "#1890ff", marginBottom: 16 }}>⚡</div>
+            <Title level={3} style={{ color: "#595959" }}>
+              数据加载中...
+            </Title>
+          </div>
+        </div>
+      </div>
+    )
   }
-  // 4、设备名称：上行信号剥离器
-  // 设备类型：F4 F8
-  // 5、设备名称：下行信号剥离器
-  // 设备类型：D4 D8
-  // 6、设备名称：数字近端机
-  // 设备类型：ED EB
-  // 7、设备名称：数字远端机
-  // 设备类型：DD DB
-  // 8、设备名称：模拟近端机
-  // 设备类型：E9 E8 E4 E2
-  // 9、设备名称：模拟远端机
-  // 设备类型：D1
-  // 10、设备名称：干线放大器
-  // 设备类型：F1
 
-  // 设备数量数据
-  const deviceCountData = deviceData.map((device) => ({
-    name: device.name,
-    total: device.total,
-    running: device.running,
-  }))
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.errorContainer}>
+          <div className={styles.errorIcon}>
+            <AlertOutlined />
+          </div>
+          <Title level={3} type="danger">
+            数据加载失败
+          </Title>
+          <p style={{ color: "#595959", marginBottom: 24 }}>{error}</p>
+          <Button type="primary" onClick={getDashboardData}>
+            重新加载
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <Title level={2} style={{ marginBottom: 0 }}>
-          设备监控看板
-        </Title>
-        <Title level={4} type="secondary">
-          {currentTime.toLocaleString("zh-CN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-          })}
-        </Title>
-      </div>
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={12}>
-          <Card title="设备状态分布">
-            <Pie
-              data={statusData}
-              angleField="value"
-              colorField="type"
-              radius={0.8}
-              label={{
-                type: "spider",
-                content: "{name}: {percentage}",
-                style: {
-                  fill: "#1a1a1a",
-                  fontSize: 12,
-                },
-              }}
-              color={["#389e0d", "#d48806", "#cf1322"]}
-              tooltip={{
-                domStyles: {
-                  "g2-tooltip": {
-                    color: "#1a1a1a",
-                  },
-                },
+      {/* 页面标题 */}
+      <Title level={3} style={{ textAlign: "center", width: "100%" }}>
+        专网通信智能网管平台
+      </Title>
+
+      {/* 主要数据展示区域 */}
+      <Row gutter={24} style={{ marginBottom: 16 }}>
+        {/* 设备健康度图表 */}
+        <Col xs={24} md={12} lg={7}>
+          <Card
+            title={
+              <Space>
+                <ThunderboltOutlined />
+                <span>设备健康度</span>
+              </Space>
+            }
+            loading={loading}
+          >
+            <Pie {...pieConfig} />
+          </Card>
+
+          {/* 能耗统计图表 */}
+          <Card
+            title={
+              <Space>
+                <DatabaseOutlined />
+                <span>能耗统计</span>
+              </Space>
+            }
+            loading={loading}
+          >
+            <Line {...lineConfig} />
+          </Card>
+        </Col>
+        <Col xs={24} md={12} lg={10}>
+          <Card
+            style={{
+              height: "100%",
+              position: "relative",
+              overflow: "hidden",
+            }}
+            bodyStyle={{ padding: 0, height: "100%" }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                bottom: "10%",
+                right: "10%",
+                width: "40%",
+                height: "60%",
+                backgroundImage: 'url("/assets/signal_tower.svg")',
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                opacity: 0.3,
+                animation: 'float 3s ease-in-out infinite',
               }}
             />
           </Card>
         </Col>
-        <Col span={12}>
-          <Card title="设备类型统计">
-            <Sunburst
-              data={sunburstData}
-              tooltip={{
-                domStyles: {
-                  "g2-tooltip": {
-                    color: "#1a1a1a",
-                  },
-                },
-              }}
-            />
-          </Card>
+
+        {/* 告警统计 */}
+        <Col xs={24} md={12} lg={7}>
+          <AlertStatsCard
+            alertCount={dashboardData?.alarm_device?.length || 0}
+            isBeeping={isBeeping}
+            onToggleBeep={toggleBeep}
+            loading={loading}
+            alarmDevice={dashboardData?.alarm_device || []}
+          />
         </Col>
-        {/*<Col span={12}>*/}
-        {/*  <Card title="设备数量统计">*/}
-        {/*    <Column*/}
-        {/*      data={deviceCountData}*/}
-        {/*      xField="name"*/}
-        {/*      yField="total"*/}
-        {/*      seriesField="name"*/}
-        {/*      isGroup={true}*/}
-        {/*      columnStyle={{ radius: [4, 4, 0, 0] }}*/}
-        {/*      color={["#096dd9", "#1890ff", "#40a9ff", "#69c0ff", "#91d5ff"]}*/}
-        {/*      label={{*/}
-        {/*        position: "middle",*/}
-        {/*        style: {*/}
-        {/*          fill: "#1a1a1a",*/}
-        {/*          fontWeight: "bold",*/}
-        {/*        },*/}
-        {/*      }}*/}
-        {/*      tooltip={{*/}
-        {/*        domStyles: {*/}
-        {/*          "g2-tooltip": {*/}
-        {/*            color: "#1a1a1a",*/}
-        {/*          },*/}
-        {/*        },*/}
-        {/*      }}*/}
-        {/*    />*/}
-        {/*  </Card>*/}
-        {/*</Col>*/}
       </Row>
 
-      <Row gutter={16}>
-        {deviceData.map((device, index) => (
-          <Col span={6} key={index} style={{ marginBottom: 16 }}>
-            <Card title={device.name}>
+      {/* 设备类型统计 */}
+      {dashboardData?.type_statistic && dashboardData.type_statistic.length > 0 && (
+        <Row gutter={24} style={{ marginBottom: 16 }}>
+          <Col span={24}>
+            <Card title="设备类型统计" loading={loading}>
               <Row gutter={16}>
-                <Col span={12}>
-                  <Statistic title="总数" value={device.total} />
-                </Col>
-                <Col span={12}>
-                  <Statistic title="运行中" value={device.running} />
-                </Col>
+                {dashboardData.type_statistic.map((item: unknown, index: any) => (
+                  <Col key={item.type} xs={24} sm={12} md={8} lg={6}>
+                    <DeviceStatusCard data={item} />
+                  </Col>
+                ))}
               </Row>
-              <div style={{ marginTop: 16 }}>
-                {getStatusTag(device.status)}
-                <Progress
-                  percent={Math.round((device.running / device.total) * 100)}
-                  status={device.status === "error" ? "exception" : "normal"}
-                  style={{ marginTop: 8 }}
-                />
-              </div>
             </Card>
           </Col>
-        ))}
-      </Row>
+        </Row>
+      )}
     </div>
   )
 }
