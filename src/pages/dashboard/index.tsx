@@ -20,7 +20,7 @@ const { Title } = Typography
 const DASHBOARD_CONFIG = {
   refreshInterval: 3000, // 3秒刷新一次数据
   beepInterval: 1000, // 1秒播放一次滴滴声
-  chartColors: ["#30BF78", "#FAAD14", "#F4664A", "#D9D9D9"],
+  chartColors: ["#30BF78", "#FAAD14", "#F4664A", "#D9D9D9FF"],
   lineChartColor: "#30BF78",
 }
 
@@ -230,7 +230,13 @@ const useBeep = (alarmDeviceCount: number = 0) => {
 }
 
 // 饼图配置
-const usePieConfig = (data: any[], total: number, isFirstRender: boolean) => {
+const usePieConfig = (
+  data: API_PostDashboard.Statistic | any[],
+  total_healthy: number,
+  total: number,
+  isFirstRender: boolean,
+  dashboardData: any,
+) => {
   return useMemo(
     () => ({
       data: data || [],
@@ -254,7 +260,7 @@ const usePieConfig = (data: any[], total: number, isFirstRender: boolean) => {
         title: { formatter: () => "健康率", style: { fontSize: 14 } },
         content: {
           style: { fontSize: 24, fontWeight: "bold", color: "#30BF78" },
-          content: `${total || 0}%`,
+          content: `${total_healthy || 0}%`,
         },
       },
       interactions: [{ type: "element-active" }, { type: "element-selected" }],
@@ -262,10 +268,13 @@ const usePieConfig = (data: any[], total: number, isFirstRender: boolean) => {
         position: "right",
         itemName: {
           formatter: (text: string, item: any, index: number) => {
+            // 设备总数显示在legend中
+            if (text === "设备总计") {
+              return `总计：${total}`
+            }
+            // 对于普通数据项，显示对应的值
             const itemData = data?.[index]
-            return text === "总数"
-              ? `总数: ${data?.reduce((sum: number, item: any) => sum + (item.value || 0), 0) || 0}`
-              : `${text.substring(0, 2)}: ${itemData?.value || 0}`
+            return `${text?.substring(0, 2) || ""}: ${itemData?.value || 0}`
           },
         },
         marker: { symbol: "circle", style: { r: 6 } },
@@ -274,12 +283,24 @@ const usePieConfig = (data: any[], total: number, isFirstRender: boolean) => {
         maxHeight: 200,
         itemHeight: 20,
         itemSpacing: 4,
-        flipPage: true,
+        flipPage: false,
+        items: [
+          ...(data || []).map((item, index) => ({
+            value: item.type,
+            name: `${item.type?.substring(0, 2) || ""}: ${item.value || 0}`,
+            marker: { symbol: "circle", style: { fill: DASHBOARD_CONFIG.chartColors[index] } },
+          })),
+          {
+            value: total,
+            name: `设备总计`,
+            marker: { symbol: "circle", style: { fill: "#00e3ff" } },
+          },
+        ],
       },
       height: 200,
       animation: isFirstRender,
     }),
-    [data, total, isFirstRender],
+    [data, total_healthy, total, isFirstRender],
   )
 }
 
@@ -516,6 +537,8 @@ const Dashboard: React.FC = () => {
       const res = await Services.api.postDashboardData({}, { showLoading: false, showToast: false })
 
       if (res?.res) {
+        console.log("Dashboard API Response:", res.res)
+        console.log("Total devices:", res.res.total)
         setDashboardData(res.res)
       } else {
         setError("获取数据失败")
@@ -548,7 +571,9 @@ const Dashboard: React.FC = () => {
   const pieConfig = usePieConfig(
     dashboardData?.statistic || [],
     dashboardData?.total_healthy || 0,
+    dashboardData?.total || 0,
     isFirstRender,
+    dashboardData,
   )
   const lineConfig = useLineConfig(dashboardData?.energy_consumption || [])
 
@@ -643,7 +668,7 @@ const Dashboard: React.FC = () => {
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "center",
                 opacity: 0.3,
-                animation: 'float 3s ease-in-out infinite',
+                animation: "float 3s ease-in-out infinite",
               }}
             />
           </Card>
