@@ -478,27 +478,30 @@ const AlertStatsCard: React.FC<{
                   }}
                 >
                   <div style={{ fontWeight: 500, fontSize: 13, color: "#262626" }}>
-                    {item.device_type} - {item.device_id}
+                    {item.device_type_group} - {item.device_name}
                   </div>
-                  <div style={{ fontSize: 11, color: "#8c8c8c" }}>{item.alarm_at_str}</div>
+                  {/*<div style={{ fontSize: 11, color: "#8c8c8c" }}>{item.config_type_name}</div>*/}
                 </div>
 
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "#ff4d4f",
-                    fontWeight: 500,
-                    marginBottom: 4,
-                  }}
-                >
-                  {item.alarm_txt}
-                </div>
-
-                {item.suggested_action && (
-                  <div style={{ fontSize: 11, color: "#595959", lineHeight: 1.4 }}>
-                    {item.suggested_action}
-                  </div>
-                )}
+                {item?.alarm_item.map((alarmItem) => {
+                  return (
+                    <>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: "#ff4d4f",
+                          fontWeight: 500,
+                          marginBottom: 4,
+                        }}
+                      >
+                        {alarmItem.config_type_name}异常
+                      </div>
+                      <div style={{ fontSize: 11, color: "#595959", lineHeight: 1.4 }}>
+                        建议操作：{alarmItem.suggested_action}
+                      </div>
+                    </>
+                  )
+                })}
               </div>
             ))}
 

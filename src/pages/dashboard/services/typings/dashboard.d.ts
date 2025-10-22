@@ -27,8 +27,17 @@ declare namespace API_PostDashboard {
     alarm_num: number
   }
   export interface AlarmDevice {
-    alarm_item: any[]
+    alarm_item: AlarmItem[]
+    device_id: number
+    device_name: string
     device_type: string
     device_type_group: string
+  }
+
+  export interface AlarmItem {
+    config_type: number
+    config_type_name: string
+    alarm_text: string
+    suggested_action: string
   }
 }
