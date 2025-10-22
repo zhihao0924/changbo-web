@@ -34,13 +34,14 @@ declare namespace API_PostDeviceList {
     //
     config_type: number
     config_type_name: string
-    current_val: number | undefined
+    current_val: number
     min_val: number | undefined
     max_val: number | undefined
     show_in_list: string
     show_in_detail: string
     unit: string
-    threshold_val: number
+    threshold_val: number | undefined
+    operator: string
   }
   export interface AlarmItems {
     config_type: number

@@ -135,14 +135,33 @@ const DeviceStatus: React.FC = () => {
                             steps={10}
                             size="small"
                             showInfo={true}
-                            format={() =>
-                              `${(metricItem.current_val ?? 0).toFixed(2)} ${metricItem.unit}`
-                            }
+                            format={() => {
+                              // 判断 max_val 是数字且大于 current_val 时显示无穷大
+                              if (
+                                typeof metricItem.max_val === "number" &&
+                                metricItem.current_val > metricItem.max_val
+                              ) {
+                                return `∞`
+                              }
+                              if (
+                                typeof metricItem.min_val === "number" &&
+                                metricItem.current_val < metricItem.min_val
+                              ) {
+                                return `-∞`
+                              }
+                              return `${(metricItem.current_val ?? 0).toFixed(2)} ${
+                                metricItem.unit
+                              }`
+                            }}
                             strokeColor={
-                              metricItem.current_val <= metricItem.threshold_val ||
-                              metricItem.threshold_val == 0
-                                ? "green"
-                                : "red"
+                              (metricItem.operator == "GT" &&
+                                typeof metricItem.threshold_val === "number" &&
+                                metricItem.current_val > metricItem.threshold_val) ||
+                              (metricItem.operator == "LT" &&
+                                typeof metricItem.threshold_val === "number" &&
+                                metricItem.current_val < metricItem.threshold_val)
+                                ? "red"
+                                : "green"
                             }
                           />
                         </Col>
@@ -154,11 +173,16 @@ const DeviceStatus: React.FC = () => {
                             alignItems: "center",
                           }}
                         >
-                          {metricItem.current_val > 0 && metricItem.threshold_val > 0 ? (
-                            metricItem.current_val <= metricItem.threshold_val ? (
-                              <CheckCircleOutlined style={{ color: "green" }} />
-                            ) : (
+                          {typeof metricItem.threshold_val === "number" ? (
+                            (metricItem.operator == "GT" &&
+                              typeof metricItem.threshold_val === "number" &&
+                              metricItem.current_val > metricItem.threshold_val) ||
+                            (metricItem.operator == "LT" &&
+                              typeof metricItem.threshold_val === "number" &&
+                              metricItem.current_val < metricItem.threshold_val) ? (
                               <CloseCircleOutlined style={{ color: "red" }} />
+                            ) : (
+                              <CheckCircleOutlined style={{ color: "green" }} />
                             )
                           ) : (
                             <></>
@@ -207,10 +231,14 @@ const DeviceStatus: React.FC = () => {
                               ${metricItem.unit}`
                             }}
                             strokeColor={
-                              metricItem.current_val <= metricItem.threshold_val ||
-                              metricItem.threshold_val == 0
-                                ? "green"
-                                : "red"
+                              (metricItem.operator == "GT" &&
+                                typeof metricItem.threshold_val === "number" &&
+                                metricItem.current_val > metricItem.threshold_val) ||
+                              (metricItem.operator == "LT" &&
+                                typeof metricItem.threshold_val === "number" &&
+                                metricItem.current_val < metricItem.threshold_val)
+                                ? "red"
+                                : "green"
                             }
                           />
                         </Col>
@@ -223,10 +251,15 @@ const DeviceStatus: React.FC = () => {
                           }}
                         >
                           {metricItem.current_val > 0 && metricItem.threshold_val > 0 ? (
-                            metricItem.current_val <= metricItem.threshold_val ? (
-                              <CheckCircleOutlined style={{ color: "green" }} />
-                            ) : (
+                            (metricItem.operator == "GT" &&
+                              typeof metricItem.threshold_val === "number" &&
+                              metricItem.current_val > metricItem.threshold_val) ||
+                            (metricItem.operator == "LT" &&
+                              typeof metricItem.threshold_val === "number" &&
+                              metricItem.current_val < metricItem.threshold_val) ? (
                               <CloseCircleOutlined style={{ color: "red" }} />
+                            ) : (
+                              <CheckCircleOutlined style={{ color: "green" }} />
                             )
                           ) : (
                             <></>
