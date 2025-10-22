@@ -62,10 +62,10 @@ const DeviceTypes: React.FC = () => {
 
       const configs: { config_type: number; val: number }[] = []
       forEach(values.configs, (item, key) => {
-        if (!item.val) return
+        if (!item.val && !item.min && !item.max) return
         configs.push({
           config_type: parseInt(key),
-          val: item.val,
+          ...item,
         })
       })
       await Services.api
@@ -169,9 +169,8 @@ const DeviceTypes: React.FC = () => {
             onClick={() => {
               setCurrentRecord(record)
               forEach(record?.configs, (item) => {
-                if (item.val != undefined) {
-                  configForm.setFieldValue(["configs", `${item.config_type}`, "val"], item.val)
-                }
+                console.log(item)
+                configForm.setFieldValue(["configs", `${item.config_type}`], item)
               })
               setConfigModalVisible(true)
             }}
@@ -287,32 +286,60 @@ const DeviceTypes: React.FC = () => {
         open={configModalVisible}
         onOk={handleConfigSubmit}
         onCancel={() => setConfigModalVisible(false)}
+        width={960}
       >
         <Form form={configForm}>
-          {currentRecord?.configs?.map((item) => {
-            return (
-              <Form.Item
-                name={["configs", `${item.config_type}`, "val"]}
-                initialValue={item.val ?? undefined}
-                label={item.config_type_name}
-                labelCol={{ span: 6 }}
-                key={item.config_type}
-              >
-                <InputNumber
-                  step={0.1}
-                  addonBefore={`${
-                    item.alarm_operator === "GT"
-                      ? "大于"
-                      : item.alarm_operator === "LT"
-                      ? "小于"
-                      : ""
-                  }`}
-                  addonAfter={item.unit}
-                  style={{ width: "100%" }}
-                />
-              </Form.Item>
-            )
-          })}
+          <Row>
+            {currentRecord?.configs?.map((item) => {
+              return (
+                <>
+                  <Col span={8} key={`${item.config_type}_val`}>
+                    <Form.Item
+                      name={["configs", `${item.config_type}`, "val"]}
+                      initialValue={item.val ?? undefined}
+                      label={item.config_type_name}
+                      labelCol={{ span: 8 }}
+                      key={item.config_type}
+                    >
+                      <InputNumber
+                        step={0.1}
+                        addonBefore={`${
+                          item.alarm_operator === "GT"
+                            ? "大于"
+                            : item.alarm_operator === "LT"
+                            ? "小于"
+                            : ""
+                        }`}
+                        addonAfter={item.unit}
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={16} key={`${item.config_type}_range`}>
+                    <Form.Item label={`显示范围`} labelCol={{ span: 6 }}>
+                      <Space align="center" style={{ display: "flex", alignItems: "center" }}>
+                        <Form.Item name={["configs", `${item.config_type}`, "min"]}>
+                          <InputNumber
+                            step={0.1}
+                            addonAfter={item.unit}
+                            style={{ width: "100%" }}
+                          />
+                        </Form.Item>
+                        <Form.Item>至</Form.Item>
+                        <Form.Item name={["configs", `${item.config_type}`, "max"]}>
+                          <InputNumber
+                            step={0.1}
+                            addonAfter={item.unit}
+                            style={{ width: "100%" }}
+                          />
+                        </Form.Item>
+                      </Space>{" "}
+                    </Form.Item>
+                  </Col>
+                </>
+              )
+            })}
+          </Row>
         </Form>
       </Modal>
 

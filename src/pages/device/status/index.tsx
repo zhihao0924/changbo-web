@@ -101,22 +101,6 @@ const DeviceStatus: React.FC = () => {
               <DeviceNameSelect />
             </Form.Item>
           </Col>
-          {/*<Col xs={24} sm={12} md={8} lg={6}>*/}
-          {/*  <Form.Item>*/}
-          {/*    <Button*/}
-          {/*      type="primary"*/}
-          {/*      onClick={() => {*/}
-          {/*        onSearch({*/}
-          {/*          ...form.getFieldsValue(),*/}
-          {/*          page: 1,*/}
-          {/*          limit: pageSize,*/}
-          {/*        })*/}
-          {/*      }}*/}
-          {/*    >*/}
-          {/*      搜索*/}
-          {/*    </Button>*/}
-          {/*  </Form.Item>*/}
-          {/*</Col>*/}
         </Row>
       </Form>
       <Row gutter={[24, 24]}>
@@ -218,13 +202,10 @@ const DeviceStatus: React.FC = () => {
                             steps={10}
                             size="small"
                             showInfo={true}
-                            format={() =>
-                              `${
-                                metricItem.current_val === 0
-                                  ? "-"
-                                  : (metricItem.current_val ?? 0).toFixed(2) + metricItem.unit
-                              }`
-                            }
+                            format={() => {
+                              return `${(metricItem.current_val ?? 0).toFixed(2)}
+                              ${metricItem.unit}`
+                            }}
                             strokeColor={
                               metricItem.current_val <= metricItem.threshold_val ||
                               metricItem.threshold_val == 0

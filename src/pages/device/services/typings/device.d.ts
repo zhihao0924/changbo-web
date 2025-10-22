@@ -34,14 +34,16 @@ declare namespace API_PostDeviceList {
     //
     config_type: number
     config_type_name: string
-    current_val: number
+    current_val: number | undefined
+    min_val: number | undefined
+    max_val: number | undefined
     show_in_list: string
     show_in_detail: string
     unit: string
     threshold_val: number
   }
   export interface AlarmItems {
-    config_type: number 
+    config_type: number
     config_type_name: string
     current_val: number
     is_alarm: boolean
@@ -103,6 +105,8 @@ declare namespace API_PostDeviceTypes {
     config_type_name: string
     alarm_operator: string
     val: number
+    min: number
+    max: number
     unit: string
     sort: number
   }
