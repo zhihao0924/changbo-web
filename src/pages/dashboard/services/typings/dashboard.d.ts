@@ -25,6 +25,7 @@ declare namespace API_PostDashboard {
     online_num: number
     offline_num: number
     alarm_num: number
+    maintaining_num: number
   }
   export interface AlarmDevice {
     alarm_item: AlarmItem[]

@@ -173,12 +173,11 @@ const DeviceStatus: React.FC = () => {
                             alignItems: "center",
                           }}
                         >
-                          {typeof metricItem.threshold_val === "number" ? (
+                          {metricItem.is_set_current_val &&
+                          typeof metricItem.threshold_val == "number" ? (
                             (metricItem.operator == "GT" &&
-                              typeof metricItem.threshold_val === "number" &&
                               metricItem.current_val > metricItem.threshold_val) ||
                             (metricItem.operator == "LT" &&
-                              typeof metricItem.threshold_val === "number" &&
                               metricItem.current_val < metricItem.threshold_val) ? (
                               <CloseCircleOutlined style={{ color: "red" }} />
                             ) : (
@@ -250,12 +249,11 @@ const DeviceStatus: React.FC = () => {
                             alignItems: "center",
                           }}
                         >
-                          {metricItem.current_val > 0 && metricItem.threshold_val > 0 ? (
+                          {metricItem.is_set_current_val &&
+                          typeof metricItem.threshold_val == "number" ? (
                             (metricItem.operator == "GT" &&
-                              typeof metricItem.threshold_val === "number" &&
                               metricItem.current_val > metricItem.threshold_val) ||
                             (metricItem.operator == "LT" &&
-                              typeof metricItem.threshold_val === "number" &&
                               metricItem.current_val < metricItem.threshold_val) ? (
                               <CloseCircleOutlined style={{ color: "red" }} />
                             ) : (

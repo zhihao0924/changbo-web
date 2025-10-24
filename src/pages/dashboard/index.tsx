@@ -12,6 +12,7 @@ import {
   SoundFilled,
   ThunderboltOutlined,
   AlertOutlined,
+  ToolOutlined,
 } from "@ant-design/icons"
 
 const { Title } = Typography
@@ -333,39 +334,47 @@ const useLineConfig = (data: any[]) => {
 const DeviceStatusCard: React.FC<{ data: any }> = ({ data }) => (
   <Card title={data.name} style={{ height: "100%" }}>
     <Row justify="center" align="middle" style={{ textAlign: "center", marginBottom: 8 }}>
-      <Col span={6}>
+      <Col span={5}>
         <Tooltip title="设备总数">
           <DatabaseOutlined style={{ color: "#30BF78" }} />
         </Tooltip>
       </Col>
-      <Col span={6}>
+      <Col span={5}>
         <Tooltip title="在线设备">
           <CheckCircleOutlined style={{ color: "#30BF78" }} />
         </Tooltip>
       </Col>
-      <Col span={6}>
+      <Col span={5}>
         <Tooltip title="离线设备">
           <CloseCircleOutlined style={{ color: "#F4664A" }} />
         </Tooltip>
       </Col>
-      <Col span={6}>
+      <Col span={5}>
         <Tooltip title="告警设备">
           <WarningOutlined style={{ color: "#FAAD14" }} />
         </Tooltip>
       </Col>
+      <Col span={4}>
+        <Tooltip title="维护中设备">
+          <ToolOutlined style={{ color: "#1890ff" }} />
+        </Tooltip>
+      </Col>
     </Row>
     <Row justify="center" align="middle" style={{ textAlign: "center" }}>
-      <Col span={6}>
+      <Col span={5}>
         <Statistic value={data.total_num} valueStyle={{ fontSize: 16 }} />
       </Col>
-      <Col span={6}>
+      <Col span={5}>
         <Statistic value={data.online_num} valueStyle={{ fontSize: 16 }} />
       </Col>
-      <Col span={6}>
+      <Col span={5}>
         <Statistic value={data.offline_num} valueStyle={{ fontSize: 16 }} />
       </Col>
-      <Col span={6}>
+      <Col span={5}>
         <Statistic value={data.alarm_num} valueStyle={{ fontSize: 16 }} />
+      </Col>
+      <Col span={4}>
+        <Statistic value={data.maintaining_num} valueStyle={{ fontSize: 16 }} />
       </Col>
     </Row>
   </Card>

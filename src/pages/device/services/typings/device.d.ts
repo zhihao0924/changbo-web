@@ -35,6 +35,7 @@ declare namespace API_PostDeviceList {
     config_type: number
     config_type_name: string
     current_val: number
+    is_set_current_val: boolean
     min_val: number | undefined
     max_val: number | undefined
     show_in_list: string
