@@ -21,7 +21,7 @@ const { Title } = Typography
 const DASHBOARD_CONFIG = {
   refreshInterval: 3000, // 3秒刷新一次数据
   beepInterval: 1000, // 1秒播放一次滴滴声
-  chartColors: ["#30BF78", "#FAAD14", "#F4664A", "#D9D9D9FF"],
+  chartColors: ["#30BF78", "#FAAD14", "#F4664A", "#FFE900"],
   lineChartColor: "#30BF78",
 }
 
