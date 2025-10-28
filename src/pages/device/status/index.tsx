@@ -3,11 +3,7 @@ import { Card, Col, Row, Tag, Progress, Form, Select, Modal } from "antd"
 import React, { useCallback, useEffect, useState } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
-import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  CheckOutlined,
-} from "@ant-design/icons"
+import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined } from "@ant-design/icons"
 const pageSize = 300
 
 const DeviceStatus: React.FC = () => {
@@ -157,10 +153,11 @@ const DeviceStatus: React.FC = () => {
                                 <span
                                   style={{
                                     color:
-                                      (typeof metricItem.alarm_min === "number" &&
+                                      metricItem.is_set_current_val &&
+                                      ((typeof metricItem.alarm_min === "number" &&
                                         metricItem.current_val < metricItem.alarm_min) ||
-                                      (typeof metricItem.alarm_max === "number" &&
-                                        metricItem.current_val > metricItem.alarm_max)
+                                        (typeof metricItem.alarm_max === "number" &&
+                                          metricItem.current_val > metricItem.alarm_max))
                                         ? "red"
                                         : "",
                                   }}
@@ -194,11 +191,10 @@ const DeviceStatus: React.FC = () => {
                             metricItem.current_val < metricItem.alarm_min ? (
                               <ArrowDownOutlined style={{ color: "red" }} />
                             ) : typeof metricItem.alarm_max == "number" &&
-                            metricItem.current_val > metricItem.alarm_max ? (
+                              metricItem.current_val > metricItem.alarm_max ? (
                               <ArrowUpOutlined style={{ color: "red" }} />
                             ) : (
                               <CheckOutlined style={{ color: "green" }} />
-        width={800}
                             )
                           ) : (
                             <></>
@@ -260,10 +256,11 @@ const DeviceStatus: React.FC = () => {
                                 <span
                                   style={{
                                     color:
-                                      (typeof metricItem.alarm_min === "number" &&
+                                      metricItem.is_set_current_val &&
+                                      ((typeof metricItem.alarm_min === "number" &&
                                         metricItem.current_val < metricItem.alarm_min) ||
-                                      (typeof metricItem.alarm_max === "number" &&
-                                        metricItem.current_val > metricItem.alarm_max)
+                                        (typeof metricItem.alarm_max === "number" &&
+                                          metricItem.current_val > metricItem.alarm_max))
                                         ? "red"
                                         : "",
                                   }}
