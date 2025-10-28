@@ -62,7 +62,7 @@ const DeviceTypes: React.FC = () => {
 
       const configs: { config_type: number; val: number }[] = []
       forEach(values.configs, (item, key) => {
-        if (!item.val && !item.min && !item.max) return
+        if (!item.alarm_min && !item.alarm_max && !item.show_min && !item.show_max) return
         configs.push({
           config_type: parseInt(key),
           ...item,
@@ -293,32 +293,10 @@ const DeviceTypes: React.FC = () => {
             {currentRecord?.configs?.map((item) => {
               return (
                 <>
-                  <Col span={8} key={`${item.config_type}_val`}>
-                    <Form.Item
-                      name={["configs", `${item.config_type}`, "val"]}
-                      initialValue={item.val ?? undefined}
-                      label={item.config_type_name}
-                      labelCol={{ span: 8 }}
-                      key={item.config_type}
-                    >
-                      <InputNumber
-                        step={0.1}
-                        addonBefore={`${
-                          item.alarm_operator === "GT"
-                            ? "大于"
-                            : item.alarm_operator === "LT"
-                            ? "小于"
-                            : ""
-                        }`}
-                        addonAfter={item.unit}
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={16} key={`${item.config_type}_range`}>
-                    <Form.Item label={`显示范围`} labelCol={{ span: 6 }}>
+                  <Col span={12} key={`${item.config_type}_alarm`}>
+                    <Form.Item label={`${item.config_type_name}`} labelCol={{ span: 6 }}>
                       <Space align="center" style={{ display: "flex", alignItems: "center" }}>
-                        <Form.Item name={["configs", `${item.config_type}`, "min"]}>
+                        <Form.Item name={["configs", `${item.config_type}`, "alarm_min"]}>
                           <InputNumber
                             step={0.1}
                             addonAfter={item.unit}
@@ -326,7 +304,28 @@ const DeviceTypes: React.FC = () => {
                           />
                         </Form.Item>
                         <Form.Item>至</Form.Item>
-                        <Form.Item name={["configs", `${item.config_type}`, "max"]}>
+                        <Form.Item name={["configs", `${item.config_type}`, "alarm_max"]}>
+                          <InputNumber
+                            step={0.1}
+                            addonAfter={item.unit}
+                            style={{ width: "100%" }}
+                          />
+                        </Form.Item>
+                      </Space>{" "}
+                    </Form.Item>
+                  </Col>
+                  <Col span={12} key={`${item.config_type}_range`}>
+                    <Form.Item label={`显示范围`} labelCol={{ span: 6 }}>
+                      <Space align="center" style={{ display: "flex", alignItems: "center" }}>
+                        <Form.Item name={["configs", `${item.config_type}`, "show_min"]}>
+                          <InputNumber
+                            step={0.1}
+                            addonAfter={item.unit}
+                            style={{ width: "100%" }}
+                          />
+                        </Form.Item>
+                        <Form.Item>至</Form.Item>
+                        <Form.Item name={["configs", `${item.config_type}`, "show_max"]}>
                           <InputNumber
                             step={0.1}
                             addonAfter={item.unit}

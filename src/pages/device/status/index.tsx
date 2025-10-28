@@ -3,7 +3,11 @@ import { Card, Col, Row, Tag, Progress, Form, Select, Modal } from "antd"
 import React, { useCallback, useEffect, useState } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons"
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CheckOutlined,
+} from "@ant-design/icons"
 const pageSize = 300
 
 const DeviceStatus: React.FC = () => {
@@ -131,35 +135,45 @@ const DeviceStatus: React.FC = () => {
                         <Col span={8}>{metricItem.config_type_name}</Col>
                         <Col span={12}>
                           <Progress
-                            percent={(metricItem.current_val * 100) / metricItem.threshold_val}
+                            percent={(metricItem.current_val * 100) / metricItem.alarm_max}
                             steps={10}
                             size="small"
                             showInfo={true}
                             format={() => {
                               // 判断 max_val 是数字且大于 current_val 时显示无穷大
                               if (
-                                typeof metricItem.max_val === "number" &&
-                                metricItem.current_val > metricItem.max_val
+                                typeof metricItem.show_max === "number" &&
+                                metricItem.current_val > metricItem.show_max
                               ) {
                                 return `∞`
                               }
                               if (
-                                typeof metricItem.min_val === "number" &&
-                                metricItem.current_val < metricItem.min_val
+                                typeof metricItem.show_min === "number" &&
+                                metricItem.current_val < metricItem.show_min
                               ) {
                                 return `-∞`
                               }
-                              return `${(metricItem.current_val ?? 0).toFixed(2)} ${
-                                metricItem.unit
-                              }`
+                              return (
+                                <span
+                                  style={{
+                                    color:
+                                      (typeof metricItem.alarm_min === "number" &&
+                                        metricItem.current_val < metricItem.alarm_min) ||
+                                      (typeof metricItem.alarm_max === "number" &&
+                                        metricItem.current_val > metricItem.alarm_max)
+                                        ? "red"
+                                        : "",
+                                  }}
+                                >
+                                  {(metricItem.current_val ?? 0).toFixed(2)} {metricItem.unit}
+                                </span>
+                              )
                             }}
                             strokeColor={
-                              (metricItem.operator == "GT" &&
-                                typeof metricItem.threshold_val === "number" &&
-                                metricItem.current_val > metricItem.threshold_val) ||
-                              (metricItem.operator == "LT" &&
-                                typeof metricItem.threshold_val === "number" &&
-                                metricItem.current_val < metricItem.threshold_val)
+                              (typeof metricItem.alarm_min === "number" &&
+                                metricItem.current_val < metricItem.alarm_min) ||
+                              (typeof metricItem.alarm_max === "number" &&
+                                metricItem.current_val > metricItem.alarm_max)
                                 ? "red"
                                 : "green"
                             }
@@ -174,14 +188,17 @@ const DeviceStatus: React.FC = () => {
                           }}
                         >
                           {metricItem.is_set_current_val &&
-                          typeof metricItem.threshold_val == "number" ? (
-                            (metricItem.operator == "GT" &&
-                              metricItem.current_val > metricItem.threshold_val) ||
-                            (metricItem.operator == "LT" &&
-                              metricItem.current_val < metricItem.threshold_val) ? (
-                              <CloseCircleOutlined style={{ color: "red" }} />
+                          (typeof metricItem.alarm_min == "number" ||
+                            typeof metricItem.alarm_max == "number") ? (
+                            typeof metricItem.alarm_min == "number" &&
+                            metricItem.current_val < metricItem.alarm_min ? (
+                              <ArrowDownOutlined style={{ color: "red" }} />
+                            ) : typeof metricItem.alarm_max == "number" &&
+                            metricItem.current_val > metricItem.alarm_max ? (
+                              <ArrowUpOutlined style={{ color: "red" }} />
                             ) : (
-                              <CheckCircleOutlined style={{ color: "green" }} />
+                              <CheckOutlined style={{ color: "green" }} />
+        width={800}
                             )
                           ) : (
                             <></>
@@ -221,21 +238,45 @@ const DeviceStatus: React.FC = () => {
                         <Col span={8}>{metricItem.config_type_name}</Col>
                         <Col span={12}>
                           <Progress
-                            percent={(metricItem.current_val * 100) / metricItem.threshold_val}
+                            percent={(metricItem.current_val * 100) / metricItem.alarm_max}
                             steps={10}
                             size="small"
                             showInfo={true}
                             format={() => {
-                              return `${(metricItem.current_val ?? 0).toFixed(2)}
-                              ${metricItem.unit}`
+                              // 判断 max_val 是数字且大于 current_val 时显示无穷大
+                              if (
+                                typeof metricItem.show_max === "number" &&
+                                metricItem.current_val > metricItem.show_max
+                              ) {
+                                return `∞`
+                              }
+                              if (
+                                typeof metricItem.show_min === "number" &&
+                                metricItem.current_val < metricItem.show_min
+                              ) {
+                                return `-∞`
+                              }
+                              return (
+                                <span
+                                  style={{
+                                    color:
+                                      (typeof metricItem.alarm_min === "number" &&
+                                        metricItem.current_val < metricItem.alarm_min) ||
+                                      (typeof metricItem.alarm_max === "number" &&
+                                        metricItem.current_val > metricItem.alarm_max)
+                                        ? "red"
+                                        : "",
+                                  }}
+                                >
+                                  {(metricItem.current_val ?? 0).toFixed(2)} {metricItem.unit}
+                                </span>
+                              )
                             }}
                             strokeColor={
-                              (metricItem.operator == "GT" &&
-                                typeof metricItem.threshold_val === "number" &&
-                                metricItem.current_val > metricItem.threshold_val) ||
-                              (metricItem.operator == "LT" &&
-                                typeof metricItem.threshold_val === "number" &&
-                                metricItem.current_val < metricItem.threshold_val)
+                              (typeof metricItem.alarm_min === "number" &&
+                                metricItem.current_val < metricItem.alarm_min) ||
+                              (typeof metricItem.alarm_max === "number" &&
+                                metricItem.current_val > metricItem.alarm_max)
                                 ? "red"
                                 : "green"
                             }
@@ -250,14 +291,16 @@ const DeviceStatus: React.FC = () => {
                           }}
                         >
                           {metricItem.is_set_current_val &&
-                          typeof metricItem.threshold_val == "number" ? (
-                            (metricItem.operator == "GT" &&
-                              metricItem.current_val > metricItem.threshold_val) ||
-                            (metricItem.operator == "LT" &&
-                              metricItem.current_val < metricItem.threshold_val) ? (
-                              <CloseCircleOutlined style={{ color: "red" }} />
+                          (typeof metricItem.alarm_min == "number" ||
+                            typeof metricItem.alarm_max == "number") ? (
+                            typeof metricItem.alarm_min == "number" &&
+                            metricItem.current_val < metricItem.alarm_min ? (
+                              <ArrowDownOutlined style={{ color: "red" }} />
+                            ) : typeof metricItem.alarm_max == "number" &&
+                              metricItem.current_val > metricItem.alarm_max ? (
+                              <ArrowUpOutlined style={{ color: "red" }} />
                             ) : (
-                              <CheckCircleOutlined style={{ color: "green" }} />
+                              <CheckOutlined style={{ color: "green" }} />
                             )
                           ) : (
                             <></>
