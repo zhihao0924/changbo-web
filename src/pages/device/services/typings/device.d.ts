@@ -35,6 +35,7 @@ declare namespace API_PostDeviceList {
     config_type: number
     config_type_name: string
     current_val: number
+    current_val_type: string
     is_set_current_val: boolean
     show_min: number | undefined
     show_max: number | undefined
@@ -43,6 +44,7 @@ declare namespace API_PostDeviceList {
     unit: string
     alarm_min: number | undefined
     alarm_max: number | undefined
+    is_module: boolean
   }
   export interface AlarmItems {
     config_type: number
