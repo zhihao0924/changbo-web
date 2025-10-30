@@ -225,6 +225,16 @@ export const request = async (
       }
 
       if (err?.response?.status == 401) {
+        // 如果是refreshToken接口本身返回401，直接退出登录，避免无限循环
+        if (url === "/api/admin/refreshToken" || url.includes("admin/refreshToken")) {
+          console.error("Refresh token failed, redirect to login")
+          setTimeout(() => {
+            removeUserInfo()
+            history.replace(redirectLoginPath)
+          }, 300)
+          throw new Error("Refresh token failed")
+        }
+        
         // 先尝试刷新token
         try {
           const res = await refreshToken({ showToast: false })
