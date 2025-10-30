@@ -56,6 +56,11 @@ export default [
         path: "/device/log",
         component: "./device/log",
       },
+      {
+        name: "xlsx",
+        path: "/device/dailyXlsx",
+        component: "./device/dailyXlsx",
+      },
     ],
   },
 

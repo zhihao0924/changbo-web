@@ -209,3 +209,31 @@ declare namespace API_PostLogList {
     created_at: string
   }
 }
+
+declare namespace API_PostDailyXlsxList {
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+  export interface Res {
+    has_more: number
+    next_page: number
+    total: number
+    list: List[]
+  }
+
+  export interface List {
+    id: number
+    content: string
+    created_at: string
+  }
+}
+
+export namespace API_PostDeviceDailyXlsxDownload {
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+}

@@ -153,7 +153,7 @@ const DeviceTypes: React.FC = () => {
       render: (_: any, record: API_PostDeviceTypes.List) => (
         <Space>
           <Button
-            type="primary"
+            type="link"
             // icon={<SettingOutlined />}
             onClick={() => {
               setCurrentRecord(record)
@@ -164,7 +164,7 @@ const DeviceTypes: React.FC = () => {
             别名
           </Button>
           <Button
-            type="primary"
+            type="link"
             // icon={<SettingOutlined />}
             onClick={() => {
               setCurrentRecord(record)
@@ -178,7 +178,7 @@ const DeviceTypes: React.FC = () => {
             阈值
           </Button>
           <Button
-            type="primary"
+            type="link"
             // icon={<SettingOutlined />}
             onClick={() => {
               setCurrentRecord(record)
@@ -196,7 +196,7 @@ const DeviceTypes: React.FC = () => {
             告警
           </Button>
           <Button
-            type="primary"
+            type="link"
             // icon={<SettingOutlined />}
             onClick={() => {
               setCurrentRecord(record)

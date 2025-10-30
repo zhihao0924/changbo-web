@@ -1,4 +1,18 @@
 import { postApi } from "@/utils/request"
+import {
+  API_PostDailyXlsxList,
+  API_PostDeviceCreate,
+  API_PostDeviceDailyXlsxDownload,
+  API_PostDeviceList,
+  API_PostDeviceTypeAlarmSaveData,
+  API_PostDeviceTypeConfigSaveData,
+  API_PostDeviceTypes,
+  API_PostDeviceTypeShowSaveData,
+  API_PostLogList,
+  API_PostSaveTopologyData,
+  API_PostToggleMaintaining,
+  API_PostTopologyData,
+} from "@/pages/device/services/typings/device"
 
 // 订单列表
 export async function postDeviceList(
@@ -163,6 +177,36 @@ export async function postDeviceLogList(
 ) {
   const res: API_PostLogList.Result = await postApi(
     "device/logList",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postDeviceDailyXlsxList(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDailyXlsxList.Result = await postApi(
+    "device/dailyXlsx",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postDeviceDailyXlsxDownload(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeviceDailyXlsxDownload.Result = await postApi(
+    "device/dailyXlsxDownload",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
