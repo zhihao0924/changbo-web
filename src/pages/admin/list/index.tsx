@@ -15,11 +15,6 @@ type CreateFormValues = {
   password: string
 }
 
-const roles = [
-  { value: "admin", label: "超级管理员" },
-  { value: "user", label: "管理员" },
-]
-
 const UserIndex: React.FC = () => {
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
@@ -77,6 +72,18 @@ const UserIndex: React.FC = () => {
       })
     }
     return {}
+  }, [])
+
+  const getRoles = useCallback(() => {
+    const userInfo = JSON.parse(localStorage.getItem("userinfo"))
+    return [
+      {
+        value: "admin",
+        label: "超级管理员",
+        disabled: userInfo?.account != "admin",
+      },
+      { value: "user", label: "管理员" },
+    ]
   }, [])
 
   const handleCreateAdminSubmit = useCallback(async () => {
@@ -153,7 +160,7 @@ const UserIndex: React.FC = () => {
         align: "center",
         dataIndex: "role",
         render: (val: string) => {
-          return roles.find((item) => item.value == val)?.label
+          return getRoles().find((item) => item.value == val)?.label
         },
       },
       {
@@ -245,7 +252,7 @@ const UserIndex: React.FC = () => {
             label="角色"
             rules={[{ required: true, message: "请选择管理员角色" }]}
           >
-            <Radio.Group options={roles} />
+            <Radio.Group options={getRoles()} />
           </Form.Item>
           <Form.Item
             name={"password"}

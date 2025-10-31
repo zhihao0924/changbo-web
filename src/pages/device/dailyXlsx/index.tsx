@@ -46,7 +46,7 @@ const DailyXlsx: React.FC = () => {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `${row.device_name}_${row.file_date}.xlsx`
+        a.download = `${row.file_name}.xlsx`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
