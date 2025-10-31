@@ -62,10 +62,23 @@ const DailyXlsx: React.FC = () => {
         hideInTable: true,
       },
       {
+        title: "文件名称",
+        align: "center",
+        dataIndex: "file_name",
+        hideInSearch: true,
+      },
+      {
         title: "设备编号",
         align: "center",
-        dataIndex: "device_name",
-        hideInSearch: true,
+        dataIndex: "id",
+        hideInTable: true,
+        valueType: "select",
+        renderFormItem: () => <DeviceNameSelect />,
+        search: {
+          transform: (value) => ({
+            device_id: value,
+          }),
+        },
       },
       {
         title: "日期",
@@ -93,6 +106,7 @@ const DailyXlsx: React.FC = () => {
       },
       {
         title: "操作",
+        hideInSearch: true,
         render: (_, row: Columns) => {
           return (
             <Button type="link" icon={<DownloadOutlined />} onClick={() => downloadLoad(row)}>

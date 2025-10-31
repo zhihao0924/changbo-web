@@ -275,7 +275,7 @@ const usePieConfig = (
             }
             // 对于普通数据项，显示对应的值
             const itemData = data?.[index]
-            return `${text?.substring(0, 2) || ""}: ${itemData?.value || 0}`
+            return `${text || ""}: ${itemData?.value || 0}`
           },
         },
         marker: { symbol: "circle", style: { r: 6 } },
@@ -288,7 +288,7 @@ const usePieConfig = (
         items: [
           ...(data || []).map((item, index) => ({
             value: item.type,
-            name: `${item.type?.substring(0, 2) || ""}: ${item.value || 0}`,
+            name: `${item.type || ""}`,
             marker: { symbol: "circle", style: { fill: DASHBOARD_CONFIG.chartColors[index] } },
           })),
           {
