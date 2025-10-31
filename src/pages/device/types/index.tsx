@@ -296,7 +296,27 @@ const DeviceTypes: React.FC = () => {
                   <Col span={12} key={`${item.config_type}_alarm`}>
                     <Form.Item label={`${item.config_type_name}`} labelCol={{ span: 6 }}>
                       <Space align="center" style={{ display: "flex", alignItems: "center" }}>
-                        <Form.Item name={["configs", `${item.config_type}`, "alarm_min"]}>
+                        <Form.Item
+                          name={["configs", `${item.config_type}`, "alarm_min"]}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const max = getFieldValue([
+                                  "configs",
+                                  item.config_type,
+                                  "alarm_max",
+                                ])
+                                if (typeof value !== "number" || typeof max !== "number") {
+                                  return Promise.resolve()
+                                }
+                                if (value < max) {
+                                  return Promise.resolve()
+                                }
+                                return Promise.reject(new Error("最小值必须小于最大值"))
+                              },
+                            }),
+                          ]}
+                        >
                           <InputNumber
                             step={0.1}
                             addonAfter={item.unit}
@@ -304,7 +324,27 @@ const DeviceTypes: React.FC = () => {
                           />
                         </Form.Item>
                         <Form.Item>至</Form.Item>
-                        <Form.Item name={["configs", `${item.config_type}`, "alarm_max"]}>
+                        <Form.Item
+                          name={["configs", `${item.config_type}`, "alarm_max"]}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const min = getFieldValue([
+                                  "configs",
+                                  item.config_type,
+                                  "alarm_min",
+                                ])
+                                if (typeof value !== "number" || typeof min !== "number") {
+                                  return Promise.resolve()
+                                }
+                                if (value > min) {
+                                  return Promise.resolve()
+                                }
+                                return Promise.reject(new Error("最大值必须大于最小值"))
+                              },
+                            }),
+                          ]}
+                        >
                           <InputNumber
                             step={0.1}
                             addonAfter={item.unit}
@@ -317,7 +357,23 @@ const DeviceTypes: React.FC = () => {
                   <Col span={12} key={`${item.config_type}_range`}>
                     <Form.Item label={`显示范围`} labelCol={{ span: 6 }}>
                       <Space align="center" style={{ display: "flex", alignItems: "center" }}>
-                        <Form.Item name={["configs", `${item.config_type}`, "show_min"]}>
+                        <Form.Item
+                          name={["configs", `${item.config_type}`, "show_min"]}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const max = getFieldValue(["configs", item.config_type, "show_max"])
+                                if (typeof value !== "number" || typeof max !== "number") {
+                                  return Promise.resolve()
+                                }
+                                if (value < max) {
+                                  return Promise.resolve()
+                                }
+                                return Promise.reject(new Error("最小值必须小于最大值"))
+                              },
+                            }),
+                          ]}
+                        >
                           <InputNumber
                             step={0.1}
                             addonAfter={item.unit}
@@ -325,7 +381,23 @@ const DeviceTypes: React.FC = () => {
                           />
                         </Form.Item>
                         <Form.Item>至</Form.Item>
-                        <Form.Item name={["configs", `${item.config_type}`, "show_max"]}>
+                        <Form.Item
+                          name={["configs", `${item.config_type}`, "show_max"]}
+                          rules={[
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                const min = getFieldValue(["configs", item.config_type, "show_min"])
+                                if (typeof value !== "number" || typeof min !== "number") {
+                                  return Promise.resolve()
+                                }
+                                if (value > min) {
+                                  return Promise.resolve()
+                                }
+                                return Promise.reject(new Error("最大值必须大于最小值"))
+                              },
+                            }),
+                          ]}
+                        >
                           <InputNumber
                             step={0.1}
                             addonAfter={item.unit}
