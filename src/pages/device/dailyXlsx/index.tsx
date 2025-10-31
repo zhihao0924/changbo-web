@@ -35,21 +35,24 @@ const DailyXlsx: React.FC = () => {
   }, [])
 
   const downloadLoad = async (row: any) => {
-    console.log(row)
-    const res = await Services.api.postDeviceDailyXlsxDownload({
-      id: row.id,
-    })
-    if (res) {
-      const url = window.URL.createObjectURL(new Blob([res.res.data]))
-      const link = document.createElement("a")
-      link.href = url
-      link.setAttribute("download", `${row.device_name}-${row.file_date}.xlsx`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-  }
+    const headers = new Headers()
+    headers.append("Authorization", `Bearer ${localStorage.getItem("token")}`)
 
+    fetch(`${window.location.origin}/api/device/dailyXlsxDownload?id=${row.id}`, {
+      headers,
+    })
+      .then((response) => response.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `${row.device_name}_${row.file_date}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+      })
+  }
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
       {

@@ -201,17 +201,3 @@ export async function postDeviceDailyXlsxList(
   return res
 }
 
-export async function postDeviceDailyXlsxDownload(
-  obj: Record<string, any>,
-  extParams?: PassExtParamsDescriptorMore,
-) {
-  const res: API_PostDeviceDailyXlsxDownload.Result = await postApi(
-    "device/dailyXlsxDownload",
-    { ...obj },
-    { showLoading: true, showToast: true, ...extParams },
-  ).catch((err) => {
-    console.error(err)
-    throw err
-  })
-  return res
-}
