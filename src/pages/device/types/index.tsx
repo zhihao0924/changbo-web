@@ -15,11 +15,12 @@ const DeviceTypes: React.FC = () => {
   const [nameModalVisible, setNameModalVisible] = useState(false)
   const [configForm] = Form.useForm()
   const [configModalVisible, setConfigModalVisible] = useState(false)
+  const [alarmForm] = Form.useForm()
   const [alarmModalVisible, setAlarmModalVisible] = useState(false)
   const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
 
-  const [alramCheckedList, setAlarmCheckedList] = useState<CheckboxValueType[]>()
+  const [alarmCheckedList, setAlarmCheckedList] = useState<CheckboxValueType[]>()
   const [alarmIndeterminate, setAlarmIndeterminate] = useState(true)
   const [alarmCheckAll, setAlarmCheckAll] = useState(false)
 
@@ -100,7 +101,7 @@ const DeviceTypes: React.FC = () => {
       await Services.api
         .postDeviceTypeAlarmSave({
           device_type_id: currentRecord?.id,
-          alarms: alramCheckedList,
+          alarms: alarmCheckedList,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
@@ -443,7 +444,7 @@ const DeviceTypes: React.FC = () => {
         onOk={handleAlarmSubmit}
         onCancel={() => setAlarmModalVisible(false)}
       >
-        <Form>
+        <Form form={alarmForm}>
           <Form.Item>
             <Space direction="vertical" style={{ width: "100%" }}>
               <Checkbox
@@ -465,7 +466,7 @@ const DeviceTypes: React.FC = () => {
 
               <Checkbox.Group
                 key="alarms"
-                value={alramCheckedList}
+                value={alarmCheckedList}
                 onChange={(list) => {
                   setAlarmIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
                   setAlarmCheckAll(list.length === currentRecord?.shows?.length)
