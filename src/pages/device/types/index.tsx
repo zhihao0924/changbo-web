@@ -474,6 +474,7 @@ const DeviceTypes: React.FC = () => {
                     checkedList.push(val)
                   })
                   setAlarmCheckedList(checkedList)
+
                 }}
               >
                 <Row>
