@@ -15,11 +15,13 @@ const DeviceTypes: React.FC = () => {
   const [nameModalVisible, setNameModalVisible] = useState(false)
   const [configForm] = Form.useForm()
   const [configModalVisible, setConfigModalVisible] = useState(false)
-  const [alarmForm] = Form.useForm()
   const [alarmModalVisible, setAlarmModalVisible] = useState(false)
-  const [showForm] = Form.useForm()
   const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
+
+  const [alramCheckedList, setAlarmCheckedList] = useState<CheckboxValueType[]>()
+  const [alarmIndeterminate, setAlarmIndeterminate] = useState(true)
+  const [alarmCheckAll, setAlarmCheckAll] = useState(false)
 
   const [detailCheckedList, setDetailCheckedList] = useState<CheckboxValueType[]>()
   const [detailIndeterminate, setDetailIndeterminate] = useState(true)
@@ -95,16 +97,14 @@ const DeviceTypes: React.FC = () => {
 
   const handleAlarmSubmit = async () => {
     try {
-      const values = await alarmForm.validateFields()
       await Services.api
         .postDeviceTypeAlarmSave({
           device_type_id: currentRecord?.id,
-          alarms: values.alarms,
+          alarms: alramCheckedList,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
             setAlarmModalVisible(false)
-            alarmForm.resetFields()
             actionRef.current?.reload()
           })
           return {}
@@ -124,7 +124,6 @@ const DeviceTypes: React.FC = () => {
         .then(() => {
           message.success(`${currentRecord?.device_type} 展示配置保存成功`, 1, () => {
             setShowModalVisible(false)
-            showForm.resetFields()
             actionRef.current?.reload()
           })
           return {}
@@ -205,8 +204,11 @@ const DeviceTypes: React.FC = () => {
                   alarms.push(item.config_type)
                 }
               })
-
-              alarmForm.setFieldsValue({ alarms: alarms })
+              setAlarmCheckedList(alarms)
+              setAlarmIndeterminate(
+                alarms.length > 0 && alarms.length < currentRecord?.shows?.length,
+              )
+              setAlarmCheckAll(alarms.length === currentRecord?.shows?.length)
               setAlarmModalVisible(true)
             }}
           >
@@ -441,21 +443,52 @@ const DeviceTypes: React.FC = () => {
         onOk={handleAlarmSubmit}
         onCancel={() => setAlarmModalVisible(false)}
       >
-        <Form form={alarmForm}>
-          <Form.Item name={"alarms"}>
-            <Checkbox.Group key="alarms">
-              <Row>
-                {currentRecord?.alarms?.map((item) => {
-                  return (
-                    <Col span={8} key={item.config_type}>
-                      <Checkbox key={item.config_type} value={item.config_type}>
-                        {item.config_type_name}
-                      </Checkbox>
-                    </Col>
-                  )
-                })}
-              </Row>
-            </Checkbox.Group>
+        <Form>
+          <Form.Item>
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Checkbox
+                indeterminate={alarmIndeterminate}
+                checked={alarmCheckAll}
+                onChange={(e) => {
+                  const alarms = []
+                  currentRecord?.shows?.map((val) => {
+                    alarms.push(val.config_type)
+                  })
+
+                  setAlarmCheckedList(e.target.checked ? alarms : [])
+                  setAlarmIndeterminate(false)
+                  setAlarmCheckAll(e.target.checked)
+                }}
+              >
+                全选
+              </Checkbox>
+
+              <Checkbox.Group
+                key="alarms"
+                value={alramCheckedList}
+                onChange={(list) => {
+                  setAlarmIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
+                  setAlarmCheckAll(list.length === currentRecord?.shows?.length)
+                  const checkedList: number[] = []
+                  list.map((val) => {
+                    checkedList.push(val)
+                  })
+                  setAlarmCheckedList(checkedList)
+                }}
+              >
+                <Row>
+                  {currentRecord?.alarms?.map((item) => {
+                    return (
+                      <Col span={8} key={item.config_type}>
+                        <Checkbox key={item.config_type} value={item.config_type}>
+                          {item.config_type_name}
+                        </Checkbox>
+                      </Col>
+                    )
+                  })}
+                </Row>
+              </Checkbox.Group>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>
@@ -466,7 +499,7 @@ const DeviceTypes: React.FC = () => {
         onOk={handleShowSubmit}
         onCancel={() => setShowModalVisible(false)}
       >
-        <Form form={showForm} layout={"vertical"}>
+        <Form layout={"vertical"}>
           <Form.Item labelCol={{ span: 6 }} label={"列表中展示"}>
             <Checkbox.Group
               key={"show_in_list"}
