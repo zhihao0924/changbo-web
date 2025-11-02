@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from "react"
 import type { ProColumns } from "@ant-design/pro-components"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
-import { Button, Form, Input, Modal, Radio, Switch } from "antd"
+import { Button, Form, Input, Modal, Radio } from "antd"
 import { PlusOutlined } from "@ant-design/icons"
 import Services from "@/pages/admin/services"
 
@@ -75,7 +75,7 @@ const UserIndex: React.FC = () => {
   }, [])
 
   const getRoles = useCallback(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userinfo"))
+    const userInfo = JSON.parse(localStorage.getItem("userinfo") as string)
     return [
       {
         value: "admin",
@@ -114,7 +114,7 @@ const UserIndex: React.FC = () => {
     resetPwdForm.resetFields()
   }, [resetPwdForm])
 
-  const handleDisabledAdmin = useCallback((record, e: any) => {
+  const handleDisabledAdmin = useCallback((record: any) => {
     Modal.confirm({
       title: "确认禁用",
       content: "确认禁用该账号？",

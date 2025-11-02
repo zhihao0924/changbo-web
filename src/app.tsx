@@ -15,8 +15,6 @@ import { stringify } from "querystring"
 import { checkVersion } from "version-rocket"
 import PackageJson from "../package.json"
 import { versionTipDialog } from "@/components/versionTipDialog"
-import MenuFooter from "@/components/menuFooter"
-import Footer from "@/components/Footer"
 import RightContent from "@/components/RightContent"
 import defaultSettings from "../config/defaultSettings"
 

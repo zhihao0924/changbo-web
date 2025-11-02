@@ -4,7 +4,7 @@ import Services from "@/pages/device/services"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
 import { forEach } from "lodash"
 import type { API_PostDeviceTypes } from "@/pages/device/services/typings/device"
-import { CheckboxValueType } from "antd/es/checkbox/Group"
+import type { CheckboxValueType } from "antd/es/checkbox/Group"
 
 type Columns = API_PostDeviceTypes.List
 
@@ -474,7 +474,6 @@ const DeviceTypes: React.FC = () => {
                     checkedList.push(val)
                   })
                   setAlarmCheckedList(checkedList)
-
                 }}
               >
                 <Row>

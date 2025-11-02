@@ -9,6 +9,7 @@ import { PageContainer, ProTable } from "@ant-design/pro-components"
 import { Button, Form, Input, message, Modal, Select, Switch } from "antd"
 import React, { useCallback, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
+import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
 
 type Columns = API_PostDeviceList.List
 

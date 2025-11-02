@@ -2,7 +2,6 @@ import { postApi } from "@/utils/request"
 import {
   API_PostDailyXlsxList,
   API_PostDeviceCreate,
-  API_PostDeviceDailyXlsxDownload,
   API_PostDeviceList,
   API_PostDeviceTypeAlarmSaveData,
   API_PostDeviceTypeConfigSaveData,

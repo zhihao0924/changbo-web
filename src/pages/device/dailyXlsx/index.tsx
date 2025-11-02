@@ -6,6 +6,7 @@ import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { DownloadOutlined } from "@ant-design/icons"
 import { Button } from "antd"
+import type { API_PostDailyXlsxList } from "@/pages/device/services/typings/device"
 
 type Columns = API_PostDailyXlsxList.List
 
