@@ -227,10 +227,6 @@ const DeviceTypes: React.FC = () => {
                   showDetailData.push(item.config_type)
                 }
               })
-              showForm.setFieldsValue({
-                show_in_list: showListData,
-                show_in_detail: showDetailData,
-              })
               setListCheckedList(showListData)
               setDetailCheckedList(showDetailData)
               setDetailCheckAll(showDetailData.length === record?.shows?.length)
@@ -471,16 +467,15 @@ const DeviceTypes: React.FC = () => {
         onCancel={() => setShowModalVisible(false)}
       >
         <Form form={showForm} layout={"vertical"}>
-          <Form.Item name={"show_in_list"} labelCol={{ span: 6 }} label={"列表中展示"}>
+          <Form.Item labelCol={{ span: 6 }} label={"列表中展示"}>
             <Checkbox.Group
               key={"show_in_list"}
               value={listCheckedList}
               onChange={(checkedValues) => {
                 const maxSelected = 3
                 if (checkedValues.length > maxSelected) {
-                  const lastSelected = checkedValues[checkedValues.length - 1]
-                  checkedValues = checkedValues.filter((v) => v !== lastSelected)
                   message.warning(`展示项目最多只能选择${maxSelected}个`)
+                  return // 直接返回，不更新状态
                 }
                 setListCheckedList(checkedValues)
               }}
@@ -498,7 +493,7 @@ const DeviceTypes: React.FC = () => {
               </Row>
             </Checkbox.Group>
           </Form.Item>
-          <Form.Item name={"show_in_detail"} labelCol={{ span: 6 }} label={"详情中展示"}>
+          <Form.Item labelCol={{ span: 6 }} label={"详情中展示"}>
             <Space direction="vertical" style={{ width: "100%" }}>
               <Checkbox
                 indeterminate={detailIndeterminate}
