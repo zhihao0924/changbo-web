@@ -21,9 +21,11 @@ const DeviceTypes: React.FC = () => {
   const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
 
-  const [checkedDetailList, setCheckedDetailList] = useState<CheckboxValueType[]>()
+  const [detailCheckedList, setDetailCheckedList] = useState<CheckboxValueType[]>()
   const [detailIndeterminate, setDetailIndeterminate] = useState(true)
   const [detailCheckAll, setDetailCheckAll] = useState(false)
+
+  const [listCheckedList, setListCheckedList] = useState<CheckboxValueType[]>()
 
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
@@ -113,12 +115,11 @@ const DeviceTypes: React.FC = () => {
   }
   const handleShowSubmit = async () => {
     try {
-      const values = await showForm.validateFields()
       await Services.api
         .postDeviceTypeShowSave({
           device_type_id: currentRecord?.id,
-          show_in_list: values.show_in_list,
-          show_in_detail: values.show_in_detail,
+          show_in_list: listCheckedList,
+          show_in_detail: detailCheckedList,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 展示配置保存成功`, 1, () => {
@@ -134,9 +135,13 @@ const DeviceTypes: React.FC = () => {
   }
 
   const onDetailSelectChange = (list: CheckboxValueType[]) => {
-    setCheckedDetailList(list)
     setDetailIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
     setDetailCheckAll(list.length === currentRecord?.shows?.length)
+    const checkedList: number[] = []
+    list.map((val) => {
+      checkedList.push(val)
+    })
+    setDetailCheckedList(checkedList)
   }
 
   const columns = [
@@ -226,7 +231,8 @@ const DeviceTypes: React.FC = () => {
                 show_in_list: showListData,
                 show_in_detail: showDetailData,
               })
-              setCheckedDetailList(showDetailData)
+              setListCheckedList(showListData)
+              setDetailCheckedList(showDetailData)
               setDetailCheckAll(showDetailData.length === record?.shows?.length)
               setDetailIndeterminate(
                 showDetailData.length > 0 && showDetailData.length < record?.shows?.length,
@@ -468,6 +474,7 @@ const DeviceTypes: React.FC = () => {
           <Form.Item name={"show_in_list"} labelCol={{ span: 6 }} label={"列表中展示"}>
             <Checkbox.Group
               key={"show_in_list"}
+              value={listCheckedList}
               onChange={(checkedValues) => {
                 const maxSelected = 3
                 if (checkedValues.length > maxSelected) {
@@ -475,7 +482,7 @@ const DeviceTypes: React.FC = () => {
                   checkedValues = checkedValues.filter((v) => v !== lastSelected)
                   message.warning(`展示项目最多只能选择${maxSelected}个`)
                 }
-                showForm.setFieldValue("show_in_list", checkedValues)
+                setListCheckedList(checkedValues)
               }}
             >
               <Row>
@@ -497,19 +504,19 @@ const DeviceTypes: React.FC = () => {
                 indeterminate={detailIndeterminate}
                 checked={detailCheckAll}
                 onChange={(e) => {
-                 const  showInDetail = []
-                  currentRecord?.shows?.map(val=>{
+                  const showInDetail = []
+                  currentRecord?.shows?.map((val) => {
                     showInDetail.push(val.config_type)
                   })
 
-                  setCheckedDetailList(e.target.checked ? showInDetail : [])
+                  setDetailCheckedList(e.target.checked ? showInDetail : [])
                   setDetailIndeterminate(false)
                   setDetailCheckAll(e.target.checked)
                 }}
               >
                 全选
               </Checkbox>
-              <Checkbox.Group value={checkedDetailList} onChange={onDetailSelectChange}>
+              <Checkbox.Group value={detailCheckedList} onChange={onDetailSelectChange}>
                 <Row>
                   {currentRecord?.shows?.map((item) => {
                     return (
