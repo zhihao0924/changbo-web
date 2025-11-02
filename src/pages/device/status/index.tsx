@@ -162,7 +162,7 @@ const DeviceStatus: React.FC = () => {
                                       color:
                                         metricItem.is_set_current_val &&
                                         ((typeof metricItem.alarm_min === "number" &&
-                                            metricItem.current_val < metricItem.alarm_min) ||
+                                          metricItem.current_val < metricItem.alarm_min) ||
                                           (typeof metricItem.alarm_max === "number" &&
                                             metricItem.current_val > metricItem.alarm_max))
                                           ? "red"
@@ -224,109 +224,122 @@ const DeviceStatus: React.FC = () => {
         onCancel={() => setShowModalVisible(false)}
         footer={null}
       >
-        <Row justify="center" align="middle" style={{ width: "100%" }}>
-          <Col span={8}>设备类型</Col>
-          <Col span={16}>
-            {deviceList && deviceList?.find((d) => d.id === deviceId)?.device_type_alias}
-          </Col>
-          <Col span={8}>设备编号</Col>
-          <Col span={16}>{deviceList && deviceList?.find((d) => d.id === deviceId)?.name}</Col>
-          {deviceList &&
-            deviceList?.map((device) => {
-              return (
-                device?.id === deviceId &&
-                device.metric_items
-                  ?.filter((metricItem) => metricItem.show_in_detail)
-                  ?.map((metricItem) => {
-                    return (
-                      <>
-                        <Col span={8}>{metricItem.config_type_name}</Col>
-                        <Col span={12}>
-                          {metricItem.is_module ? (
-                            metricItem.current_val ? (
-                              "在线"
+        <Card bordered={false}>
+          <Row>
+            <Col span={8} style={{ backgroundColor: "#f0f0f0" }}>
+              设备类型
+            </Col>
+            <Col span={16} style={{ backgroundColor: "#f0f0f0" }}>
+              {deviceList && deviceList?.find((d) => d.id === deviceId)?.device_type_alias}
+            </Col>
+            <Col span={8}>设备编号</Col>
+            <Col span={16}>{deviceList && deviceList?.find((d) => d.id === deviceId)?.name}</Col>
+            {deviceList &&
+              deviceList?.map((device) => {
+                return (
+                  device?.id === deviceId &&
+                  device.metric_items
+                    ?.filter((metricItem) => metricItem.show_in_detail)
+                    ?.map((metricItem, index) => {
+                      return (
+                        <>
+                          <Col
+                            span={8}
+                            style={{ backgroundColor: index % 2 == 0 ? "#f0f0f0" : "" }}
+                          >
+                            {metricItem.config_type_name}
+                          </Col>
+                          <Col
+                            span={12}
+                            style={{ backgroundColor: index % 2 == 0 ? "#f0f0f0" : "" }}
+                          >
+                            {metricItem.is_module ? (
+                              metricItem.current_val ? (
+                                "在线"
+                              ) : (
+                                "离线"
+                              )
                             ) : (
-                              "离线"
-                            )
-                          ) : (
-                            <Progress
-                              percent={(metricItem.current_val * 100) / metricItem.alarm_max}
-                              steps={10}
-                              size="small"
-                              showInfo={true}
-                              format={() => {
-                                // 判断 max_val 是数字且大于 current_val 时显示无穷大
-                                if (
-                                  typeof metricItem.show_max === "number" &&
-                                  metricItem.current_val > metricItem.show_max
-                                ) {
-                                  return `∞`
+                              <Progress
+                                percent={(metricItem.current_val * 100) / metricItem.alarm_max}
+                                steps={10}
+                                size="small"
+                                showInfo={true}
+                                format={() => {
+                                  // 判断 max_val 是数字且大于 current_val 时显示无穷大
+                                  if (
+                                    typeof metricItem.show_max === "number" &&
+                                    metricItem.current_val > metricItem.show_max
+                                  ) {
+                                    return `∞`
+                                  }
+                                  if (
+                                    typeof metricItem.show_min === "number" &&
+                                    metricItem.current_val < metricItem.show_min
+                                  ) {
+                                    return `-∞`
+                                  }
+                                  return (
+                                    <span
+                                      style={{
+                                        color:
+                                          metricItem.is_set_current_val &&
+                                          ((typeof metricItem.alarm_min === "number" &&
+                                            metricItem.current_val < metricItem.alarm_min) ||
+                                            (typeof metricItem.alarm_max === "number" &&
+                                              metricItem.current_val > metricItem.alarm_max))
+                                            ? "red"
+                                            : "",
+                                      }}
+                                    >
+                                      {Number(metricItem.current_val ?? 0).toFixed(2)}{" "}
+                                      {metricItem.unit}
+                                    </span>
+                                  )
+                                }}
+                                strokeColor={
+                                  (typeof metricItem.alarm_min === "number" &&
+                                    metricItem.current_val < metricItem.alarm_min) ||
+                                  (typeof metricItem.alarm_max === "number" &&
+                                    metricItem.current_val > metricItem.alarm_max)
+                                    ? "red"
+                                    : "green"
                                 }
-                                if (
-                                  typeof metricItem.show_min === "number" &&
-                                  metricItem.current_val < metricItem.show_min
-                                ) {
-                                  return `-∞`
-                                }
-                                return (
-                                  <span
-                                    style={{
-                                      color:
-                                        metricItem.is_set_current_val &&
-                                        ((typeof metricItem.alarm_min === "number" &&
-                                          metricItem.current_val < metricItem.alarm_min) ||
-                                          (typeof metricItem.alarm_max === "number" &&
-                                            metricItem.current_val > metricItem.alarm_max))
-                                          ? "red"
-                                          : "",
-                                    }}
-                                  >
-                                    {Number(metricItem.current_val ?? 0).toFixed(2)}{" "}
-                                    {metricItem.unit}
-                                  </span>
-                                )
-                              }}
-                              strokeColor={
-                                (typeof metricItem.alarm_min === "number" &&
-                                  metricItem.current_val < metricItem.alarm_min) ||
-                                (typeof metricItem.alarm_max === "number" &&
-                                  metricItem.current_val > metricItem.alarm_max)
-                                  ? "red"
-                                  : "green"
-                              }
-                            />
-                          )}
-                        </Col>
-                        <Col
-                          span={4}
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
-                          {metricItem.is_set_current_val &&
-                          (typeof metricItem.alarm_min == "number" ||
-                            typeof metricItem.alarm_max == "number") ? (
-                            typeof metricItem.alarm_min == "number" &&
-                            metricItem.current_val < metricItem.alarm_min ? (
-                              <ArrowDownOutlined style={{ color: "red" }} />
-                            ) : typeof metricItem.alarm_max == "number" &&
-                              metricItem.current_val > metricItem.alarm_max ? (
-                              <ArrowUpOutlined style={{ color: "red" }} />
+                              />
+                            )}
+                          </Col>
+                          <Col
+                            span={4}
+                            style={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              backgroundColor: index % 2 == 0 ? "#f0f0f0" : "",
+                            }}
+                          >
+                            {metricItem.is_set_current_val &&
+                            (typeof metricItem.alarm_min == "number" ||
+                              typeof metricItem.alarm_max == "number") ? (
+                              typeof metricItem.alarm_min == "number" &&
+                              metricItem.current_val < metricItem.alarm_min ? (
+                                <ArrowDownOutlined style={{ color: "red" }} />
+                              ) : typeof metricItem.alarm_max == "number" &&
+                                metricItem.current_val > metricItem.alarm_max ? (
+                                <ArrowUpOutlined style={{ color: "red" }} />
+                              ) : (
+                                <CheckOutlined style={{ color: "green" }} />
+                              )
                             ) : (
-                              <CheckOutlined style={{ color: "green" }} />
-                            )
-                          ) : (
-                            <></>
-                          )}
-                        </Col>
-                      </>
-                    )
-                  })
-              )
-            })}
-        </Row>{" "}
+                              <></>
+                            )}
+                          </Col>
+                        </>
+                      )
+                    })
+                )
+              })}
+          </Row>
+        </Card>
       </Modal>
     </PageContainer>
   )
