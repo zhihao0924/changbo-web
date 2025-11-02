@@ -3,6 +3,8 @@ import { Button, Modal, Form, Input, message, Space, InputNumber, Checkbox, Row,
 import Services from "@/pages/device/services"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
 import { forEach } from "lodash"
+import type { API_PostDeviceTypes } from "@/pages/device/services/typings/device"
+import { CheckboxValueType } from "antd/es/checkbox/Group"
 
 type Columns = API_PostDeviceTypes.List
 
@@ -18,6 +20,10 @@ const DeviceTypes: React.FC = () => {
   const [showForm] = Form.useForm()
   const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
+
+  const [checkedDetailList, setCheckedDetailList] = useState<CheckboxValueType[]>()
+  const [detailIndeterminate, setDetailIndeterminate] = useState(true)
+  const [detailCheckAll, setDetailCheckAll] = useState(false)
 
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
@@ -127,6 +133,12 @@ const DeviceTypes: React.FC = () => {
     }
   }
 
+  const onDetailSelectChange = (list: CheckboxValueType[]) => {
+    setCheckedDetailList(list)
+    setDetailIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
+    setDetailCheckAll(list.length === currentRecord?.shows?.length)
+  }
+
   const columns = [
     {
       title: "设备名称",
@@ -210,8 +222,15 @@ const DeviceTypes: React.FC = () => {
                   showDetailData.push(item.config_type)
                 }
               })
-              showForm.setFieldsValue({ show_in_list: showListData })
-              showForm.setFieldsValue({ show_in_detail: showDetailData })
+              showForm.setFieldsValue({
+                show_in_list: showListData,
+                show_in_detail: showDetailData,
+              })
+              setCheckedDetailList(showDetailData)
+              setDetailCheckAll(showDetailData.length === record?.shows?.length)
+              setDetailIndeterminate(
+                showDetailData.length > 0 && showDetailData.length < record?.shows?.length,
+              )
               setShowModalVisible(true)
             }}
           >
@@ -473,19 +492,37 @@ const DeviceTypes: React.FC = () => {
             </Checkbox.Group>
           </Form.Item>
           <Form.Item name={"show_in_detail"} labelCol={{ span: 6 }} label={"详情中展示"}>
-            <Checkbox.Group key={"show_in_detail"}>
-              <Row>
-                {currentRecord?.shows?.map((item) => {
-                  return (
-                    <Col span={8} key={item.config_type}>
-                      <Checkbox key={item.config_type} value={item.config_type}>
-                        {item.config_type_name}
-                      </Checkbox>
-                    </Col>
-                  )
-                })}
-              </Row>
-            </Checkbox.Group>
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Checkbox
+                indeterminate={detailIndeterminate}
+                checked={detailCheckAll}
+                onChange={(e) => {
+                 const  showInDetail = []
+                  currentRecord?.shows?.map(val=>{
+                    showInDetail.push(val.config_type)
+                  })
+
+                  setCheckedDetailList(e.target.checked ? showInDetail : [])
+                  setDetailIndeterminate(false)
+                  setDetailCheckAll(e.target.checked)
+                }}
+              >
+                全选
+              </Checkbox>
+              <Checkbox.Group value={checkedDetailList} onChange={onDetailSelectChange}>
+                <Row>
+                  {currentRecord?.shows?.map((item) => {
+                    return (
+                      <Col span={8} key={item.config_type}>
+                        <Checkbox key={item.config_type} value={item.config_type}>
+                          {item.config_type_name}
+                        </Checkbox>
+                      </Col>
+                    )
+                  })}
+                </Row>
+              </Checkbox.Group>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>
