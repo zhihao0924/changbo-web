@@ -12,6 +12,8 @@ export default {
   "menu.admin": "用户管理",
   "menu.admin.list": "用户列表",
   "menu.dashboard": "仪表盘",
+  "menu.setting": "系统设置",
+  "menu.setting.system": "系统设置",
 
   // "app.copyright.produced": "app.copyright.produced",
 }

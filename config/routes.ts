@@ -82,6 +82,13 @@ export default [
     ],
   },
   {
+    name: "setting",
+    path: "setting",
+    icon: "setting",
+    access: "adminRouteFilter",
+    component: "./setting/system",
+  },
+  {
     path: "/",
     redirect: "/dashboard",
   },

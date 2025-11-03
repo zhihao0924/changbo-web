@@ -1,7 +1,7 @@
 /**
  * @module 业务辅助
  */
-import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRE, REFRESH_AFTER, USER_INFO } from "@/constants"
+import { ACCESS_TOKEN, ACCESS_TOKEN_EXPIRE, REFRESH_AFTER, USER_INFO, SYSTEM_CONFIG } from "@/constants"
 
 // 清理用户转态
 // 退出登录
@@ -10,6 +10,7 @@ export const removeUserInfo = () => {
   localStorage.removeItem(ACCESS_TOKEN_EXPIRE)
   localStorage.removeItem(REFRESH_AFTER)
   localStorage.removeItem(USER_INFO)
+  localStorage.removeItem(SYSTEM_CONFIG)
 }
 
 // 获取用户信息

@@ -9,7 +9,7 @@ import type { RunTimeLayoutConfig } from "umi"
 import { history } from "umi"
 import { message } from "antd"
 import moment from "moment"
-import { USER_INFO, LOGINPATH, CALLBACKPATH } from "@/constants"
+import { USER_INFO, LOGINPATH, CALLBACKPATH, SYSTEM_CONFIG, SYSTEMCONFIGPATH } from "@/constants"
 import { removeUserInfo, getUserInfo } from "@/utils/biz"
 import { stringify } from "querystring"
 import { checkVersion } from "version-rocket"
@@ -17,8 +17,9 @@ import PackageJson from "../package.json"
 import { versionTipDialog } from "@/components/versionTipDialog"
 import RightContent from "@/components/RightContent"
 import defaultSettings from "../config/defaultSettings"
+import { postSystemConfig } from "@/pages/setting/services/api"
 
-const excludePath = [LOGINPATH, CALLBACKPATH]
+const excludePath = [LOGINPATH, CALLBACKPATH, SYSTEMCONFIGPATH]
 
 /** 获取用户信息比较慢的时候会展示一个 loading */
 export const initialStateConfig = {
@@ -32,7 +33,9 @@ export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>
   loading?: boolean
   currentUser?: API_USER.Res
+  systemConfig?: API_PostSystemConfig.Config
   fetchUserInfo?: () => Promise<API_USER.Res | undefined>
+  fetchSystemConfig?: () => Promise<API_PostSystemConfig.Config | undefined>
 }> {
   if (process.env.NODE_ENV !== "development") {
     if (process.env.BUILD_ENV == "prod" || process.env.BUILD_ENV == "dev") {
@@ -63,12 +66,33 @@ export async function getInitialState(): Promise<{
     return undefined
   }
 
+  const fetchSystemConfig = async () => {
+    try {
+      const res = await postSystemConfig({})
+      if (res.err === 0) {
+        // 将系统配置存储到 localStorage
+        localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
+        return res.res
+      }
+      return undefined
+    } catch (error) {
+      console.error("获取系统配置失败:", error)
+      return undefined
+    }
+  }
+
   // 如果是登录页面，不执行
   if (!excludePath.includes(history.location.pathname)) {
     const currentUser = await fetchUserInfo()
+
+    const systemConfig = await fetchSystemConfig()
+    defaultSettings.title = systemConfig?.system_name
+    defaultSettings.logo = systemConfig?.system_logo
     const data = {
       fetchUserInfo,
+      fetchSystemConfig,
       currentUser,
+      systemConfig,
       settings: defaultSettings,
     }
     return data
@@ -76,6 +100,7 @@ export async function getInitialState(): Promise<{
 
   return {
     fetchUserInfo,
+    fetchSystemConfig,
     settings: defaultSettings,
   }
 }

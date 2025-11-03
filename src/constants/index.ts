@@ -7,9 +7,11 @@ export const ACCESS_TOKEN = "token"
 export const ACCESS_TOKEN_EXPIRE = "access_token_expire"
 export const REFRESH_AFTER = "refresh_after"
 export const REFRESH_TOKEN = "refresh-token"
+export const SYSTEM_CONFIG = "system_config"
 
 export const LOGINPATH = "/user/login"
 export const CALLBACKPATH = "/callback"
+export const SYSTEMCONFIGPATH = "system/config"
 
 export const FMT = `YYYY-MM-DD HH:mm:ss`
 export const FMT_SHORT = `YYYY-MM-DD HH:mm`

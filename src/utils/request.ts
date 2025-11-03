@@ -118,7 +118,7 @@ export const request = async (
       : (process.env.BUILD_ENV && proxy[process.env.BUILD_ENV][gateway].target) + url
 
   // 检查并刷新token（排除刷新token接口本身）
-  if (url !== "/api/admin/refreshToken" && !extParams?.gateway) {
+  if (url !== "/api/admin/refreshToken" && url !== "/api/system/config" && !extParams?.gateway) {
     const now = Date.now()
     // 添加防抖机制，避免频繁调用刷新token
     if (now - lastRefreshTime > REFRESH_DEBOUNCE_TIME) {
@@ -134,11 +134,14 @@ export const request = async (
       }
     }
 
-    headers.Authorization =
-      "Bearer " +
-      (extParams?.gateway && process.env.BUILD_ENV
-        ? proxy[process.env.BUILD_ENV][gateway].token
-        : localStorage.getItem(ACCESS_TOKEN))
+    // 对于不需要认证的接口（如/system/config），不添加Authorization头
+    if (url !== "/api/system/config" && (!url.endsWith("/system/config"))) {
+      headers.Authorization =
+        "Bearer " +
+        (extParams?.gateway && process.env.BUILD_ENV
+          ? proxy[process.env.BUILD_ENV][gateway].token
+          : localStorage.getItem(ACCESS_TOKEN))
+    }
   }
 
   prepareEnv()
@@ -234,7 +237,7 @@ export const request = async (
           }, 300)
           throw new Error("Refresh token failed")
         }
-        
+
         // 先尝试刷新token
         try {
           const res = await refreshToken({ showToast: false })

@@ -2,11 +2,12 @@ import Footer from "@/components/Footer"
 import {
   ACCESS_TOKEN,
   ACCESS_TOKEN_EXPIRE,
-  DEFAULT_NAME,
   REFRESH_AFTER,
+  SYSTEM_CONFIG,
   USER_INFO,
 } from "@/constants"
 import Services from "@/pages/user/services"
+import { postSystemConfig } from "@/pages/setting/services/api"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { LoginFormPage, ProFormText } from "@ant-design/pro-form"
 import { Alert, message, Tabs } from "antd"
@@ -32,6 +33,7 @@ const LoginMessage: React.FC<{
 const Login: React.FC = () => {
   const [userLoginState, setUserLoginState] = useState("")
   const [type, setType] = useState<LoginType>("account")
+  const [systemConfig, setSystemConfig] = useState<any>(null)
   const { loading, setInitialState } = useModel("@@initialState")
 
   const handleLoginAuto = () => {
@@ -50,7 +52,7 @@ const Login: React.FC = () => {
   }
 
   const fetchUserInfo = useCallback(
-    async (info) => {
+    async (info: any) => {
       const { jwtToken, name, account, role } = info
 
       localStorage.setItem(ACCESS_TOKEN, jwtToken.access_token.toString())
@@ -67,37 +69,6 @@ const Login: React.FC = () => {
     },
     [setInitialState],
   )
-
-  // const setQrCode = () => {
-  //   const info = {
-  //     client_id: "",
-  //     redirect_uri: "",
-  //     response_type: "code",
-  //     state: "middle",
-  //   }
-  //   const goto = `https://passport.feishu.cn/suite/passport/oauth/authorize?client_id=${info.client_id}&redirect_uri=${info.redirect_uri}&response_type=${info.response_type}&state=${info.state}`
-  //   const QRLoginObj = window.QRLogin({
-  //     id: "qrcode",
-  //     goto,
-  //     width: "260",
-  //     height: "260",
-  //     style: "width:260px;height:260px", //可选的，二维码html标签的style属性
-  //   })
-  //   const handleMessage = function (event: any) {
-  //     const origin = event.origin
-  //     // 使用 matchOrigin 方法来判断 message 来自页面的url是否合法
-  //     if (QRLoginObj.matchOrigin(origin)) {
-  //       const loginTmpCode = event.data
-  //       // 在授权页面地址上拼接上参数 tmp_code，并跳转
-  //       window.location.href = `${goto}&tmp_code=${loginTmpCode}`
-  //     }
-  //   }
-  //   if (typeof window.addEventListener != "undefined") {
-  //     window.addEventListener("message", handleMessage, false)
-  //   } else if (typeof window.attachEvent != "undefined") {
-  //     window.attachEvent("onmessage", handleMessage)
-  //   }
-  // }
 
   const handleSubmit = useCallback(
     async (values: any) => {
@@ -135,11 +106,44 @@ const Login: React.FC = () => {
         // message.error(defaultLoginFailureMessage)
       }
     },
-    [fetchUserInfo, loading],
+    [fetchUserInfo],
   )
+
+  // 获取系统配置
+  const fetchSystemConfig = async () => {
+    try {
+      console.log("开始获取系统配置...")
+      const res = await postSystemConfig({})
+      console.log("系统配置响应:", res)
+      if (res.err === 0) {
+        // 将系统配置存储到 localStorage
+        localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
+        setSystemConfig(res.res)
+        console.log("系统配置获取成功:", res.res)
+        return res.res
+      } else {
+        console.error("系统配置接口返回错误:", res.msg)
+        return null
+      }
+    } catch (error) {
+      console.error("获取系统配置失败:", error)
+      return null
+    }
+  }
 
   useEffect(() => {
     const abortController = new AbortController()
+
+    const initSystemConfig = async () => {
+      // 如果没有系统配置，从后台获取
+      console.log("没有缓存配置，从后台获取...")
+      await fetchSystemConfig()
+    }
+
+    // 不等待系统配置获取完成，避免阻塞页面渲染
+    initSystemConfig().catch((error) => {
+      console.error("系统配置初始化异常:", error)
+    })
     handleLoginAuto()
     // setQrCode()
     return () => {
@@ -148,13 +152,31 @@ const Login: React.FC = () => {
   }, [])
 
   return useMemo(() => {
+    // 使用状态中的系统配置数据
+    let logoUrl = "" // 默认logo
+    let systemName = "" // 默认名称
+
+    if (systemConfig) {
+      if (systemConfig.system_logo) {
+        logoUrl = systemConfig.system_logo
+      }
+
+      if (systemConfig.system_name) {
+        systemName = systemConfig.system_name
+      }
+    }
+
+    // 如果没有获取到系统配置，使用默认值
+    if (!logoUrl) logoUrl = "/logo.png"
+    if (!systemName) systemName = "畅博管理系统123"
+
     return (
       <div className={styles.container}>
         <div className={styles.content}>
           <LoginFormPage
             backgroundImageUrl="/logIn_bg.png"
-            logo={<img alt="logo" src="/logo.png" />}
-            title={DEFAULT_NAME}
+            logo={<img alt="logo" src={logoUrl} />}
+            title={systemName}
             subTitle=""
             initialValues={{
               autoLogin: true,
@@ -164,14 +186,14 @@ const Login: React.FC = () => {
             }}
             actions={<Footer />}
             submitter={{
-              render: (props, dom) => {
+              render: (props: any, dom: any) => {
                 return type == "account" ? [dom[1]] : []
               },
             }}
           >
             <Tabs
               activeKey={type}
-              onChange={(activeKey) => {
+              onChange={(activeKey: string) => {
                 setType(activeKey as LoginType)
               }}
               items={[
@@ -221,7 +243,7 @@ const Login: React.FC = () => {
         </div>
       </div>
     )
-  }, [type, userLoginState, handleSubmit])
+  }, [type, userLoginState, handleSubmit, systemConfig])
 }
 
 export default Login
