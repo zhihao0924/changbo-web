@@ -20,7 +20,7 @@ const DeviceTypes: React.FC = () => {
   const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
 
-  const [alarmCheckedList, setAlarmCheckedList] = useState<CheckboxValueType[]>()
+  const [alramCheckedList, setAlarmCheckedList] = useState<CheckboxValueType[]>()
   const [alarmIndeterminate, setAlarmIndeterminate] = useState(true)
   const [alarmCheckAll, setAlarmCheckAll] = useState(false)
 
@@ -101,7 +101,7 @@ const DeviceTypes: React.FC = () => {
       await Services.api
         .postDeviceTypeAlarmSave({
           device_type_id: currentRecord?.id,
-          alarms: alarmCheckedList,
+          alarms: alramCheckedList,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
@@ -139,9 +139,7 @@ const DeviceTypes: React.FC = () => {
     setDetailCheckAll(list.length === currentRecord?.shows?.length)
     const checkedList: number[] = []
     list.map((val) => {
-      if (typeof val === "number") {
-        checkedList.push(val)
-      }
+      checkedList.push(val)
     })
     setDetailCheckedList(checkedList)
   }
@@ -208,8 +206,10 @@ const DeviceTypes: React.FC = () => {
                 }
               })
               setAlarmCheckedList(alarms)
-              setAlarmIndeterminate(alarms.length > 0 && alarms.length < record?.shows?.length)
-              setAlarmCheckAll(alarms.length === record?.shows?.length)
+              setAlarmIndeterminate(
+                alarms.length > 0 && alarms.length < currentRecord?.shows?.length,
+              )
+              setAlarmCheckAll(alarms.length === currentRecord?.shows?.length)
               setAlarmModalVisible(true)
             }}
           >
@@ -451,7 +451,7 @@ const DeviceTypes: React.FC = () => {
                 indeterminate={alarmIndeterminate}
                 checked={alarmCheckAll}
                 onChange={(e) => {
-                  const alarms: React.SetStateAction<CheckboxValueType[] | undefined> = []
+                  const alarms = []
                   currentRecord?.shows?.map((val) => {
                     alarms.push(val.config_type)
                   })
@@ -466,11 +466,11 @@ const DeviceTypes: React.FC = () => {
 
               <Checkbox.Group
                 key="alarms"
-                value={alarmCheckedList}
+                value={alramCheckedList}
                 onChange={(list) => {
                   setAlarmIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
                   setAlarmCheckAll(list.length === currentRecord?.shows?.length)
-                  const checkedList: React.SetStateAction<CheckboxValueType[] | undefined> = []
+                  const checkedList: number[] = []
                   list.map((val) => {
                     checkedList.push(val)
                   })
@@ -533,7 +533,7 @@ const DeviceTypes: React.FC = () => {
                 indeterminate={detailIndeterminate}
                 checked={detailCheckAll}
                 onChange={(e) => {
-                  const showInDetail: React.SetStateAction<CheckboxValueType[] | undefined> = []
+                  const showInDetail = []
                   currentRecord?.shows?.map((val) => {
                     showInDetail.push(val.config_type)
                   })
