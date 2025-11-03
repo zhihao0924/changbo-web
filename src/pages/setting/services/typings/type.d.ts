@@ -18,5 +18,6 @@ declare namespace API_PostSystemConfig {
     port: number
     username: string
     authorization_code: string
+    is_send: boolean
   }
 }

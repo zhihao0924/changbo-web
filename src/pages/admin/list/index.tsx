@@ -1,9 +1,10 @@
-import React, { useCallback, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ProColumns } from "@ant-design/pro-components"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
 import { Button, Form, Input, Modal, Radio } from "antd"
 import { PlusOutlined } from "@ant-design/icons"
 import Services from "@/pages/admin/services"
+import { USER_INFO } from "@/constants"
 
 type Columns = API_PostAdminList.List
 
@@ -23,6 +24,7 @@ const UserIndex: React.FC = () => {
   const [createAdminModalVisible, setCreateAdminModalVisible] = useState(false)
   const [resetPwdModalVisible, setResetPwdModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<API_PostAdminList.List>()
+  const [userinfo, setUserinfo] = useState<API_USER.Res>()
 
   const openCreateAdminModal = useCallback(
     (record: Columns | null = null) => {
@@ -134,6 +136,11 @@ const UserIndex: React.FC = () => {
     })
   }, [])
 
+  useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem(USER_INFO) || "{}")
+    setUserinfo(userInfo)
+  }, [])
+
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
       {
@@ -178,11 +185,12 @@ const UserIndex: React.FC = () => {
         align: "center",
         valueType: "option",
         render: (_, record) => [
-          record.account != "admin" && (
+          record.account != "admin" && (record.role != "admin" || userinfo?.account == "admin") && (
             <>
               <Button
                 type={"primary"}
                 onClick={() => {
+                  console.log(userinfo?.account)
                   handleDisabledAdmin(record)
                 }}
               >
@@ -196,7 +204,7 @@ const UserIndex: React.FC = () => {
         ],
       },
     ]
-  }, [])
+  }, [getRoles, handleDisabledAdmin, openResetPwdModal, userinfo?.account])
 
   return (
     <PageContainer>

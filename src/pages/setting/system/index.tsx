@@ -6,6 +6,7 @@ import { Card, Form, Input, Button, message, Upload } from "antd"
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons"
 import type { RcFile, UploadChangeParam } from "antd/es/upload"
 import Services from "@/pages/setting/services"
+import { SYSTEM_CONFIG } from "@/constants"
 
 const getBase64 = (img: RcFile, callback: (url: string) => void) => {
   const reader = new FileReader()
@@ -41,8 +42,14 @@ const SystemSetting: React.FC = () => {
   }, [getSystemConfig])
 
   const onFinish = async (values: any) => {
-    Services.api.postSystemConfigSave(values)
-    message.success("系统设置保存成功")
+    Services.api
+      .postSystemConfigSave(values)
+      .then((res) => {
+        localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
+      })
+      .then((res) => {
+        window.location.reload()
+      })
   }
 
   const [loading, setLoading] = useState(false)
@@ -217,6 +224,7 @@ const SystemSetting: React.FC = () => {
             label="是否发送邮件"
             name={["email_config", "is_send"]}
             style={{ maxWidth: 600 }}
+            valuePropName="checked"
             rules={[
               ({ getFieldValue }) => ({
                 validator(_, value) {
