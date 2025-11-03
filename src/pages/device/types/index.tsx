@@ -139,7 +139,9 @@ const DeviceTypes: React.FC = () => {
     setDetailCheckAll(list.length === currentRecord?.shows?.length)
     const checkedList: number[] = []
     list.map((val) => {
-      checkedList.push(val)
+      if (typeof val === "number") {
+        checkedList.push(val)
+      }
     })
     setDetailCheckedList(checkedList)
   }
@@ -206,10 +208,8 @@ const DeviceTypes: React.FC = () => {
                 }
               })
               setAlarmCheckedList(alarms)
-              setAlarmIndeterminate(
-                alarms.length > 0 && alarms.length < currentRecord?.shows?.length,
-              )
-              setAlarmCheckAll(alarms.length === currentRecord?.shows?.length)
+              setAlarmIndeterminate(alarms.length > 0 && alarms.length < record?.shows?.length)
+              setAlarmCheckAll(alarms.length === record?.shows?.length)
               setAlarmModalVisible(true)
             }}
           >
@@ -451,7 +451,7 @@ const DeviceTypes: React.FC = () => {
                 indeterminate={alarmIndeterminate}
                 checked={alarmCheckAll}
                 onChange={(e) => {
-                  const alarms = []
+                  const alarms: React.SetStateAction<CheckboxValueType[] | undefined> = []
                   currentRecord?.shows?.map((val) => {
                     alarms.push(val.config_type)
                   })
@@ -470,7 +470,7 @@ const DeviceTypes: React.FC = () => {
                 onChange={(list) => {
                   setAlarmIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
                   setAlarmCheckAll(list.length === currentRecord?.shows?.length)
-                  const checkedList: number[] = []
+                  const checkedList: React.SetStateAction<CheckboxValueType[] | undefined> = []
                   list.map((val) => {
                     checkedList.push(val)
                   })
@@ -533,7 +533,7 @@ const DeviceTypes: React.FC = () => {
                 indeterminate={detailIndeterminate}
                 checked={detailCheckAll}
                 onChange={(e) => {
-                  const showInDetail = []
+                  const showInDetail: React.SetStateAction<CheckboxValueType[] | undefined> = []
                   currentRecord?.shows?.map((val) => {
                     showInDetail.push(val.config_type)
                   })
