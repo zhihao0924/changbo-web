@@ -1,12 +1,8 @@
-<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg" fill="none">
-
- <g>
-  <title>Layer 1</title>
-  <path id="svg_1" stroke-linecap="round" stroke-width="14" stroke="#99CEFF" d="m62.99619,37.00015c-34.9333,41.28555 -55.9962,94.68285 -55.9962,152.99985c0,58.317 21.0629,111.715 55.9962,153"/>
-  <path id="svg_2" stroke-linecap="round" stroke-width="14" stroke="#99CEFF" d="m336,37.00015c34.933,41.28555 55.996,94.68285 55.996,152.99985c0,58.317 -21.063,111.715 -55.996,153"/>
-  <path id="svg_3" stroke-linecap="round" stroke-width="14" stroke="#0083FF" d="m115.6996,93.5002c-20.466,25.6413 -32.6996,58.1418 -32.6996,93.4998c0,35.358 12.2336,67.859 32.6996,93.5"/>
-  <path id="svg_4" stroke-linecap="round" stroke-width="14" stroke="#0083FF" d="m283,93.5002c20.466,25.6413 32.7,58.1418 32.7,93.4998c0,35.358 -12.234,67.859 -32.7,93.5"/>
-  <circle id="svg_5" fill="#0083FF" r="45" cy="206" cx="199.49796"/>
-  <path id="svg_6" stroke-linecap="round" stroke-width="18" stroke="#0083FF" d="m89.99796,591.5l31.377,-112m187.623,112l-32.249,-112m-155.374,0l76.623,-273.5l78.751,273.5m-155.374,0l155.374,0"/>
- </g>
+<svg width="462" height="568" viewBox="0 0 462 568" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M62.9962 7.00015C28.0629 48.2857 7 101.683 7 160C7 218.317 28.0629 271.715 62.9962 313" stroke="#99CEFF" stroke-width="14" stroke-linecap="round"/>
+<path d="M399 7.00015C433.933 48.2857 454.996 101.683 454.996 160C454.996 218.317 433.933 271.715 399 313" stroke="#99CEFF" stroke-width="14" stroke-linecap="round"/>
+<path d="M122.848 66.5002C102.382 92.1415 90.1484 124.642 90.1484 160C90.1484 195.358 102.382 227.859 122.848 253.5" stroke="#0083FF" stroke-width="14" stroke-linecap="round"/>
+<path d="M339.148 66.5002C359.614 92.1415 371.848 124.642 371.848 160C371.848 195.358 359.614 227.859 339.148 253.5" stroke="#0083FF" stroke-width="14" stroke-linecap="round"/>
+<circle cx="229" cy="173" r="45" fill="#0083FF"/>
+<path d="M121 558.5L152.377 446.5M340 558.5L307.751 446.5M152.377 446.5L229 173L307.751 446.5M152.377 446.5H307.751" stroke="#0083FF" stroke-width="18" stroke-linecap="round"/>
 </svg>

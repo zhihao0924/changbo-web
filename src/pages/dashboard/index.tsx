@@ -9,12 +9,9 @@ import {
   Button,
   Space,
   Statistic,
-  Divider,
   Image,
   Switch,
   List,
-  Avatar,
-  Descriptions,
 } from "antd"
 import { Line, Pie } from "@ant-design/charts"
 import styles from "./index.less"
@@ -30,8 +27,8 @@ import {
   ToolOutlined,
   AreaChartOutlined,
   CodeSandboxOutlined,
-  PictureOutlined,
   RiseOutlined,
+  ProductOutlined,
 } from "@ant-design/icons"
 
 const { Title } = Typography
@@ -285,7 +282,7 @@ const usePieConfig = (
       interactions: [{ type: "element-active" }, { type: "element-selected" }],
       legend: {
         position: "right",
-        offsetX: -20,
+        offsetX: -60,
         itemName: {
           formatter: (text: string, item: any, index: number) => {
             // 设备总数显示在legend中
@@ -297,12 +294,12 @@ const usePieConfig = (
             return `${text || ""}: ${itemData?.value || 0}`
           },
         },
-        marker: { symbol: "circle", style: { r: 3 } },
+        marker: { symbol: "circle", style: { r: 2 } },
         layout: "vertical",
         maxRow: 10,
         maxHeight: 200,
-        itemHeight: 20,
-        itemSpacing: 4,
+        itemHeight: 8,
+        itemSpacing: 2,
         flipPage: false,
         items: [
           ...(data || []).map((item, index) => ({
@@ -317,7 +314,7 @@ const usePieConfig = (
           },
         ],
       },
-      height: 200,
+      // height: 200,
       animation: isFirstRender,
     }),
     [data, total_healthy, total, isFirstRender],
@@ -332,7 +329,6 @@ const useLineConfig = (data: any[]) => {
       xField: "type",
       yField: "value",
       padding: "auto",
-      height: 200,
       tooltip: {
         formatter: (item: any) => ({
           name: item.type,
@@ -675,8 +671,8 @@ const Dashboard: React.FC = () => {
               loading={loading}
               style={{
                 marginBottom: 16,
-                height: "320px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                aspectRatio: "4/3",
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
             >
@@ -691,7 +687,6 @@ const Dashboard: React.FC = () => {
                 <Pie {...pieConfig} />
               </div>
             </Card>
-
             <Card
               title={
                 <Space>
@@ -701,8 +696,8 @@ const Dashboard: React.FC = () => {
               }
               loading={loading}
               style={{
-                height: "320px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                aspectRatio: "4/3",
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
             >
@@ -723,38 +718,52 @@ const Dashboard: React.FC = () => {
               }
               loading={loading}
               style={{
-                height: "656px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                aspectRatio: "16/17",
               }}
               bodyStyle={{
-                padding: "20px",
+                padding: "16px",
                 height: "calc(100% - 57px)",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
+                justifyContent: "center",
+                overflow: "hidden",
               }}
             >
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-end",
-                  flex: 1,
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                  height: "100%",
+                  alignItems: "end",
+                  alignContent: "end",
                 }}
               >
                 <Image
                   src={`/assets/cabinet_tx_rx.svg`}
                   preview={false}
-                  style={{ width: "120px", height: "auto" }}
+                  style={{ width: "60%", height: "auto" }}
                 />
-
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "16px",
+                  height: "100%",
+                  alignItems: "end",
+                  alignContent: "end",
+                }}
+              >
                 <Image
                   src={`/assets/tower_${currentImageIndex + 1}.svg`}
                   preview={false}
                   style={{
-                    width: "180px",
-                    height: "560px",
-                    objectFit: "fill",
+                    width: "100%",
+                    height: "auto",
+                    maxWidth: "100%",
+                    objectFit: "contain",
                   }}
                 />
               </div>
@@ -779,8 +788,8 @@ const Dashboard: React.FC = () => {
               loading={loading}
               style={{
                 marginBottom: 16,
-                height: "320px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                aspectRatio: "4/3",
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
             >
@@ -792,7 +801,11 @@ const Dashboard: React.FC = () => {
                   height: "100%",
                 }}
               >
-                <Image src={`/assets/indicator_light_red.svg`} width={200} preview={false} />
+                <Image
+                  src={`/assets/indicator_light_red.svg`}
+                  style={{ width: "150%", height: "auto", transform: "scale(1.5)" }}
+                  preview={false}
+                />{" "}
               </div>
             </Card>
             <Card
@@ -802,26 +815,150 @@ const Dashboard: React.FC = () => {
                   <span>最新告警</span>
                 </Space>
               }
+              style={{
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                aspectRatio: "4/3",
+              }}
+              bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
             >
-
+              <div style={{ height: "100%", overflow: "auto" }}>
+                <List
+                  dataSource={dashboardData?.alarm_device.slice(0, 3)}
+                  renderItem={(item) => (
+                    <List.Item style={{ borderBottom: "1px solid #f0f0f0", padding: "6px 0" }}>
+                      <div style={{ width: "100%" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          <span style={{ fontWeight: 600, color: "#ff4d4f", fontSize: "13px" }}>
+                            {item.device_type_group}（{item.device_name}） 异常
+                          </span>
+                          <span style={{ color: "#999", fontSize: "11px" }}>{item.alarm_at}</span>
+                        </div>
+                        <div
+                          style={{
+                            color: "#666",
+                            fontSize: "12px",
+                            lineHeight: "1.4",
+                            display: "-webkit-box",
+                            WebkitBoxOrient: "vertical",
+                            WebkitLineClamp: 2,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {item.alarm_item.map((item: any, index: number) => {
+                            return (
+                              <>
+                                <span key={item.config_type_name}>{item.config_type_name}</span>
+                                <span key={item.suggested_action}>{item.suggested_action}</span>
+                              </>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              </div>
             </Card>
           </Col>
         </Row>
 
         {/* 设备类型统计详情 */}
-        {dashboardData?.type_statistic && dashboardData.type_statistic.length > 0 && (
+        {dashboardData?.type_statistic && dashboardData?.type_statistic.length > 0 && (
           <Row gutter={24} style={{ marginBottom: 16 }}>
-            <Col span={24}>
-              <Card title="设备类型详情" loading={loading}>
-                <Row gutter={16}>
-                  {dashboardData.type_statistic.map((item: any, index: number) => (
-                    <Col key={item.type} xs={24} sm={12} md={8} lg={6}>
-                      <DeviceStatusCard data={item} />
-                    </Col>
-                  ))}
-                </Row>
-              </Card>
-            </Col>
+            {dashboardData?.type_statistic.map((item: any, index: number) => (
+              <Col key={item.type} xs={24} sm={12} md={8} lg={4}>
+                <Card
+                  title={
+                    <Space>
+                      <ProductOutlined style={{ color: "#0083FF" }} />
+                      <span>{item.name}</span>
+                    </Space>
+                  }
+                  loading={loading}
+                  style={{ height: "180px" }}
+                >
+                  <div style={{ padding: "8px 0" }}>
+                    {/* 第一行：总数和在线 */}
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}
+                    >
+                      <div style={{ width: "48%", display: "flex", alignItems: "center" }}>
+                        <Image
+                          src={`/assets/total.svg`}
+                          preview={false}
+                          style={{ width: "30px", height: "30px", marginRight: 8 }}
+                        />
+                        <div>
+                          <div style={{ fontSize: "10px", fontWeight: "500", color: "#333" }}>
+                            总数
+                          </div>
+                          <div style={{ fontSize: "10px", color: "#999" }}>
+                            {item.total_num || 0}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ width: "48%", display: "flex", alignItems: "center" }}>
+                        <Image
+                          src={`/assets/online.svg`}
+                          preview={false}
+                          style={{ width: "30px", height: "30px", marginRight: 8 }}
+                        />
+                        <div>
+                          <div style={{ fontSize: "10px", fontWeight: "500", color: "#52c41a" }}>
+                            在线
+                          </div>
+                          <div style={{ fontSize: "10px", color: "#999" }}>
+                            {item.online_num || 0}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 第二行：离线和告警 */}
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <div style={{ width: "48%", display: "flex", alignItems: "center" }}>
+                        <Image
+                          src={`/assets/offline.svg`}
+                          preview={false}
+                          style={{ width: "30px", height: "30px", marginRight: 8 }}
+                        />
+                        <div>
+                          <div style={{ fontSize: "10px", fontWeight: "500", color: "#ff4d4f" }}>
+                            离线
+                          </div>
+                          <div style={{ fontSize: "10px", color: "#999" }}>
+                            {item.offline_num || 0}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ width: "48%", display: "flex", alignItems: "center" }}>
+                        <Image
+                          src={`/assets/indicator_light_red.svg`}
+                          preview={false}
+                          style={{ width: "30px", height: "30px", marginRight: 8 }}
+                        />
+                        <div>
+                          <div style={{ fontSize: "10px", fontWeight: "500", color: "#faad14" }}>
+                            告警
+                          </div>
+                          <div style={{ fontSize: "10px", color: "#999" }}>
+                            {item.alarm_num || 0}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
           </Row>
         )}
       </div>

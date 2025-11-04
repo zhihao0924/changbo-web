@@ -9,7 +9,7 @@ declare namespace API_PostDashboard {
     statistic: Statistic
     energy_consumption: Statistic
     total_healthy: number
-    type_statistic: StatisticNumber
+    type_statistic: StatisticNumber[]
     alarm_device: AlarmDevice[]
   }
 
