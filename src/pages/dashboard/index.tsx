@@ -660,7 +660,7 @@ const Dashboard: React.FC = () => {
         {/* 主要数据展示区域 */}
         <Row gutter={[24, 16]} style={{ marginBottom: 24 }}>
           {/* 左侧图表区域 */}
-          <Col xs={24} lg={7}>
+          <Col xs={24} lg={6}>
             <Card
               title={
                 <Space>
@@ -675,6 +675,12 @@ const Dashboard: React.FC = () => {
                 aspectRatio: "4/3",
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
+              headStyle={{
+                fontSize: "12px",
+                fontWeight: "600",
+                height: "24px",
+                borderBottom: "none",
+              }}
             >
               <div
                 style={{
@@ -700,6 +706,12 @@ const Dashboard: React.FC = () => {
                 aspectRatio: "4/3",
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
+              headStyle={{
+                fontSize: "12px",
+                fontWeight: "600",
+                height: "24px",
+                borderBottom: "none",
+              }}
             >
               <div style={{ height: "100%" }}>
                 <Line {...lineConfig} />
@@ -708,7 +720,7 @@ const Dashboard: React.FC = () => {
           </Col>
 
           {/* 中间图片展示区域 */}
-          <Col xs={24} lg={10}>
+          <Col xs={24} lg={12}>
             <Card
               title={
                 <Space>
@@ -719,50 +731,54 @@ const Dashboard: React.FC = () => {
               loading={loading}
               style={{
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                aspectRatio: "16/17",
+                aspectRatio: "4/3",
               }}
               bodyStyle={{
                 padding: "16px",
                 height: "calc(100% - 57px)",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
+                justifyContent: "space-between",
                 overflow: "hidden",
               }}
+              headStyle={{
+                fontSize: "12px",
+                fontWeight: "600",
+                height: "24px",
+                borderBottom: "none",
+              }}
             >
+              {/* 左右布局的图片区域 */}
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  display: "flex",
+                  height: "80%",
                   gap: "16px",
-                  height: "100%",
-                  alignItems: "end",
-                  alignContent: "end",
+                  alignItems: "flex-end",
                 }}
               >
+                {/* 左边：机柜设备图片（高度为右边的一半） */}
+
                 <Image
                   src={`/assets/cabinet_tx_rx.svg`}
                   preview={false}
-                  style={{ width: "60%", height: "auto" }}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    maxHeight: "100%",
+                    objectFit: "contain",
+                  }}
                 />
-              </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "16px",
-                  height: "100%",
-                  alignItems: "end",
-                  alignContent: "end",
-                }}
-              >
+
+                {/* 右边：塔台设备图片（全高） */}
+
                 <Image
                   src={`/assets/tower_${currentImageIndex + 1}.svg`}
                   preview={false}
                   style={{
                     width: "100%",
                     height: "auto",
-                    maxWidth: "100%",
+                    maxHeight: "100%",
                     objectFit: "contain",
                   }}
                 />
@@ -771,7 +787,7 @@ const Dashboard: React.FC = () => {
           </Col>
 
           {/* 右侧告警统计 */}
-          <Col xs={24} lg={7}>
+          <Col xs={24} lg={6}>
             <Card
               title={
                 <Space>
@@ -781,7 +797,7 @@ const Dashboard: React.FC = () => {
               }
               extra={
                 <Space>
-                  <span>告警声音</span>
+                  <span style={{ fontSize: "12px", color: "#8c8c8c" }}>告警声音</span>
                   <Switch />
                 </Space>
               }
@@ -792,6 +808,12 @@ const Dashboard: React.FC = () => {
                 aspectRatio: "4/3",
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
+              headStyle={{
+                fontSize: "12px",
+                fontWeight: "600",
+                height: "24px",
+                borderBottom: "none",
+              }}
             >
               <div
                 style={{
@@ -818,6 +840,12 @@ const Dashboard: React.FC = () => {
               style={{
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 aspectRatio: "4/3",
+              }}
+              headStyle={{
+                fontSize: "12px",
+                fontWeight: "600",
+                height: "24px",
+                borderBottom: "none",
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
             >
@@ -874,7 +902,7 @@ const Dashboard: React.FC = () => {
         {dashboardData?.type_statistic && dashboardData?.type_statistic.length > 0 && (
           <Row gutter={24} style={{ marginBottom: 16 }}>
             {dashboardData?.type_statistic.map((item: any, index: number) => (
-              <Col key={item.type} xs={24} sm={12} md={8} lg={4}>
+              <Col key={item.type} xs={12} sm={8} md={6} lg={4}>
                 <Card
                   title={
                     <Space>
@@ -883,9 +911,14 @@ const Dashboard: React.FC = () => {
                     </Space>
                   }
                   loading={loading}
-                  style={{ height: "180px" }}
+                  headStyle={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    height: "24px",
+                    borderBottom: "none",
+                  }}
                 >
-                  <div style={{ padding: "8px 0" }}>
+                  <div style={{ padding: "0" }}>
                     {/* 第一行：总数和在线 */}
                     <div
                       style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}
