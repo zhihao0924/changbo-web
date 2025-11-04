@@ -673,6 +673,7 @@ const Dashboard: React.FC = () => {
                 marginBottom: 16,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 aspectRatio: "4/3",
+                minHeight: 200,
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
               headStyle={{
@@ -704,6 +705,7 @@ const Dashboard: React.FC = () => {
               style={{
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 aspectRatio: "4/3",
+                minHeight: 200,
               }}
               bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
               headStyle={{
@@ -732,13 +734,13 @@ const Dashboard: React.FC = () => {
               style={{
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 aspectRatio: "4/3",
+                minHeight: 416,
               }}
               bodyStyle={{
                 padding: "16px",
-                height: "calc(100% - 57px)",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
+                justifyContent: "flex-start", // 改为flex-start，允许图片自由下移
                 overflow: "hidden",
               }}
               headStyle={{
@@ -755,31 +757,66 @@ const Dashboard: React.FC = () => {
                   height: "80%",
                   gap: "16px",
                   alignItems: "flex-end",
+                  position: "relative",
                 }}
               >
-                {/* 左边：机柜设备图片（高度为右边的一半） */}
-
-                <Image
-                  src={`/assets/cabinet_tx_rx.svg`}
-                  preview={false}
+                {/* 左边：机柜设备图片（调整为更小尺寸） */}
+                <div
                   style={{
-                    width: "100%",
-                    height: "auto",
-                    maxHeight: "100%",
-                    objectFit: "contain",
+                    flex: 0.5, // 减少左边容器的占比
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "flex-end",
+                    height: "40%", // 进一步降低高度
+                    minHeight: "40%",
                   }}
-                />
+                >
+                  <Image
+                    src={`/assets/cabinet_tx_rx.svg`}
+                    preview={false}
+                    style={{
+                      width: "80%", // 减少图片宽度
+                      height: "auto",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                </div>
 
-                {/* 右边：塔台设备图片（全高） */}
-
-                <Image
-                  src={`/assets/tower_${currentImageIndex + 1}.svg`}
-                  preview={false}
+                {/* 右边：塔台设备图片（保持全高） */}
+                <div
                   style={{
-                    width: "100%",
-                    height: "auto",
-                    maxHeight: "100%",
-                    objectFit: "contain",
+                    flex: 1, // 增加右边容器的占比
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "flex-end",
+                    height: "100%",
+                    minHeight: "100%",
+                  }}
+                >
+                  <Image
+                    src={`/assets/tower_${currentImageIndex + 1}.svg`}
+                    preview={false}
+                    style={{
+                      width: "80%",
+                      height: "auto",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                </div>
+
+                {/* 2px连接线 */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "0",
+                    left: "25%",
+                    right: "25%",
+                    height: "2px",
+                    background: "linear-gradient(90deg, #0083FF 0%, #30BF78 50%, #0083FF 100%)",
+                    borderRadius: "1px",
+                    boxShadow: "0 1px 3px rgba(0, 131, 255, 0.3)",
                   }}
                 />
               </div>
@@ -798,7 +835,12 @@ const Dashboard: React.FC = () => {
               extra={
                 <Space>
                   <span style={{ fontSize: "12px", color: "#8c8c8c" }}>告警声音</span>
-                  <Switch />
+                  <Switch
+                    onChange={() => {
+                      toggleBeep()
+                    }}
+                    checked={isBeeping}
+                  />
                 </Space>
               }
               loading={loading}
@@ -806,8 +848,15 @@ const Dashboard: React.FC = () => {
                 marginBottom: 16,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 aspectRatio: "4/3",
+                minHeight: 200,
               }}
-              bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
+              bodyStyle={{
+                padding: "16px",
+                height: "calc(100% - 57px)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
               headStyle={{
                 fontSize: "12px",
                 fontWeight: "600",
@@ -815,20 +864,20 @@ const Dashboard: React.FC = () => {
                 borderBottom: "none",
               }}
             >
-              <div
+              <Image
+                src={
+                  dashboardData?.alarm_device.length > 0
+                    ? `/assets/light_red.svg`
+                    : `/assets/light_green.svg`
+                }
                 style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100%",
+                  width: "60%",
+                  height: "auto",
+                  display: "block",
+                  margin: "0 auto",
                 }}
-              >
-                <Image
-                  src={`/assets/indicator_light_red.svg`}
-                  style={{ width: "150%", height: "auto", transform: "scale(1.5)" }}
-                  preview={false}
-                />{" "}
-              </div>
+                preview={false}
+              />{" "}
             </Card>
             <Card
               title={
@@ -840,6 +889,7 @@ const Dashboard: React.FC = () => {
               style={{
                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                 aspectRatio: "4/3",
+                minHeight: 200,
               }}
               headStyle={{
                 fontSize: "12px",
@@ -974,7 +1024,7 @@ const Dashboard: React.FC = () => {
                       </div>
                       <div style={{ width: "48%", display: "flex", alignItems: "center" }}>
                         <Image
-                          src={`/assets/indicator_light_red.svg`}
+                          src={`/assets/alarm.svg`}
                           preview={false}
                           style={{ width: "30px", height: "30px", marginRight: 8 }}
                         />
