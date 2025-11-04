@@ -1,5 +1,21 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { Card, Row, Col, Typography, Tooltip, Button, Space, Statistic } from "antd"
+import { PageContainer } from "@ant-design/pro-components"
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Tooltip,
+  Button,
+  Space,
+  Statistic,
+  Divider,
+  Image,
+  Switch,
+  List,
+  Avatar,
+  Descriptions,
+} from "antd"
 import { Line, Pie } from "@ant-design/charts"
 import styles from "./index.less"
 import Services from "@/pages/dashboard/services"
@@ -10,9 +26,12 @@ import {
   WarningOutlined,
   SoundOutlined,
   SoundFilled,
-  ThunderboltOutlined,
   AlertOutlined,
   ToolOutlined,
+  AreaChartOutlined,
+  CodeSandboxOutlined,
+  PictureOutlined,
+  RiseOutlined,
 } from "@ant-design/icons"
 
 const { Title } = Typography
@@ -21,8 +40,8 @@ const { Title } = Typography
 const DASHBOARD_CONFIG = {
   refreshInterval: 3000, // 3秒刷新一次数据
   beepInterval: 1000, // 1秒播放一次滴滴声
-  chartColors: ["#30BF78", "#FAAD14", "#F4664A", "#FFE900"],
-  lineChartColor: "#30BF78",
+  chartColors: ["#376DF7", "#00B5FF", "#FFB600", "#FF5900", "#999999"],
+  lineChartColor: "#0083FF",
 }
 
 // 自定义Hook：滴滴声功能
@@ -236,15 +255,14 @@ const usePieConfig = (
   total_healthy: number,
   total: number,
   isFirstRender: boolean,
-  dashboardData: any,
 ) => {
   return useMemo(
     () => ({
       data: data || [],
       angleField: "value",
       colorField: "type",
-      radius: 0.8,
-      innerRadius: 0.5,
+      radius: 0.7,
+      innerRadius: 0.6,
       label: {
         type: "inner",
         content: "{value}",
@@ -254,19 +272,20 @@ const usePieConfig = (
       tooltip: {
         formatter: (item: any) => ({
           name: item.type,
-          value: `${item.value} 个 (${((item.value * 100) / (total || 1)).toFixed(2)}%)`,
+          value: `${item.value} 台 (${((item.value * 100) / (total || 1)).toFixed(2)}%)`,
         }),
       },
       statistic: {
         title: { formatter: () => "健康率", style: { fontSize: 14 } },
         content: {
-          style: { fontSize: 24, fontWeight: "bold", color: "#30BF78" },
-          content: `${total_healthy || 0}%`,
+          style: { fontSize: 12, fontWeight: "bold", color: "#30BF78" },
+          content: `${total_healthy.toFixed(2) || 0}%`,
         },
       },
       interactions: [{ type: "element-active" }, { type: "element-selected" }],
       legend: {
         position: "right",
+        offsetX: -20,
         itemName: {
           formatter: (text: string, item: any, index: number) => {
             // 设备总数显示在legend中
@@ -278,7 +297,7 @@ const usePieConfig = (
             return `${text || ""}: ${itemData?.value || 0}`
           },
         },
-        marker: { symbol: "circle", style: { r: 6 } },
+        marker: { symbol: "circle", style: { r: 3 } },
         layout: "vertical",
         maxRow: 10,
         maxHeight: 200,
@@ -294,7 +313,7 @@ const usePieConfig = (
           {
             value: total,
             name: `设备总计`,
-            marker: { symbol: "circle", style: { fill: "#00e3ff" } },
+            marker: { symbol: "circle", style: { fill: "" } },
           },
         ],
       },
@@ -324,6 +343,7 @@ const useLineConfig = (data: any[]) => {
         stroke: DASHBOARD_CONFIG.lineChartColor,
         lineWidth: 2,
       },
+      smooth: true,
       animation: false,
     }),
     [data],
@@ -533,6 +553,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isFirstRender, setIsFirstRender] = useState(true)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   // 计算告警设备数量
   const alarmDeviceCount = useMemo(() => {
@@ -572,6 +593,15 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(timer)
   }, [getDashboardData])
 
+  // 图片轮播定时器
+  useEffect(() => {
+    const imageTimer = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % 3)
+    }, 500) // 每0.5秒切换一次图片
+
+    return () => clearInterval(imageTimer)
+  }, [])
+
   // 处理首次渲染标记
   useEffect(() => {
     if (dashboardData && isFirstRender) {
@@ -585,8 +615,8 @@ const Dashboard: React.FC = () => {
     dashboardData?.total_healthy || 0,
     dashboardData?.total || 0,
     isFirstRender,
-    dashboardData,
   )
+
   const lineConfig = useLineConfig(dashboardData?.energy_consumption || [])
 
   if (loading) {
@@ -624,97 +654,178 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className={styles.container}>
-      {/* 页面标题 */}
-      <Title level={3} style={{ textAlign: "center", width: "100%" }}>
-        专网通信智能网管平台
-      </Title>
+    <PageContainer>
+      <div className={styles.container}>
+        {/* 页面标题 */}
+        <Title level={3} style={{ textAlign: "center", width: "100%", marginBottom: 24 }}>
+          专网通信智能网管平台
+        </Title>
 
-      {/* 主要数据展示区域 */}
-      <Row gutter={24} style={{ marginBottom: 16 }}>
-        {/* 设备健康度图表 */}
-        <Col xs={24} md={12} lg={7}>
-          <Card
-            title={
-              <Space>
-                <ThunderboltOutlined />
-                <span>设备健康度</span>
-              </Space>
-            }
-            loading={loading}
-          >
-            <Pie {...pieConfig} />
-          </Card>
-
-          {/* 能耗统计图表 */}
-          <Card
-            title={
-              <Space>
-                <DatabaseOutlined />
-                <span>能耗统计</span>
-              </Space>
-            }
-            loading={loading}
-          >
-            <Line {...lineConfig} />
-          </Card>
-        </Col>
-        <Col xs={24} md={12} lg={10}>
-          <Card
-            style={{
-              height: "100%",
-              position: "relative",
-              overflow: "hidden",
-            }}
-            bodyStyle={{ padding: 0, height: "100%" }}
-          >
-            <div
+        {/* 主要数据展示区域 */}
+        <Row gutter={[24, 16]} style={{ marginBottom: 24 }}>
+          {/* 左侧图表区域 */}
+          <Col xs={24} lg={7}>
+            <Card
+              title={
+                <Space>
+                  <CodeSandboxOutlined style={{ color: "#0083FF" }} />
+                  <span>设备健康度</span>
+                </Space>
+              }
+              loading={loading}
               style={{
-                position: "absolute",
-                bottom: "10%",
-                right: "10%",
-                width: "40%",
-                height: "60%",
-                backgroundImage: 'url("/assets/signal_tower.svg")',
-                backgroundSize: "contain",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "center",
-                opacity: 0.3,
-                animation: "float 3s ease-in-out infinite",
+                marginBottom: 16,
+                height: "320px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
-            />
-          </Card>
-        </Col>
+              bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Pie {...pieConfig} />
+              </div>
+            </Card>
 
-        {/* 告警统计 */}
-        <Col xs={24} md={12} lg={7}>
-          <AlertStatsCard
-            alertCount={dashboardData?.alarm_device?.length || 0}
-            isBeeping={isBeeping}
-            onToggleBeep={toggleBeep}
-            loading={loading}
-            alarmDevice={dashboardData?.alarm_device || []}
-          />
-        </Col>
-      </Row>
+            <Card
+              title={
+                <Space>
+                  <AreaChartOutlined style={{ color: "#0083FF" }} />
+                  <span>能耗统计</span>
+                </Space>
+              }
+              loading={loading}
+              style={{
+                height: "320px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+              bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
+            >
+              <div style={{ height: "100%" }}>
+                <Line {...lineConfig} />
+              </div>
+            </Card>
+          </Col>
 
-      {/* 设备类型统计 */}
-      {dashboardData?.type_statistic && dashboardData.type_statistic.length > 0 && (
-        <Row gutter={24} style={{ marginBottom: 16 }}>
-          <Col span={24}>
-            <Card title="设备类型统计" loading={loading}>
-              <Row gutter={16}>
-                {dashboardData.type_statistic.map((item: unknown, index: any) => (
-                  <Col key={item.type} xs={24} sm={12} md={8} lg={4}>
-                    <DeviceStatusCard data={item} />
-                  </Col>
-                ))}
-              </Row>
+          {/* 中间图片展示区域 */}
+          <Col xs={24} lg={10}>
+            <Card
+              title={
+                <Space>
+                  <CodeSandboxOutlined style={{ color: "#0083FF" }} />
+                  <span>设备状态预览</span>
+                </Space>
+              }
+              loading={loading}
+              style={{
+                height: "656px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+              bodyStyle={{
+                padding: "20px",
+                height: "calc(100% - 57px)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  flex: 1,
+                }}
+              >
+                <Image
+                  src={`/assets/cabinet_tx_rx.svg`}
+                  preview={false}
+                  style={{ width: "120px", height: "auto" }}
+                />
+
+                <Image
+                  src={`/assets/tower_${currentImageIndex + 1}.svg`}
+                  preview={false}
+                  style={{
+                    width: "180px",
+                    height: "560px",
+                    objectFit: "fill",
+                  }}
+                />
+              </div>
+            </Card>
+          </Col>
+
+          {/* 右侧告警统计 */}
+          <Col xs={24} lg={7}>
+            <Card
+              title={
+                <Space>
+                  <WarningOutlined style={{ color: "#0083FF" }} />
+                  <span>声光告警</span>
+                </Space>
+              }
+              extra={
+                <Space>
+                  <span>告警声音</span>
+                  <Switch />
+                </Space>
+              }
+              loading={loading}
+              style={{
+                marginBottom: 16,
+                height: "320px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              }}
+              bodyStyle={{ padding: "16px", height: "calc(100% - 57px)" }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100%",
+                }}
+              >
+                <Image src={`/assets/indicator_light_red.svg`} width={200} preview={false} />
+              </div>
+            </Card>
+            <Card
+              title={
+                <Space>
+                  <RiseOutlined style={{ color: "#0083FF" }} />
+                  <span>最新告警</span>
+                </Space>
+              }
+            >
+
             </Card>
           </Col>
         </Row>
-      )}
-    </div>
+
+        {/* 设备类型统计详情 */}
+        {dashboardData?.type_statistic && dashboardData.type_statistic.length > 0 && (
+          <Row gutter={24} style={{ marginBottom: 16 }}>
+            <Col span={24}>
+              <Card title="设备类型详情" loading={loading}>
+                <Row gutter={16}>
+                  {dashboardData.type_statistic.map((item: any, index: number) => (
+                    <Col key={item.type} xs={24} sm={12} md={8} lg={6}>
+                      <DeviceStatusCard data={item} />
+                    </Col>
+                  ))}
+                </Row>
+              </Card>
+            </Col>
+          </Row>
+        )}
+      </div>
+    </PageContainer>
   )
 }
 
