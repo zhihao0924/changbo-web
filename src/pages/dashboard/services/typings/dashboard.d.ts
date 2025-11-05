@@ -28,11 +28,12 @@ declare namespace API_PostDashboard {
     maintaining_num: number
   }
   export interface AlarmDevice {
-    alarm_item: AlarmItem[]
+    alarm_item: AlarmItem
     device_id: number
     device_name: string
     device_type: string
     device_type_group: string
+    alarm_at: string
   }
 
   export interface AlarmItem {

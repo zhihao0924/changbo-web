@@ -901,7 +901,7 @@ const Dashboard: React.FC = () => {
             >
               <div style={{ height: "100%", overflow: "auto" }}>
                 <List
-                  dataSource={dashboardData?.alarm_device.slice(0, 3)}
+                  dataSource={dashboardData?.alarm_device}
                   renderItem={(item) => (
                     <List.Item style={{ borderBottom: "1px solid #f0f0f0", padding: "6px 0" }}>
                       <div style={{ width: "100%" }}>
@@ -913,31 +913,25 @@ const Dashboard: React.FC = () => {
                             marginBottom: "4px",
                           }}
                         >
-                          <span style={{ fontWeight: 600, color: "#ff4d4f", fontSize: "13px" }}>
-                            {item.device_type_group}（{item.device_name}） 异常
+                          <span style={{ color: "#222222", fontSize: "12px" }}>
+                            {item.device_type_group}（{item.device_name}）{" "}
+                            {item.alarm_item.config_type_name} 异常
                           </span>
-                          <span style={{ color: "#999", fontSize: "11px" }}>{item.alarm_at}</span>
                         </div>
                         <div
                           style={{
                             color: "#666",
                             fontSize: "12px",
                             lineHeight: "1.4",
-                            display: "-webkit-box",
-                            WebkitBoxOrient: "vertical",
-                            WebkitLineClamp: 2,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                           }}
                         >
-                          {item.alarm_item.map((item: any, index: number) => {
-                            return (
-                              <>
-                                <span key={item.config_type_name}>{item.config_type_name}</span>
-                                <span key={item.suggested_action}>{item.suggested_action}</span>
-                              </>
-                            )
-                          })}
+                          <span style={{ color: "#808080", fontSize: "10px" }}>
+                            {item.alarm_item.suggested_action}
+                          </span>
+                          <span style={{ color: "#808080", fontSize: "10px" }}>{item.alarm_at}</span>
                         </div>
                       </div>
                     </List.Item>
