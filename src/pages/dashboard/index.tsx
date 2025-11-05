@@ -5,10 +5,8 @@ import {
   Row,
   Col,
   Typography,
-  Tooltip,
   Button,
   Space,
-  Statistic,
   Image,
   Switch,
   List,
@@ -17,14 +15,8 @@ import { Line, Pie } from "@ant-design/charts"
 import styles from "./index.less"
 import Services from "@/pages/dashboard/services"
 import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DatabaseOutlined,
   WarningOutlined,
-  SoundOutlined,
-  SoundFilled,
   AlertOutlined,
-  ToolOutlined,
   AreaChartOutlined,
   CodeSandboxOutlined,
   RiseOutlined,
@@ -471,12 +463,43 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <PageContainer>
+    <PageContainer header={{ breadcrumb: undefined, title: false }}>
       <div className={styles.container}>
-        {/* 页面标题 */}
-        <Title level={3} style={{ textAlign: "center", width: "100%", marginBottom: 24 }}>
-          专网通信智能网管平台
-        </Title>
+        {/* 页面标题和Logo */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <Image
+            src={(() => {
+              try {
+                const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
+
+                console.log("systemConfig:", systemConfig)
+                if (systemConfig) {
+                  const config = JSON.parse(systemConfig);
+                  return config.system_logo || "/logo.png";
+                }
+              } catch (error) {
+                console.error("获取系统配置失败:", error);
+              }
+              return "/logo.png";
+            })()}
+            preview={false}
+            style={{ width: "40px", height: "40px" }} />
+          <Title level={3} style={{ textAlign: "center", margin: 0, flex: 1 }}>
+            {(() => {
+              try {
+                const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
+                if (systemConfig) {
+                  const config = JSON.parse(systemConfig);
+                  return config.system_name || "专网通信智能网管平台";
+                }
+              } catch (error) {
+                console.error("获取系统配置失败:", error);
+              }
+              return "专网通信智能网管平台";
+            })()}
+          </Title>
+          <div style={{ width: "40px" }}></div> {/* 占位元素，保持对称 */}
+        </div>
 
         {/* 主要数据展示区域 */}
         <Row gutter={[24, 16]} style={{ marginBottom: 24 }}>
@@ -735,8 +758,8 @@ const Dashboard: React.FC = () => {
                           }}
                         >
                           <span style={{ color: "#222222", fontSize: "12px" }}>
-                            {item.device_type_group}（{item.device_name}）{" "}
-                            {item.alarm_item.config_type_name} 异常
+                            {item.device_type_group}（{item.device_name}）
+                            {item.alarm_item.config_type_name} 告警
                           </span>
                         </div>
                         <div
