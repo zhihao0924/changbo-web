@@ -38,15 +38,15 @@ const { Title } = Typography
 const DASHBOARD_CONFIG = {
   refreshInterval: () => {
     try {
-      const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
+      const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
       if (systemConfig) {
-        const config = JSON.parse(systemConfig);
-        return config.refresh_interval || 3000; // 默认3秒
+        const config = JSON.parse(systemConfig)
+        return config.refresh_interval || 3000 // 默认3秒
       }
     } catch (error) {
-      console.error("获取系统配置失败:", error);
+      console.error("获取系统配置失败:", error)
     }
-    return 3000; // 默认3秒
+    return 3000 // 默认3秒
   },
   beepInterval: 1000, // 1秒播放一次滴滴声
   chartColors: ["#376DF7", "#00B5FF", "#FFB600", "#FF5900", "#999999"],
@@ -358,210 +358,13 @@ const useLineConfig = (data: any[]) => {
   )
 }
 
-// 设备状态卡片组件
-const DeviceStatusCard: React.FC<{ data: any }> = ({ data }) => (
-  <Card title={data.name} style={{ height: "100%" }}>
-    <Row justify="center" align="middle" style={{ textAlign: "center", marginBottom: 8 }}>
-      <Col span={5}>
-        <Tooltip title="设备总数">
-          <DatabaseOutlined style={{ color: "#30BF78" }} />
-        </Tooltip>
-      </Col>
-      <Col span={5}>
-        <Tooltip title="在线设备">
-          <CheckCircleOutlined style={{ color: "#30BF78" }} />
-        </Tooltip>
-      </Col>
-      <Col span={5}>
-        <Tooltip title="离线设备">
-          <CloseCircleOutlined style={{ color: "#F4664A" }} />
-        </Tooltip>
-      </Col>
-      <Col span={5}>
-        <Tooltip title="告警设备">
-          <WarningOutlined style={{ color: "#FAAD14" }} />
-        </Tooltip>
-      </Col>
-      <Col span={4}>
-        <Tooltip title="维护中设备">
-          <ToolOutlined style={{ color: "#1890ff" }} />
-        </Tooltip>
-      </Col>
-    </Row>
-    <Row justify="center" align="middle" style={{ textAlign: "center" }}>
-      <Col span={5}>
-        <Statistic value={data.total_num} valueStyle={{ fontSize: 16 }} />
-      </Col>
-      <Col span={5}>
-        <Statistic value={data.online_num} valueStyle={{ fontSize: 16 }} />
-      </Col>
-      <Col span={5}>
-        <Statistic value={data.offline_num} valueStyle={{ fontSize: 16 }} />
-      </Col>
-      <Col span={5}>
-        <Statistic value={data.alarm_num} valueStyle={{ fontSize: 16 }} />
-      </Col>
-      <Col span={4}>
-        <Statistic value={data.maintaining_num} valueStyle={{ fontSize: 16 }} />
-      </Col>
-    </Row>
-  </Card>
-)
-
-// 告警统计卡片
-const AlertStatsCard: React.FC<{
-  alertCount: number
-  isBeeping: boolean
-  onToggleBeep: () => void
-  loading?: boolean
-  alarmDevice: []
-}> = ({ alertCount, isBeeping, onToggleBeep, loading, alarmDevice }) => {
-  // 按告警时间排序，最新的在前
-  const sortedAlarmDevices = alarmDevice
-
-  return (
-    <Card
-      title={
-        <Space>
-          <AlertOutlined />
-          <span>告警统计</span>
-          {alertCount > 0 && (
-            <span
-              style={{
-                background: "#ff4d4f",
-                color: "white",
-                padding: "2px 8px",
-                borderRadius: "12px",
-                fontSize: "12px",
-                fontWeight: "500",
-              }}
-            >
-              {alertCount}
-            </span>
-          )}
-        </Space>
-      }
-      loading={loading}
-      extra={
-        <Tooltip title={isBeeping ? "停止滴滴声" : "开始滴滴声"}>
-          <span
-            onClick={onToggleBeep}
-            style={{
-              cursor: "pointer",
-              fontSize: "16px",
-              color: isBeeping ? "#1890ff" : "#d9d9d9",
-              transition: "color 0.3s ease",
-            }}
-          >
-            {isBeeping ? <SoundOutlined /> : <SoundFilled />}
-          </span>
-        </Tooltip>
-      }
-      style={{ height: "100%" }}
-    >
-      {alertCount === 0 ? (
-        <div style={{ textAlign: "center", padding: "40px 0" }}>
-          <CheckCircleOutlined style={{ fontSize: 48, color: "#52c41a", marginBottom: 16 }} />
-          <div style={{ color: "#52c41a", fontSize: 16, fontWeight: 500 }}>系统运行正常</div>
-          <div style={{ color: "#8c8c8c", fontSize: 14, marginTop: 8 }}>暂无告警设备</div>
-        </div>
-      ) : (
-        <>
-          {/* 告警概览 */}
-          <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <div
-              style={{
-                fontSize: 32,
-                fontWeight: "bold",
-                color: "#ff4d4f",
-                marginBottom: 4,
-              }}
-            >
-              {alertCount}
-            </div>
-            <div style={{ fontSize: 14, color: "#8c8c8c" }}>告警设备总数</div>
-          </div>
-
-          {/* 告警列表 */}
-          <div>
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 500,
-                marginBottom: 12,
-                color: "#262626",
-              }}
-            >
-              最新告警 ({sortedAlarmDevices.length})
-            </div>
-
-            {sortedAlarmDevices.slice(0, 3).map((item, index) => (
-              <div
-                key={item.device_id}
-                style={{
-                  padding: "12px",
-                  marginBottom: 8,
-                  borderRadius: "6px",
-                  background: index % 2 === 0 ? "#fafafa" : "transparent",
-                  border: "1px solid #f0f0f0",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: 6,
-                  }}
-                >
-                  <div style={{ fontWeight: 500, fontSize: 13, color: "#262626" }}>
-                    {item.device_type_group} - {item.device_name}
-                  </div>
-                  {/*<div style={{ fontSize: 11, color: "#8c8c8c" }}>{item.config_type_name}</div>*/}
-                </div>
-
-                {item?.alarm_item.map((alarmItem) => {
-                  return (
-                    <>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "#ff4d4f",
-                          fontWeight: 500,
-                          marginBottom: 4,
-                        }}
-                      >
-                        {alarmItem.config_type_name}异常
-                      </div>
-                      <div style={{ fontSize: 11, color: "#595959", lineHeight: 1.4 }}>
-                        建议操作：{alarmItem.suggested_action}
-                      </div>
-                    </>
-                  )
-                })}
-              </div>
-            ))}
-
-            {sortedAlarmDevices.length > 3 && (
-              <div style={{ textAlign: "center", marginTop: 12 }}>
-                <span style={{ fontSize: 12, color: "#8c8c8c" }}>
-                  还有 {sortedAlarmDevices.length - 3} 条告警未显示
-                </span>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </Card>
-  )
-}
-
 const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<API_PostDashboard.Result>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isFirstRender, setIsFirstRender] = useState(true)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [currentTowerImage, setCurrentTowerImage] = useState<string>("tower_1")
+  const [currentCabinetImage, setCurrentCabinetImage] = useState<string>("")
 
   // 计算告警设备数量
   const alarmDeviceCount = useMemo(() => {
@@ -604,7 +407,13 @@ const Dashboard: React.FC = () => {
   // 图片轮播定时器
   useEffect(() => {
     const imageTimer = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % 3)
+      setCurrentTowerImage((prevImage) =>
+        prevImage === "tower_1" ? "tower_2" : prevImage === "tower_2" ? "tower_3" : "tower_1",
+      )
+
+      setCurrentCabinetImage((prevImage) =>
+        prevImage !== "cabinet_none" ? "cabinet_none" : "cabinet_tx_rx",
+      )
     }, 500) // 每0.5秒切换一次图片
 
     return () => clearInterval(imageTimer)
@@ -784,7 +593,7 @@ const Dashboard: React.FC = () => {
                   }}
                 >
                   <Image
-                    src={`/assets/cabinet_tx_rx.svg`}
+                    src={`/assets/${currentCabinetImage}.svg`}
                     preview={false}
                     style={{
                       width: "80%", // 减少图片宽度
@@ -807,7 +616,7 @@ const Dashboard: React.FC = () => {
                   }}
                 >
                   <Image
-                    src={`/assets/tower_${currentImageIndex + 1}.svg`}
+                    src={`/assets/${currentTowerImage}.svg`}
                     preview={false}
                     style={{
                       width: "80%",
@@ -943,7 +752,9 @@ const Dashboard: React.FC = () => {
                           <span style={{ color: "#808080", fontSize: "10px" }}>
                             {item.alarm_item.suggested_action}
                           </span>
-                          <span style={{ color: "#808080", fontSize: "10px" }}>{item.alarm_at}</span>
+                          <span style={{ color: "#808080", fontSize: "10px" }}>
+                            {item.alarm_at}
+                          </span>
                         </div>
                       </div>
                     </List.Item>
