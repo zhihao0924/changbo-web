@@ -6,16 +6,9 @@ export default {
       pathRewrite: { "^": "" },
     },
   },
-  staging: {
-    "/api/": {
-      target: "http://127.0.0.1:8080/",
-      changeOrigin: true,
-      pathRewrite: { "^": "" },
-    },
-  },
   prod: {
     "/api/": {
-      target: "http://127.0.0.1:8080/",
+      target: "http://127.0.0.1:8090/api/",
       changeOrigin: true,
       pathRewrite: { "^": "" },
     },

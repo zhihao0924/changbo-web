@@ -9,7 +9,6 @@
     "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider UMI_ENV=dev BUILD_ENV=dev umi dev",
     "build:prod": "cross-env NODE_OPTIONS=--openssl-legacy-provider BUILD_ENV=prod umi build && yarn generate:version",
     "build:test": "cross-env NODE_OPTIONS=--openssl-legacy-provider BUILD_ENV=dev umi build && yarn generate:version",
-    "build:staging": "cross-env NODE_OPTIONS=--openssl-legacy-provider BUILD_ENV=staging umi build && yarn generate:version",
     "postinstall": "umi generate tmp",
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
     "stylelint": "stylelint src/**/* --fix --color --custom-syntax postcss-less",
