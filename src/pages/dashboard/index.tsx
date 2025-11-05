@@ -1,16 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { PageContainer } from "@ant-design/pro-components"
-import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Button,
-  Space,
-  Image,
-  Switch,
-  List,
-} from "antd"
+import { Card, Row, Col, Typography, Button, Space, Image, Switch, List } from "antd"
 import { Line, Pie } from "@ant-design/charts"
 import styles from "./index.less"
 import Services from "@/pages/dashboard/services"
@@ -399,17 +389,59 @@ const Dashboard: React.FC = () => {
   // 图片轮播定时器
   useEffect(() => {
     const imageTimer = setInterval(() => {
+      let towerChange = false
+      if (
+        dashboardData?.transmitter_mixer_downlink_forward_power_signal ||
+        dashboardData?.near_end_bs1_downlink_input_power_signal
+      ) {
+        towerChange = true
+      }
+
       setCurrentTowerImage((prevImage) =>
-        prevImage === "tower_1" ? "tower_2" : prevImage === "tower_2" ? "tower_3" : "tower_1",
+        towerChange
+          ? prevImage === "tower_1"
+            ? "tower_2"
+            : prevImage === "tower_2"
+            ? "tower_3"
+            : "tower_1"
+          : "tower_3",
       )
 
+      let green: boolean = false,
+        red: boolean = false
+      let cabinetImageName: string = ""
+      if (
+        dashboardData?.transmitter_mixer_downlink_forward_power_signal ||
+        dashboardData?.near_end_bs1_downlink_input_power_signal
+      ) {
+        green = true
+      }
+
+      if (
+        dashboardData?.near_end_bs1_uplink_output_rssi_signal ||
+        dashboardData?.splitter_rx_output_rssi_signal
+      ) {
+        red = true
+      }
+
+      console.log(green,red)
+      if (green && red) {
+        cabinetImageName = "cabinet_tx_rx"
+      } else if (green) {
+        cabinetImageName = "cabinet_tx"
+      } else if (red) {
+        cabinetImageName = "cabinet_rx"
+      } else {
+        cabinetImageName="cabinet_none"
+      }
+
       setCurrentCabinetImage((prevImage) =>
-        prevImage !== "cabinet_none" ? "cabinet_none" : "cabinet_tx_rx",
+        prevImage !== "cabinet_none" ? "cabinet_none" : cabinetImageName,
       )
     }, 500) // 每0.5秒切换一次图片
 
     return () => clearInterval(imageTimer)
-  }, [])
+  }, [dashboardData?.transmitter_mixer_downlink_forward_power_signal, dashboardData?.near_end_bs1_downlink_input_power_signal, dashboardData?.near_end_bs1_uplink_output_rssi_signal, dashboardData?.splitter_rx_output_rssi_signal])
 
   // 处理首次渲染标记
   useEffect(() => {
@@ -466,36 +498,42 @@ const Dashboard: React.FC = () => {
     <PageContainer header={{ breadcrumb: undefined, title: false }}>
       <div className={styles.container}>
         {/* 页面标题和Logo */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 24,
+          }}
+        >
           <Image
             src={(() => {
               try {
-                const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
-
-                console.log("systemConfig:", systemConfig)
+                const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
                 if (systemConfig) {
-                  const config = JSON.parse(systemConfig);
-                  return config.system_logo || "/logo.png";
+                  const config = JSON.parse(systemConfig)
+                  return config.system_logo || "/logo.png"
                 }
               } catch (error) {
-                console.error("获取系统配置失败:", error);
+                console.error("获取系统配置失败:", error)
               }
-              return "/logo.png";
+              return "/logo.png"
             })()}
             preview={false}
-            style={{ width: "40px", height: "40px" }} />
+            style={{ width: "40px", height: "40px" }}
+          />
           <Title level={3} style={{ textAlign: "center", margin: 0, flex: 1 }}>
             {(() => {
               try {
-                const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
+                const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
                 if (systemConfig) {
-                  const config = JSON.parse(systemConfig);
-                  return config.system_name || "专网通信智能网管平台";
+                  const config = JSON.parse(systemConfig)
+                  return config.system_name || "专网通信智能网管平台"
                 }
               } catch (error) {
-                console.error("获取系统配置失败:", error);
+                console.error("获取系统配置失败:", error)
               }
-              return "专网通信智能网管平台";
+              return "专网通信智能网管平台"
             })()}
           </Title>
           <div style={{ width: "40px" }}></div> {/* 占位元素，保持对称 */}

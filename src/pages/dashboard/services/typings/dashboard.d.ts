@@ -11,6 +11,10 @@ declare namespace API_PostDashboard {
     total_healthy: number
     type_statistic: StatisticNumber[]
     alarm_device: AlarmDevice[]
+    transmitter_mixer_downlink_forward_power_signal: boolean // 合路器下行正向
+    near_end_bs1_downlink_input_power_signal: boolean //近端机BS1下行输入
+    near_end_bs1_uplink_output_rssi_signal: boolean // 近端机BS1上行输出RSSI值
+    splitter_rx_output_rssi_signal: boolean // 分路器RX上行输出RSSI值
   }
 
   export interface Statistic {
