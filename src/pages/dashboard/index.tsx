@@ -30,12 +30,24 @@ import {
   RiseOutlined,
   ProductOutlined,
 } from "@ant-design/icons"
+import { SYSTEM_CONFIG } from "@/constants"
 
 const { Title } = Typography
 
 // 常量配置
 const DASHBOARD_CONFIG = {
-  refreshInterval: 3000, // 3秒刷新一次数据
+  refreshInterval: () => {
+    try {
+      const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
+      if (systemConfig) {
+        const config = JSON.parse(systemConfig);
+        return config.refresh_interval || 3000; // 默认3秒
+      }
+    } catch (error) {
+      console.error("获取系统配置失败:", error);
+    }
+    return 3000; // 默认3秒
+  },
   beepInterval: 1000, // 1秒播放一次滴滴声
   chartColors: ["#376DF7", "#00B5FF", "#FFB600", "#FF5900", "#999999"],
   lineChartColor: "#0083FF",
@@ -584,7 +596,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     getDashboardData()
 
-    const timer = setInterval(getDashboardData, DASHBOARD_CONFIG.refreshInterval)
+    const timer = setInterval(getDashboardData, DASHBOARD_CONFIG.refreshInterval())
 
     return () => clearInterval(timer)
   }, [getDashboardData])

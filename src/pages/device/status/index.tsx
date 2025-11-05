@@ -4,7 +4,23 @@ import React, { useCallback, useEffect, useState } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined } from "@ant-design/icons"
+import { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
+import { SYSTEM_CONFIG } from "@/constants"
 const pageSize = 300
+
+
+const getRefreshInterval = () => {
+  try {
+    const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
+    if (systemConfig) {
+      const config = JSON.parse(systemConfig);
+      return config.refresh_interval || 3000; // 默认3秒
+    }
+  } catch (error) {
+    console.error("获取系统配置失败:", error);
+  }
+  return 3000; // 默认3秒
+};
 
 const DeviceStatus: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
@@ -70,7 +86,7 @@ const DeviceStatus: React.FC = () => {
         limit: pageSize,
         ...form.getFieldsValue(),
       })
-    }, 500)
+    }, getRefreshInterval())
     return () => {
       if (intervalId) clearInterval(intervalId)
     }
