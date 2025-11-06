@@ -39,7 +39,11 @@ const DailyXlsx: React.FC = () => {
     const headers = new Headers()
     headers.append("Authorization", `Bearer ${localStorage.getItem("token")}`)
 
-    fetch(`${window.location.origin}/api/device/dailyXlsxDownload?id=${row.id}`, {
+    // 根据环境使用不同的 API 地址
+    const isDev = process.env.NODE_ENV === "development"
+    const apiTarget = isDev ? "http://127.0.0.1:8099" : "http://127.0.0.1:8090/api"
+
+    fetch(`${apiTarget}/device/dailyXlsxDownload?id=${row.id}`, {
       headers,
     })
       .then((response) => response.blob())
