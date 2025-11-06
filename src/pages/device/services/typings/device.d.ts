@@ -237,3 +237,11 @@ export namespace API_PostDeviceDailyXlsxDownload {
     res: Res
   }
 }
+
+export namespace API_PostDeleteDailyXlsx {
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+}

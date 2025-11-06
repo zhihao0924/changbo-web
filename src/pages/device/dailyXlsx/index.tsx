@@ -4,8 +4,8 @@ import React, { useCallback, useMemo, useRef } from "react"
 import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
-import { DownloadOutlined } from "@ant-design/icons"
-import { Button } from "antd"
+import { DeleteOutlined, DownloadOutlined } from "@ant-design/icons"
+import { Button, Space } from "antd"
 import type { API_PostDailyXlsxList } from "@/pages/device/services/typings/device"
 
 type Columns = API_PostDailyXlsxList.List
@@ -54,6 +54,23 @@ const DailyXlsx: React.FC = () => {
         window.URL.revokeObjectURL(url)
       })
   }
+
+  const deleteRow = useCallback(async (row) => {
+    try {
+      const res = await Services.api.postDeleterDailyXlsx(
+        {
+          id: row.id,
+        },
+        { showLoading: false, showToast: false },
+      )
+      if (res?.res) {
+        actionRef.current?.reload()
+      } else {
+      }
+    } catch (error) {
+    } finally {
+    }
+  }, [])
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
       {
@@ -110,9 +127,14 @@ const DailyXlsx: React.FC = () => {
         hideInSearch: true,
         render: (_, row: Columns) => {
           return (
-            <Button type="link" icon={<DownloadOutlined />} onClick={() => downloadLoad(row)}>
-              下载
-            </Button>
+            <Space>
+              <Button type="link" icon={<DownloadOutlined />} onClick={() => downloadLoad(row)}>
+                下载
+              </Button>
+              <Button type="link" icon={<DeleteOutlined />} onClick={() => deleteRow(row)}>
+                删除
+              </Button>
+            </Space>
           )
         },
       },

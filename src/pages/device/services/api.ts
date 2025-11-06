@@ -1,6 +1,7 @@
 import { postApi } from "@/utils/request"
 import {
   API_PostDailyXlsxList,
+  API_PostDeleteDailyXlsx,
   API_PostDeviceCreate,
   API_PostDeviceList,
   API_PostDeviceTypeAlarmSaveData,
@@ -200,3 +201,17 @@ export async function postDeviceDailyXlsxList(
   return res
 }
 
+export async function postDeleterDailyXlsx(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeleteDailyXlsx.Result = await postApi(
+    "device/deleteDailyXlsx",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
