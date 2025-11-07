@@ -37,8 +37,8 @@ declare namespace API_PostDeviceList {
     current_val: number
     current_val_type: string
     is_set_current_val: boolean
-    show_min: number | undefined
-    show_max: number | undefined
+    show_min_val: number | undefined
+    show_max_val: number | undefined
     show_in_list: string
     show_in_detail: string
     unit: string

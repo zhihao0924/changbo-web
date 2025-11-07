@@ -135,9 +135,9 @@ const DailyXlsx: React.FC = () => {
               <Button type="link" icon={<DownloadOutlined />} onClick={() => downloadLoad(row)}>
                 下载
               </Button>
-              <Button type="link" icon={<DeleteOutlined />} onClick={() => deleteRow(row)}>
-                删除
-              </Button>
+              {/*<Button type="link" icon={<DeleteOutlined />} onClick={() => deleteRow(row)}>*/}
+              {/*  删除*/}
+              {/*</Button>*/}
             </Space>
           )
         },

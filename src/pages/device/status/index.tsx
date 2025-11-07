@@ -8,19 +8,18 @@ import { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/dev
 import { SYSTEM_CONFIG } from "@/constants"
 const pageSize = 300
 
-
 const getRefreshInterval = () => {
   try {
-    const systemConfig = localStorage.getItem(SYSTEM_CONFIG);
+    const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
     if (systemConfig) {
-      const config = JSON.parse(systemConfig);
-      return config.refresh_interval || 3000; // 默认3秒
+      const config = JSON.parse(systemConfig)
+      return config.refresh_interval || 3000 // 默认3秒
     }
   } catch (error) {
-    console.error("获取系统配置失败:", error);
+    console.error("获取系统配置失败:", error)
   }
-  return 3000; // 默认3秒
-};
+  return 3000 // 默认3秒
+}
 
 const DeviceStatus: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
@@ -154,21 +153,24 @@ const DeviceStatus: React.FC = () => {
                             )
                           ) : (
                             <Progress
-                              percent={(metricItem.current_val * 100) / metricItem.alarm_max}
+                              percent={
+                                ((metricItem.current_val - metricItem?.alarm_min) * 100) /
+                                (metricItem?.alarm_max - metricItem?.alarm_min)
+                              }
                               steps={5}
                               size="small"
                               showInfo={true}
                               format={() => {
                                 // 判断 max_val 是数字且大于 current_val 时显示无穷大
                                 if (
-                                  typeof metricItem.show_max === "number" &&
-                                  metricItem.current_val > metricItem.show_max
+                                  typeof metricItem.show_max_val === "number" &&
+                                  metricItem.current_val > metricItem.show_max_val
                                 ) {
                                   return `∞`
                                 }
                                 if (
-                                  typeof metricItem.show_min === "number" &&
-                                  metricItem.current_val < metricItem.show_min
+                                  typeof metricItem.show_min_val === "number" &&
+                                  metricItem.current_val < metricItem.show_min_val
                                 ) {
                                   return `-∞`
                                 }
@@ -277,21 +279,22 @@ const DeviceStatus: React.FC = () => {
                               )
                             ) : (
                               <Progress
-                                percent={(metricItem.current_val * 100) / metricItem.alarm_max}
+                                percent={((metricItem.current_val - metricItem?.alarm_min) * 100) /
+                                  (metricItem?.alarm_max - metricItem?.alarm_min)}
                                 steps={10}
                                 size="small"
                                 showInfo={true}
                                 format={() => {
                                   // 判断 max_val 是数字且大于 current_val 时显示无穷大
                                   if (
-                                    typeof metricItem.show_max === "number" &&
-                                    metricItem.current_val > metricItem.show_max
+                                    typeof metricItem.show_max_val === "number" &&
+                                    metricItem.current_val > metricItem.show_max_val
                                   ) {
                                     return `∞`
                                   }
                                   if (
-                                    typeof metricItem.show_min === "number" &&
-                                    metricItem.current_val < metricItem.show_min
+                                    typeof metricItem.show_min_val === "number" &&
+                                    metricItem.current_val < metricItem.show_min_val
                                   ) {
                                     return `-∞`
                                   }
