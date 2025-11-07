@@ -130,7 +130,7 @@ const DeviceIndex: React.FC = () => {
     try {
       const data = {
         id: record.id,
-        is_maintaining: !record.is_maintaining,
+        is_maintaining: !record?.is_maintaining,
       }
       const res = await Services.api.postToggleMaintaining(data)
       message.success(res?.msg || "更新设备成功")
@@ -203,10 +203,10 @@ const DeviceIndex: React.FC = () => {
           <Button
             key="toggle"
             type="link"
-            icon={record.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
+            icon={record?.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
             onClick={() => handleToggleMaintaining(record)}
           >
-            {record.is_maintaining ? "维护结束" : "开始维护"}
+            {record?.is_maintaining ? "维护结束" : "开始维护"}
           </Button>,
         ],
       },

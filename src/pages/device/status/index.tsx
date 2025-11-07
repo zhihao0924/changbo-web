@@ -155,7 +155,7 @@ const DeviceStatus: React.FC = () => {
                           ) : (
                             <Progress
                               percent={(metricItem.current_val * 100) / metricItem.alarm_max}
-                              steps={10}
+                              steps={5}
                               size="small"
                               showInfo={true}
                               format={() => {

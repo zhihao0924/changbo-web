@@ -346,7 +346,8 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [isFirstRender, setIsFirstRender] = useState(true)
   const [currentTowerImage, setCurrentTowerImage] = useState<string>("tower_1")
-  const [currentCabinetImage, setCurrentCabinetImage] = useState<string>("")
+  const [currentCabinetImage, setCurrentCabinetImage] = useState<string>("cabinet_none")
+  const [currentLightImage, setCurrentLightImage] = useState<string>("light_none")
 
   // 计算告警设备数量
   const alarmDeviceCount = useMemo(() => {
@@ -386,9 +387,16 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(timer)
   }, [getDashboardData])
 
-  // 图片轮播定时器
+  // 图片切换配置 - 不同的图片使用不同的切换时间
+  const IMAGE_SWITCH_CONFIG = {
+    tower: 1000, // 塔台图片切换
+    cabinet: 3000, // 机柜图片切换
+    light: 300, // 灯光图片切换
+  }
+
+  // 塔台图片定时器
   useEffect(() => {
-    const imageTimer = setInterval(() => {
+    const towerTimer = setInterval(() => {
       let towerChange = false
       if (
         dashboardData?.transmitter_mixer_downlink_forward_power_signal ||
@@ -406,7 +414,18 @@ const Dashboard: React.FC = () => {
             : "tower_1"
           : "tower_3",
       )
+    }, IMAGE_SWITCH_CONFIG.tower)
 
+    return () => clearInterval(towerTimer)
+  }, [
+    dashboardData?.transmitter_mixer_downlink_forward_power_signal,
+    dashboardData?.near_end_bs1_downlink_input_power_signal,
+    IMAGE_SWITCH_CONFIG.tower,
+  ])
+
+  // 机柜图片定时器
+  useEffect(() => {
+    const cabinetTimer = setInterval(() => {
       let green: boolean = false,
         red: boolean = false
       let cabinetImageName: string = ""
@@ -424,7 +443,6 @@ const Dashboard: React.FC = () => {
         red = true
       }
 
-      console.log(green,red)
       if (green && red) {
         cabinetImageName = "cabinet_tx_rx"
       } else if (green) {
@@ -432,16 +450,48 @@ const Dashboard: React.FC = () => {
       } else if (red) {
         cabinetImageName = "cabinet_rx"
       } else {
-        cabinetImageName="cabinet_none"
+        cabinetImageName = "cabinet_none"
       }
 
       setCurrentCabinetImage((prevImage) =>
         prevImage !== "cabinet_none" ? "cabinet_none" : cabinetImageName,
       )
-    }, 500) // 每0.5秒切换一次图片
+    }, IMAGE_SWITCH_CONFIG.cabinet)
 
-    return () => clearInterval(imageTimer)
-  }, [dashboardData?.transmitter_mixer_downlink_forward_power_signal, dashboardData?.near_end_bs1_downlink_input_power_signal, dashboardData?.near_end_bs1_uplink_output_rssi_signal, dashboardData?.splitter_rx_output_rssi_signal])
+    return () => clearInterval(cabinetTimer)
+  }, [
+    dashboardData?.transmitter_mixer_downlink_forward_power_signal,
+    dashboardData?.near_end_bs1_downlink_input_power_signal,
+    dashboardData?.near_end_bs1_uplink_output_rssi_signal,
+    dashboardData?.splitter_rx_output_rssi_signal,
+    IMAGE_SWITCH_CONFIG.cabinet,
+  ])
+
+  // 灯光图片定时器
+  useEffect(() => {
+    const lightTimer = setInterval(() => {
+      // 根据告警设备状态决定灯光图片
+      let lightImg: string = "light_green"
+      if (dashboardData?.alarm_device && dashboardData.alarm_device.length > 0) {
+        lightImg = "light_red"
+      }
+
+      // 实现灯光闪烁效果：在"关闭"状态和"相应颜色"状态之间切换
+      setCurrentLightImage((prevImage) => {
+        console.log("当前灯光图片:", prevImage, "目标颜色:", lightImg)
+
+        // 如果当前是关闭状态，则显示对应颜色的灯光
+        if (prevImage === "light_none") {
+          return lightImg
+        }
+
+        // 如果当前是某种颜色状态，则切换回关闭状态
+        return "light_none"
+      })
+    }, IMAGE_SWITCH_CONFIG.light)
+
+    return () => clearInterval(lightTimer)
+  }, [IMAGE_SWITCH_CONFIG.light, dashboardData?.alarm_device])
 
   // 处理首次渲染标记
   useEffect(() => {
@@ -747,11 +797,7 @@ const Dashboard: React.FC = () => {
               }}
             >
               <Image
-                src={
-                  dashboardData?.alarm_device.length > 0
-                    ? `/assets/light_red.svg`
-                    : `/assets/light_green.svg`
-                }
+                src={`/assets/${currentLightImage}.svg`}
                 style={{
                   width: "60%",
                   height: "auto",
