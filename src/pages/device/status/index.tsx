@@ -151,7 +151,12 @@ const DeviceStatus: React.FC = () => {
                             ) : (
                               "离线"
                             )
-                          ) : (
+                          ) : ((typeof metricItem.show_max_val === "number" &&
+                              metricItem.current_val <= metricItem.show_max_val) ||
+                              typeof metricItem.show_max_val !== "number") &&
+                            ((typeof metricItem.show_min_val === "number" &&
+                              metricItem.current_val > metricItem.show_min_val) ||
+                              typeof metricItem.show_min_val !== "number") ? (
                             <Progress
                               percent={
                                 ((metricItem.current_val - metricItem?.alarm_min) * 100) /
@@ -201,6 +206,8 @@ const DeviceStatus: React.FC = () => {
                                   : "green"
                               }
                             />
+                          ) : (
+                            "-"
                           )}
                         </Col>
                         <Col
@@ -211,7 +218,13 @@ const DeviceStatus: React.FC = () => {
                             alignItems: "center",
                           }}
                         >
-                          {metricItem.is_set_current_val &&
+                          {((typeof metricItem.show_max_val === "number" &&
+                            metricItem.current_val <= metricItem.show_max_val) ||
+                            typeof metricItem.show_max_val !== "number") &&
+                          ((typeof metricItem.show_min_val === "number" &&
+                            metricItem.current_val > metricItem.show_min_val) ||
+                            typeof metricItem.show_min_val !== "number") &&
+                          metricItem.is_set_current_val &&
                           (typeof metricItem.alarm_min == "number" ||
                             typeof metricItem.alarm_max == "number") ? (
                             typeof metricItem.alarm_min == "number" &&
@@ -261,27 +274,26 @@ const DeviceStatus: React.FC = () => {
                     ?.map((metricItem, index) => {
                       return (
                         <>
-                          <Col
-                            span={8}
-                            style={{ backgroundColor: index % 2 == 0 ? "#f0f0f0" : "" }}
-                          >
-                            {metricItem.config_type_name}
-                          </Col>
-                          <Col
-                            span={12}
-                            style={{ backgroundColor: index % 2 == 0 ? "#f0f0f0" : "" }}
-                          >
+                          <Col span={8}>{metricItem.config_type_name}</Col>
+                          <Col span={12}>
                             {metricItem.is_module ? (
                               metricItem.current_val ? (
                                 "在线"
                               ) : (
                                 "离线"
                               )
-                            ) : (
+                            ) : ((typeof metricItem.show_max_val === "number" &&
+                                metricItem.current_val <= metricItem.show_max_val) ||
+                                typeof metricItem.show_max_val !== "number") &&
+                              ((typeof metricItem.show_min_val === "number" &&
+                                metricItem.current_val > metricItem.show_min_val) ||
+                                typeof metricItem.show_min_val !== "number") ? (
                               <Progress
-                                percent={((metricItem.current_val - metricItem?.alarm_min) * 100) /
-                                  (metricItem?.alarm_max - metricItem?.alarm_min)}
-                                steps={10}
+                                percent={
+                                  ((metricItem.current_val - metricItem?.alarm_min) * 100) /
+                                  (metricItem?.alarm_max - metricItem?.alarm_min)
+                                }
+                                steps={5}
                                 size="small"
                                 showInfo={true}
                                 format={() => {
@@ -325,6 +337,8 @@ const DeviceStatus: React.FC = () => {
                                     : "green"
                                 }
                               />
+                            ) : (
+                              "-"
                             )}
                           </Col>
                           <Col
@@ -333,10 +347,15 @@ const DeviceStatus: React.FC = () => {
                               display: "flex",
                               justifyContent: "center",
                               alignItems: "center",
-                              backgroundColor: index % 2 == 0 ? "#f0f0f0" : "",
                             }}
                           >
-                            {metricItem.is_set_current_val &&
+                            {((typeof metricItem.show_max_val === "number" &&
+                              metricItem.current_val <= metricItem.show_max_val) ||
+                              typeof metricItem.show_max_val !== "number") &&
+                            ((typeof metricItem.show_min_val === "number" &&
+                              metricItem.current_val > metricItem.show_min_val) ||
+                              typeof metricItem.show_min_val !== "number") &&
+                            metricItem.is_set_current_val &&
                             (typeof metricItem.alarm_min == "number" ||
                               typeof metricItem.alarm_max == "number") ? (
                               typeof metricItem.alarm_min == "number" &&
