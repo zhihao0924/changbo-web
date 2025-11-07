@@ -58,7 +58,7 @@ interface DeviceCardProps {
 
 const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRow = false }) => {
   const deviceTitle = `${device.device_type_alias || device.device_type_group}:${device.name}`
-  
+
   return (
     <Card
       title={deviceTitle}
@@ -184,16 +184,16 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
     <Modal title={`设备详情`} open={visible} onCancel={onCancel} footer={null} width={600}>
       <Card bordered={false}>
         <Row>
-          <Col span={8} style={{ backgroundColor: "#f0f0f0", padding: "8px" }}>
+          <Col span={8} style={{ backgroundColor: "#f8f9fa" }}>
             设备类型
           </Col>
-          <Col span={16} style={{ backgroundColor: "#f0f0f0", padding: "8px" }}>
+          <Col span={16} style={{ backgroundColor: "#f8f9fa" }}>
             {selectedDevice.device_type_alias}
           </Col>
-          <Col span={8} style={{ padding: "8px" }}>
+          <Col span={8} style={{ backgroundColor: "#ffffff" }}>
             设备编号
           </Col>
-          <Col span={16} style={{ padding: "8px" }}>
+          <Col span={16} style={{ backgroundColor: "#ffffff" }}>
             {selectedDevice.name}
           </Col>
 
@@ -201,20 +201,18 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
             ?.filter((metricItem) => metricItem.show_in_detail)
             ?.map((metricItem, index) => (
               <React.Fragment key={index}>
-                <Col 
-                  span={8} 
-                  style={{ 
-                    padding: "8px",
-                    backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
+                <Col
+                  span={8}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
                   {metricItem.config_type_name}
                 </Col>
-                <Col 
-                  span={12} 
-                  style={{ 
-                    padding: "8px",
-                    backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
+                <Col
+                  span={12}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
                   <MetricItem metricItem={metricItem} />
@@ -222,11 +220,10 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                 <Col
                   span={4}
                   style={{
-                    padding: "8px",
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
+                    backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
                   {metricItem.is_set_current_val &&

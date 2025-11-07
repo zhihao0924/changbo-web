@@ -263,20 +263,7 @@ const DeviceTypes: React.FC = () => {
             bordered={true}
             scroll={{ x: "100%" }}
             headerTitle=""
-            toolBarRender={() => [
-              // <Button
-              //   key="create"
-              //   type="primary"
-              //   icon={<PlusOutlined />}
-              //   onClick={() => {
-              //     setCurrentRecord(null)
-              //     form.resetFields()
-              //     setVisible(true)
-              //   }}
-              // >
-              //   添加设备类型
-              // </Button>,
-            ]}
+            toolBarRender={() => []}
             pagination={{ size: "default" }}
             columns={columns}
             request={() => getDeviceTypes()}
@@ -428,7 +415,7 @@ const DeviceTypes: React.FC = () => {
                             style={{ width: "100%" }}
                           />
                         </Form.Item>
-                      </Space>{" "}
+                      </Space>
                     </Form.Item>
                   </Col>
                 </>
