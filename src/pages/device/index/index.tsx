@@ -179,7 +179,6 @@ const DeviceIndex: React.FC = () => {
         },
       },
       {
-        fixed: "left",
         key: "name",
         title: "设备编号",
         align: "center",
@@ -188,6 +187,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key:"device_type_group",
         title: "设备名称",
         align: "center",
         dataIndex: "device_type_group",
@@ -198,6 +198,7 @@ const DeviceIndex: React.FC = () => {
         title: "设备类型",
         align: "center",
         dataIndex: "device_type_id",
+        key: "device_type_id",
         valueType: "select",
         request: getDeviceTypes,
         fieldProps: {
@@ -209,6 +210,7 @@ const DeviceIndex: React.FC = () => {
         title: "安装位置",
         align: "center",
         dataIndex: "position",
+        key: "position",
         hideInSearch: true,
         width: 200,
       },
@@ -216,10 +218,12 @@ const DeviceIndex: React.FC = () => {
         title: "设备状态",
         align: "center",
         dataIndex: "status_text",
+        key: "status_text",
         hideInSearch: true,
         width: 200,
       },
       {
+        key: "panel_info_panel_type",
         title: "设备类型",
         align: "center",
         dataIndex: ["panel_info", "panel_type"],
@@ -227,6 +231,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_panel_id",
         title: "ID号",
         align: "center",
         dataIndex: ["panel_info", "panel_id"],
@@ -234,6 +239,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_name",
         title: "名称",
         align: "center",
         dataIndex: ["panel_info", "name"],
@@ -241,6 +247,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_model",
         title: "型号",
         align: "center",
         dataIndex: ["panel_info", "model"],
@@ -248,6 +255,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_serial_number",
         title: "编码",
         align: "center",
         dataIndex: ["panel_info", "serial_number"],
@@ -255,6 +263,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_area",
         title: "区域",
         align: "center",
         dataIndex: ["panel_info", "area"],
@@ -262,6 +271,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_sn",
         title: "序列号",
         align: "center",
         dataIndex: ["panel_info", "sn"],
@@ -269,6 +279,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_physical_sn",
         title: "物理序列号",
         align: "center",
         dataIndex: ["panel_info", "physical_sn"],
@@ -276,6 +287,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_firmware_id",
         title: "固件ID",
         align: "center",
         dataIndex: ["panel_info", "firmware_id"],
@@ -283,6 +295,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_upstream_band",
         title: "上行频段",
         align: "center",
         dataIndex: ["panel_info", "upstream_band"],
@@ -290,6 +303,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_downstream_band",
         title: "下行频段",
         align: "center",
         dataIndex: ["panel_info", "downstream_band"],
@@ -297,6 +311,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_band_code",
         title: "频段代码",
         align: "center",
         dataIndex: ["panel_info", "band_code"],
@@ -304,6 +319,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_power",
         title: "功率（W）",
         align: "center",
         dataIndex: ["panel_info", "power"],
@@ -311,6 +327,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_firmware_type",
         title: "固件类型",
         align: "center",
         dataIndex: ["panel_info", "firmware_type"],
@@ -318,6 +335,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_firmware_version",
         title: "固件版本",
         align: "center",
         dataIndex: ["panel_info", "firmware_version"],
@@ -325,6 +343,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_internal_version",
         title: "内码版本",
         align: "center",
         dataIndex: ["panel_info", "internal_version"],
@@ -332,6 +351,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_bootloader_version",
         title: "引导程序版本",
         align: "center",
         dataIndex: ["panel_info", "bootloader_version"],
@@ -339,6 +359,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_netmask",
         title: "网络掩码",
         align: "center",
         dataIndex: ["panel_info", "netmask"],
@@ -346,6 +367,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_wifi_mac",
         title: "WiFi MAC地址",
         align: "center",
         dataIndex: ["panel_info", "wifi_mac"],
@@ -353,6 +375,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_ipv4",
         title: "IPV4地址",
         align: "center",
         dataIndex: ["panel_info", "ipv4"],
@@ -360,6 +383,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_ipv6",
         title: "IPV6地址",
         align: "center",
         dataIndex: ["panel_info", "ipv6"],
@@ -367,13 +391,13 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        key: "panel_info_last_program_time",
         title: "上次编码时间",
         align: "center",
         dataIndex: ["panel_info", "last_program_time"],
         hideInSearch: true,
         width: 200,
       },
-
       {
         width: 240,
         title: "操作",
@@ -432,7 +456,40 @@ const DeviceIndex: React.FC = () => {
             添加设备
           </Button>,
         ]}
-        scroll={{ x: 5840 }}
+        scroll={{ x: 0 }}
+        // 列设置配置
+        columnsState={{
+          // persistenceKey: "deviceIndexColumns", // 本地存储的key
+          // persistenceType: "localStorage", // 存储方式
+          defaultValue: {
+            device_type_group: { show: true },
+            device_type_id: { show: true },
+            position: { show: true },
+            status_text: { show: true },
+            panel_info_panel_type: { show: false },
+            panel_info_panel_id: { show: false },
+            panel_info_name: { show: false },
+            panel_info_model: { show: false },
+            panel_info_serial_number: { show: false },
+            panel_info_area: { show: false },
+            panel_info_sn: { show: false },
+            panel_info_physical_sn: { show: false },
+            panel_info_firmware_id: { show: false },
+            panel_info_upstream_band: { show: false },
+            panel_info_downstream_band: { show: false },
+            panel_info_band_code: { show: false },
+            panel_info_power: { show: false },
+            panel_info_firmware_type: { show: false },
+            panel_info_firmware_version: { show: false },
+            panel_info_internal_version: { show: false },
+            panel_info_bootloader_version: { show: false },
+            panel_info_netmask: { show: false },
+            panel_info_wifi_mac: { show: false },
+            panel_info_ipv4: { show: false },
+            panel_info_ipv6: { show: false },
+            panel_info_last_program_time: { show: false },
+          },
+        }}
       />
 
       <Modal

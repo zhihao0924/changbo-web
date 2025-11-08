@@ -40,13 +40,13 @@ const DailyXlsx: React.FC = () => {
       // 使用项目统一的API请求方式
       const response = await Services.api.postDeviceDailyXlsxDownload(
         { id: row.id },
-        { 
+        {
           responseType: 'blob',
-          showLoading: false, 
-          showToast: false 
+          showLoading: false,
+          showToast: false
         }
       )
-      
+
       if (response) {
         const blob = new Blob([response])
         const url = window.URL.createObjectURL(blob)
