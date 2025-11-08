@@ -85,7 +85,7 @@ export default [
     name: "setting",
     path: "setting",
     icon: "setting",
-    access: "adminRouteFilter",
+    access: "superAdminRouteFilter",
     component: "./setting/system",
   },
   {

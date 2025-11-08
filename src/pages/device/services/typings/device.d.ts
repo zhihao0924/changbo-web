@@ -252,4 +252,8 @@ export namespace API_PostSyncPanelInfo {
     msg: string
     res: Res
   }
+  export interface Res {
+    success_count: number
+    fail_count: number
+  }
 }

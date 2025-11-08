@@ -1,5 +1,5 @@
 import { PageContainer } from "@ant-design/pro-components"
-import { Card, Col, Row, Tag, Progress, Form, Select, Modal } from "antd"
+import { Card, Col, Row, Tag, Progress, Form, Select, Modal, Checkbox } from "antd"
 import React, { useCallback, useEffect, useState, useMemo } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
@@ -263,7 +263,14 @@ const DeviceStatus: React.FC = () => {
 
   // 获取设备列表
   const getLists = useCallback(
-    async (queryParams: { page?: number; limit?: number; type?: string; ip?: string }) => {
+    async (queryParams: {
+      page?: number
+      limit?: number
+      type?: string
+      ip?: string
+      is_alarm?: boolean
+    }) => {
+      console.log(queryParams)
       try {
         const res = await Services.api.postDeviceList(
           {
@@ -336,6 +343,11 @@ const DeviceStatus: React.FC = () => {
           <Col xs={24} sm={12} md={8} lg={6}>
             <Form.Item name="id_list" label="设备编号">
               <DeviceNameSelect />
+            </Form.Item>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Form.Item name="is_alarm" label="告警中">
+              <Checkbox />
             </Form.Item>
           </Col>
         </Row>

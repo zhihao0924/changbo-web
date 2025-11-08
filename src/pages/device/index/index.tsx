@@ -105,13 +105,16 @@ const DeviceIndex: React.FC = () => {
     [form, allDeviceTypes],
   )
 
-  const syncPanel = useCallback(async (deviceId: number) => {
+  const syncPanel = useCallback(async () => {
     try {
-      const res = await Services.api.postDeviceSyncPanel({ device_id: deviceId })
-      if (res) {
-        message.success("同步面板成功")
-        actionRef.current?.reload()
-      }
+      const res = await Services.api.postDeviceSyncPanel({}).then((res) => {
+        message.success(
+          `同步面板信息成功${res.res.success_count}条，失败${res.res.fail_count}条`,
+          2,
+          actionRef.current?.reload,
+        )
+      })
+
       return res
     } catch (error) {
       console.error("同步面板失败:", error)
@@ -187,7 +190,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
-        key:"device_type_group",
+        key: "device_type_group",
         title: "设备名称",
         align: "center",
         dataIndex: "device_type_group",
@@ -422,19 +425,11 @@ const DeviceIndex: React.FC = () => {
             >
               {record?.is_maintaining ? "维护结束" : "开始维护"}
             </Button>
-            <Button
-              key="syncPanel"
-              type="link"
-              icon={<SyncOutlined />}
-              onClick={() => syncPanel(record.id)}
-            >
-              设备信息同步
-            </Button>
           </div>,
         ],
       },
     ]
-  }, [getDeviceTypes, handleToggleMaintaining, openModal, syncPanel])
+  }, [getDeviceTypes, handleToggleMaintaining, openModal])
 
   return (
     <PageContainer>
@@ -454,6 +449,9 @@ const DeviceIndex: React.FC = () => {
         toolBarRender={() => [
           <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => openModal()}>
             添加设备
+          </Button>,
+          <Button key="button" icon={<SyncOutlined />} type="primary" onClick={() => syncPanel()}>
+            同步设备信息
           </Button>,
         ]}
         scroll={{ x: 0 }}
