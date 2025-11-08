@@ -36,18 +36,19 @@ const DailyXlsx: React.FC = () => {
   }, [])
 
   const downloadLoad = async (row: any) => {
-    const headers = new Headers()
-    headers.append("Authorization", `Bearer ${localStorage.getItem("token")}`)
-
-    // 根据环境使用不同的 API 地址
-    const isDev = process.env.NODE_ENV === "development"
-    const apiTarget = isDev ? "http://127.0.0.1:8099" : "http://127.0.0.1:8090/api"
-
-    fetch(`${apiTarget}/device/dailyXlsxDownload?id=${row.id}`, {
-      headers,
-    })
-      .then((response) => response.blob())
-      .then((blob) => {
+    try {
+      // 使用项目统一的API请求方式
+      const response = await Services.api.postDeviceDailyXlsxDownload(
+        { id: row.id },
+        { 
+          responseType: 'blob',
+          showLoading: false, 
+          showToast: false 
+        }
+      )
+      
+      if (response) {
+        const blob = new Blob([response])
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
@@ -56,7 +57,11 @@ const DailyXlsx: React.FC = () => {
         a.click()
         document.body.removeChild(a)
         window.URL.revokeObjectURL(url)
-      })
+      }
+    } catch (error) {
+      console.error('下载失败:', error)
+      // 可以添加错误提示
+    }
   }
 
   const deleteRow = useCallback(async (row) => {

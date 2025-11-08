@@ -1,4 +1,4 @@
-import { postApi } from "@/utils/request"
+import { getApi, postApi } from "@/utils/request"
 import {
   API_PostDailyXlsxList,
   API_PostDeleteDailyXlsx,
@@ -12,6 +12,7 @@ import {
   API_PostSaveTopologyData,
   API_PostToggleMaintaining,
   API_PostTopologyData,
+  API_PostDeviceDailyXlsxDownload,
 } from "@/pages/device/services/typings/device"
 
 // 订单列表
@@ -209,6 +210,22 @@ export async function postDeleterDailyXlsx(
     "device/deleteDailyXlsx",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+// 下载日报Excel文件
+export async function postDeviceDailyXlsxDownload(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeviceDailyXlsxDownload.Result = await getApi(
+    "device/dailyXlsxDownload",
+    { ...obj },
+    { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
     console.error(err)
     throw err
