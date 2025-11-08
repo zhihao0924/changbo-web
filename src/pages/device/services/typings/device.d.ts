@@ -245,3 +245,11 @@ export namespace API_PostDeleteDailyXlsx {
     res: Res
   }
 }
+
+export namespace API_PostSyncPanelInfo {
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+}

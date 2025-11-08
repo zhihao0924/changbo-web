@@ -3,13 +3,17 @@ import {
   PauseCircleOutlined,
   PlayCircleOutlined,
   PlusOutlined,
+  SyncOutlined,
 } from "@ant-design/icons"
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
 import { Button, Form, Input, message, Modal, Select, Switch } from "antd"
 import React, { useCallback, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
-import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
+import type {
+  API_PostDeviceList,
+  API_PostDeviceTypes,
+} from "@/pages/device/services/typings/device"
 
 type Columns = API_PostDeviceList.List
 
@@ -101,6 +105,22 @@ const DeviceIndex: React.FC = () => {
     [form, allDeviceTypes],
   )
 
+  const syncPanel = useCallback(async (deviceId: number) => {
+    try {
+      const res = await Services.api.postDeviceSyncPanel({ device_id: deviceId })
+      if (res) {
+        message.success("同步面板成功")
+        actionRef.current?.reload()
+      }
+      return res
+    } catch (error) {
+      console.error("同步面板失败:", error)
+      message.error("同步面板失败")
+      throw error
+    } finally {
+    }
+  }, [])
+
   const handleCancel = useCallback(() => {
     setModalVisible(false)
     form.resetFields()
@@ -150,6 +170,8 @@ const DeviceIndex: React.FC = () => {
         title: "IP地址",
         align: "center",
         dataIndex: "ip",
+        fixed: "left",
+        key: "ip",
         search: {
           transform: (value) => ({
             order_no: value,
@@ -157,17 +179,20 @@ const DeviceIndex: React.FC = () => {
         },
       },
       {
+        fixed: "left",
         key: "name",
         title: "设备编号",
         align: "center",
         dataIndex: "name",
         hideInSearch: true,
+        width: 200,
       },
       {
         title: "设备名称",
         align: "center",
         dataIndex: "device_type_group",
         hideInSearch: true,
+        width: 200,
       },
       {
         title: "设备类型",
@@ -178,40 +203,214 @@ const DeviceIndex: React.FC = () => {
         fieldProps: {
           showSearch: true,
         },
+        width: 200,
       },
       {
         title: "安装位置",
         align: "center",
         dataIndex: "position",
         hideInSearch: true,
+        width: 200,
       },
       {
         title: "设备状态",
         align: "center",
         dataIndex: "status_text",
         hideInSearch: true,
+        width: 200,
       },
       {
-        width: 160,
+        title: "设备类型",
+        align: "center",
+        dataIndex: ["panel_info", "panel_type"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "ID号",
+        align: "center",
+        dataIndex: ["panel_info", "panel_id"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "名称",
+        align: "center",
+        dataIndex: ["panel_info", "name"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "型号",
+        align: "center",
+        dataIndex: ["panel_info", "model"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "编码",
+        align: "center",
+        dataIndex: ["panel_info", "serial_number"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "区域",
+        align: "center",
+        dataIndex: ["panel_info", "area"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "序列号",
+        align: "center",
+        dataIndex: ["panel_info", "sn"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "物理序列号",
+        align: "center",
+        dataIndex: ["panel_info", "physical_sn"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "固件ID",
+        align: "center",
+        dataIndex: ["panel_info", "firmware_id"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "上行频段",
+        align: "center",
+        dataIndex: ["panel_info", "upstream_band"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "下行频段",
+        align: "center",
+        dataIndex: ["panel_info", "downstream_band"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "频段代码",
+        align: "center",
+        dataIndex: ["panel_info", "band_code"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "功率（W）",
+        align: "center",
+        dataIndex: ["panel_info", "power"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "固件类型",
+        align: "center",
+        dataIndex: ["panel_info", "firmware_type"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "固件版本",
+        align: "center",
+        dataIndex: ["panel_info", "firmware_version"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "内码版本",
+        align: "center",
+        dataIndex: ["panel_info", "internal_version"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "引导程序版本",
+        align: "center",
+        dataIndex: ["panel_info", "bootloader_version"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "网络掩码",
+        align: "center",
+        dataIndex: ["panel_info", "netmask"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "WiFi MAC地址",
+        align: "center",
+        dataIndex: ["panel_info", "wifi_mac"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "IPV4地址",
+        align: "center",
+        dataIndex: ["panel_info", "ipv4"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "IPV6地址",
+        align: "center",
+        dataIndex: ["panel_info", "ipv6"],
+        hideInSearch: true,
+        width: 200,
+      },
+      {
+        title: "上次编码时间",
+        align: "center",
+        dataIndex: ["panel_info", "last_program_time"],
+        hideInSearch: true,
+        width: 200,
+      },
+
+      {
+        width: 240,
         title: "操作",
         align: "center",
         valueType: "option",
+        fixed: "right",
         render: (_, record) => [
-          <Button key="edit" type="link" icon={<EditOutlined />} onClick={() => openModal(record)}>
-            修改
-          </Button>,
-          <Button
-            key="toggle"
-            type="link"
-            icon={record?.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
-            onClick={() => handleToggleMaintaining(record)}
-          >
-            {record?.is_maintaining ? "维护结束" : "开始维护"}
-          </Button>,
+          <div key="actions">
+            <Button
+              key="edit"
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => openModal(record)}
+            >
+              修改
+            </Button>
+            <Button
+              key="toggle"
+              type="link"
+              icon={record?.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
+              onClick={() => handleToggleMaintaining(record)}
+            >
+              {record?.is_maintaining ? "维护结束" : "开始维护"}
+            </Button>
+            <Button
+              key="syncPanel"
+              type="link"
+              icon={<SyncOutlined />}
+              onClick={() => syncPanel(record.id)}
+            >
+              设备信息同步
+            </Button>
+          </div>,
         ],
       },
     ]
-  }, [getDeviceTypes, handleToggleMaintaining, openModal])
+  }, [getDeviceTypes, handleToggleMaintaining, openModal, syncPanel])
 
   return (
     <PageContainer>
@@ -233,6 +432,7 @@ const DeviceIndex: React.FC = () => {
             添加设备
           </Button>,
         ]}
+        scroll={{ x: 5840 }}
       />
 
       <Modal

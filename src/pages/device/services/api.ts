@@ -13,6 +13,7 @@ import {
   API_PostToggleMaintaining,
   API_PostTopologyData,
   API_PostDeviceDailyXlsxDownload,
+  API_PostSyncPanelInfo,
 } from "@/pages/device/services/typings/device"
 
 // 订单列表
@@ -224,6 +225,21 @@ export async function postDeviceDailyXlsxDownload(
 ) {
   const res: API_PostDeviceDailyXlsxDownload.Result = await getApi(
     "device/dailyXlsxDownload",
+    { ...obj },
+    { showLoading: false, showToast: false, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postDeviceSyncPanel(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostSyncPanelInfo.Result = await postApi(
+    "device/syncPanelInfo",
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
