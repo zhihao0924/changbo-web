@@ -70,9 +70,27 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
         borderRadius: "8px",
         backgroundColor: isEvenRow ? "#fafafa" : "#ffffff",
         border: isEvenRow ? "1px solid #f0f0f0" : "1px solid #e8e8e8",
+        position: "relative", // 添加相对定位
       }}
       hoverable
     >
+      {/* 右上角标签区域 */}
+      <div
+        style={{
+          position: "absolute",
+          top: "48px", // 在extra区域下面
+          right: "24px", // 右侧对齐
+          zIndex: 1,
+        }}
+      >
+        {device.is_online && !device.is_maintaining && device.is_alarm && (
+          <Tag color={"red"}>告警中</Tag>
+        )}
+        {device.is_online && !device.is_maintaining && !device.is_module_online && (
+          <Tag color={"red"}>模块离线</Tag>
+        )}
+      </div>
+
       <Row>
         {device?.metric_items
           ?.filter((metricItem) => metricItem.show_in_list)
@@ -147,7 +165,11 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem }) => {
   }
 
   if (!shouldShowValue) {
-    return <span>-</span>
+    return (
+      <div style={{ display: "flex", alignItems: "center", height: "22px" }}>
+        <span>——</span>
+      </div>
+    )
   }
 
   return (
@@ -268,7 +290,7 @@ const DeviceStatus: React.FC = () => {
       limit?: number
       type?: string
       ip?: string
-      is_alarm?: boolean
+      is_alarm_or_module_offline?: boolean
     }) => {
       console.log(queryParams)
       try {
@@ -346,7 +368,7 @@ const DeviceStatus: React.FC = () => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="is_alarm" label="告警中">
+            <Form.Item name="is_alarm_or_module_offline" label="告警中" valuePropName="checked">
               <Checkbox />
             </Form.Item>
           </Col>

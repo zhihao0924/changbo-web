@@ -822,10 +822,13 @@ const Dashboard: React.FC = () => {
               }
               extra={
                 <Space>
-                  <ClearOutlined
+                  <Image
+                    src={"/icon/qingkong.svg"}
                     onClick={() => {
                       clearBeep()
                     }}
+                    preview={false}
+                    width={24}
                   />
 
                   {/*<span style={{ fontSize: "12px", color: "#8c8c8c" }}>声音</span>*/}
@@ -839,7 +842,7 @@ const Dashboard: React.FC = () => {
                   {/*/>*/}
                   <Image
                     src={`${isBeeping ? "/icon/shengyin.svg" : "/icon/shengyinguanbi.svg"}`}
-                    onClick={()=>{
+                    onClick={() => {
                       toggleBeep()
                     }}
                     width={24}

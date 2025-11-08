@@ -25,6 +25,8 @@ declare namespace API_PostDeviceList {
     status_text: string
     tag_color: string
     is_maintaining: boolean
+    is_alarm: boolean
+    is_module_online: boolean
     is_online: boolean
     metric_items: MetricItems[]
     alarm_items: AlarmItems[]
