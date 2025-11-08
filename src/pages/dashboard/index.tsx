@@ -11,6 +11,7 @@ import {
   CodeSandboxOutlined,
   RiseOutlined,
   ProductOutlined,
+  ClearOutlined,
 } from "@ant-design/icons"
 import { SYSTEM_CONFIG } from "@/constants"
 
@@ -349,13 +350,68 @@ const Dashboard: React.FC = () => {
   const [currentCabinetImage, setCurrentCabinetImage] = useState<string>("cabinet_none")
   const [currentLightImage, setCurrentLightImage] = useState<string>("light_none")
 
-  // 计算告警设备数量
+  // 清除告警状态的时间记录（从localStorage读取）
+  const [lastClearTime, setLastClearTime] = useState<Date | null>(() => {
+    try {
+      const storedTime = localStorage.getItem('dashboard_lastClearTime')
+      if (storedTime) {
+        const parsedTime = new Date(storedTime)
+        if (!isNaN(parsedTime.getTime())) {
+          console.log('从localStorage读取清除时间:', parsedTime.toISOString())
+          return parsedTime
+        }
+      }
+    } catch (error) {
+      console.error('读取localStorage清除时间失败:', error)
+    }
+    return null
+  })
+
+  // 更新lastClearTime的函数，同时保存到localStorage
+  const setLastClearTimeWithStorage = useCallback((time: Date | null) => {
+    setLastClearTime(time)
+    if (time) {
+      localStorage.setItem('dashboard_lastClearTime', time.toISOString())
+      console.log('清除时间已保存到localStorage:', time.toISOString())
+    } else {
+      localStorage.removeItem('dashboard_lastClearTime')
+      console.log('清除时间已从localStorage移除')
+    }
+  }, [])
+
+  // 计算告警设备数量（新增设备才计数）
   const alarmDeviceCount = useMemo(() => {
-    const count = dashboardData?.alarm_device?.length || 0
-    return count
-  }, [dashboardData?.alarm_device])
+    if (!dashboardData?.alarm_device) return 0
+    
+    // 如果之前没有清除时间，说明是初次加载，所有告警都计数
+    if (!lastClearTime) {
+      return dashboardData.alarm_device.length
+    }
+    
+    // 只计算在清除时间之后出现的告警
+    const newAlarmCount = dashboardData.alarm_device.filter(alarm => {
+      if (!alarm.alarm_at) return true
+      
+      try {
+        const alarmTime = new Date(alarm.alarm_at)
+        return alarmTime > lastClearTime
+      } catch (error) {
+        console.error('解析告警时间失败:', error)
+        return true
+      }
+    }).length
+    
+    console.log('总告警设备:', dashboardData.alarm_device.length, '新增告警设备:', newAlarmCount)
+    return newAlarmCount
+  }, [dashboardData?.alarm_device, lastClearTime])
 
   const { isBeeping, toggleBeep } = useBeep(alarmDeviceCount)
+
+  // 清除告警功能
+  const clearBeep = useCallback(() => {
+    const currentTime = new Date()
+    setLastClearTimeWithStorage(currentTime)
+  }, [setLastClearTimeWithStorage])
 
   // 获取数据
   const getDashboardData = useCallback(async () => {
@@ -766,8 +822,15 @@ const Dashboard: React.FC = () => {
               }
               extra={
                 <Space>
-                  <span style={{ fontSize: "12px", color: "#8c8c8c" }}>告警声音</span>
+                  <ClearOutlined
+                    onClick={() => {
+                      clearBeep()
+                    }}
+                  />
+                  {/*<span style={{ fontSize: "12px", color: "#8c8c8c" }}>声音</span>*/}
                   <Switch
+                    checkedChildren="开启"
+                    unCheckedChildren="关闭"
                     onChange={() => {
                       toggleBeep()
                     }}
@@ -805,7 +868,7 @@ const Dashboard: React.FC = () => {
                   margin: "0 auto",
                 }}
                 preview={false}
-              />{" "}
+              />
             </Card>
             <Card
               title={
