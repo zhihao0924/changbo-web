@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined } from "@ant-design/icons"
-import type { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
+import { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
 import { SYSTEM_CONFIG } from "@/constants"
 
 // 常量配置
@@ -25,8 +25,15 @@ const getRefreshInterval = (): number => {
 }
 
 // 获取状态图标
-const getStatusIcon = (metricItem: API_PostDeviceList.MetricItems) => {
-  const { alarm_min, alarm_max, show_min_val, show_max_val, current_val } = metricItem
+const getStatusIcon = (
+  metricItem: API_PostDeviceList.MetricItems,
+  alarmItems: API_PostDeviceList.AlarmItems[],
+) => {
+  const { alarm_min, alarm_max, show_min_val, show_max_val, current_val, config_type } = metricItem
+
+  if (alarmItems?.findIndex((item) => item.config_type == config_type) == -1) {
+    return <></>
+  }
 
   if (typeof show_min_val === "number" && current_val < show_min_val) {
     return <></>
@@ -47,6 +54,7 @@ const getStatusIcon = (metricItem: API_PostDeviceList.MetricItems) => {
 // 指标项状态组件
 interface MetricItemProps {
   metricItem: API_PostDeviceList.MetricItems
+  alarmItems?: API_PostDeviceList.AlarmItems[]
 }
 
 // 设备卡片组件
@@ -98,7 +106,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
             <React.Fragment key={index}>
               <Col span={8}>{metricItem.config_type_name}</Col>
               <Col span={12}>
-                <MetricItem metricItem={metricItem} />
+                <MetricItem metricItem={metricItem} alarmItems={device?.alarm_items} />
               </Col>
               <Col
                 span={4}
@@ -111,7 +119,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
                 {metricItem.is_set_current_val &&
                   (typeof metricItem.alarm_min === "number" ||
                     typeof metricItem.alarm_max === "number") &&
-                  getStatusIcon(metricItem)}
+                  getStatusIcon(metricItem, device?.alarm_items)}
               </Col>
             </React.Fragment>
           ))}
@@ -120,7 +128,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
   )
 }
 
-const MetricItem: React.FC<MetricItemProps> = ({ metricItem }) => {
+const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   // 判断是否显示值
   const shouldShowValue = useMemo(() => {
     const { show_max_val, show_min_val, current_val } = metricItem
@@ -131,14 +139,15 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem }) => {
 
   // 判断是否告警
   const isAlarm = useMemo(() => {
-    const { alarm_min, alarm_max, current_val, is_set_current_val } = metricItem
+    const { alarm_min, alarm_max, current_val, is_set_current_val, config_type } = metricItem
     if (!is_set_current_val) return false
 
     return (
-      (typeof alarm_min === "number" && current_val < alarm_min) ||
-      (typeof alarm_max === "number" && current_val > alarm_max)
+      alarmItems?.findIndex((item) => item.config_type == config_type) != -1 &&
+      ((typeof alarm_min === "number" && current_val < alarm_min) ||
+        (typeof alarm_max === "number" && current_val > alarm_max))
     )
-  }, [metricItem])
+  }, [metricItem, alarmItems])
 
   // 格式化显示值
   const formatValue = useCallback(() => {
@@ -178,7 +187,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem }) => {
       steps={5}
       size="small"
       showInfo={true}
-      format={() => <span style={{ color: isAlarm ? "red" : "" }}>{formatValue()}</span>}
+      format={() => <span style={{ color: isAlarm ? "red" : "#888888" }}>{formatValue()}</span>}
       strokeColor={isAlarm ? "red" : "green"}
     />
   )
@@ -237,7 +246,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                     backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
-                  <MetricItem metricItem={metricItem} />
+                  <MetricItem metricItem={metricItem} alarmItems={selectedDevice?.alarm_items} />
                 </Col>
                 <Col
                   span={4}
@@ -251,7 +260,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                   {metricItem.is_set_current_val &&
                     (typeof metricItem.alarm_min === "number" ||
                       typeof metricItem.alarm_max === "number") &&
-                    getStatusIcon(metricItem)}
+                    getStatusIcon(metricItem, selectedDevice?.alarm_items)}
                 </Col>
               </React.Fragment>
             ))}

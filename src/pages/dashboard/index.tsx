@@ -526,28 +526,70 @@ const Dashboard: React.FC = () => {
   // 灯光图片定时器
   useEffect(() => {
     const lightTimer = setInterval(() => {
-      // 根据告警设备状态决定灯光图片
+      // 根据告警设备状态决定灯光图片和闪烁逻辑
       let lightImg: string = "light_green"
-      if (dashboardData?.alarm_device && dashboardData.alarm_device.length > 0) {
-        lightImg = "light_red"
+      
+      // 检查是否有告警设备
+      const hasAlarms = dashboardData?.alarm_device && dashboardData.alarm_device.length > 0
+      
+      // 检查是否有新告警（在清除时间之后出现的告警）
+      let hasNewAlarms = false
+      let hasHistoryAlarms = false
+      
+      if (hasAlarms) {
+        // 如果有清除时间，检查告警类型
+        if (lastClearTime) {
+          dashboardData.alarm_device.forEach((alarm) => {
+            if (!alarm.alarm_at) {
+              // 没有时间信息的告警视为新告警
+              hasNewAlarms = true
+            } else {
+              try {
+                const alarmTime = new Date(alarm.alarm_at)
+                if (alarmTime > lastClearTime) {
+                  hasNewAlarms = true
+                } else {
+                  hasHistoryAlarms = true
+                }
+              } catch (error) {
+                console.error("解析告警时间失败:", error)
+                hasNewAlarms = true
+              }
+            }
+          })
+        } else {
+          // 没有清除时间，所有告警都视为新告警
+          hasNewAlarms = true
+        }
       }
 
-      // 实现灯光闪烁效果：在"关闭"状态和"相应颜色"状态之间切换
-      setCurrentLightImage((prevImage) => {
-        console.log("当前灯光图片:", prevImage, "目标颜色:", lightImg)
-
-        // 如果当前是关闭状态，则显示对应颜色的灯光
-        if (prevImage === "light_none") {
-          return lightImg
-        }
-
-        // 如果当前是某种颜色状态，则切换回关闭状态
-        return "light_none"
-      })
+      // 确定灯光状态
+      if (hasNewAlarms) {
+        // 有新告警：红灯闪烁
+        lightImg = "light_red"
+        setCurrentLightImage((prevImage) => {
+          console.log("有新告警，红灯闪烁", prevImage)
+          // 在"关闭"状态和"红灯"状态之间切换实现闪烁
+          if (prevImage === "light_none") {
+            return "light_red"
+          }
+          return "light_none"
+        })
+      } else if (hasHistoryAlarms) {
+        // 只有历史告警：稳定红灯，不闪烁
+        lightImg = "light_red"
+        setCurrentLightImage("light_red")
+        console.log("只有历史告警，稳定红灯")
+      } else {
+        // 无告警：稳定绿灯
+        lightImg = "light_green"
+        setCurrentLightImage("light_green")
+        console.log("无告警，稳定绿灯")
+      }
     }, IMAGE_SWITCH_CONFIG.light)
 
     return () => clearInterval(lightTimer)
-  }, [IMAGE_SWITCH_CONFIG.light, dashboardData?.alarm_device])
+  }, [IMAGE_SWITCH_CONFIG.light, dashboardData?.alarm_device, lastClearTime])
 
   // 处理首次渲染标记
   useEffect(() => {
