@@ -4,7 +4,7 @@ import React, { useCallback, useMemo, useRef } from "react"
 import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
-import { DeleteOutlined, DownloadOutlined } from "@ant-design/icons"
+import { DownloadOutlined } from "@ant-design/icons"
 import { Button, Space } from "antd"
 import type { API_PostDailyXlsxList } from "@/pages/device/services/typings/device"
 
@@ -47,8 +47,10 @@ const DailyXlsx: React.FC = () => {
         }
       )
 
-      if (response) {
-        const blob = new Blob([response])
+      if (response && response.res) {
+        // response.res 包含实际的blob数据
+        const blobData = response.res
+        const blob = new Blob([blobData])
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url

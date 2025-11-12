@@ -1,19 +1,18 @@
 import {
+  DeleteOutlined,
   EditOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
   PlusOutlined,
+  SettingOutlined,
   SyncOutlined,
 } from "@ant-design/icons"
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import { Button, Form, Input, message, Modal, Select, Switch } from "antd"
-import React, { useCallback, useMemo, useRef, useState } from "react"
+import { Button, Form, Input, InputNumber, message, Modal, Select, Space, Switch } from "antd"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
-import type {
-  API_PostDeviceList,
-  API_PostDeviceTypes,
-} from "@/pages/device/services/typings/device"
+import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
 
 type Columns = API_PostDeviceList.List
 
@@ -26,7 +25,21 @@ type CreateFormValues = {
   is_maintaining: boolean
 }
 
-const groups = [
+type CreateSettingFormValues = {
+  uplink_power: number | null
+  uplink_attenuation: number | null
+  downlink_power: number | null
+  downlink_attenuation: number | null
+}
+
+type DeviceTypeOption = {
+  value: number
+  label: string
+  group: string
+}
+
+// 设备类型组常量
+const DEVICE_GROUPS = [
   { label: "发射合路器", value: "发射合路器" },
   { label: "接收分路器", value: "接收分路器" },
   { label: "带通双工器", value: "带通双工器" },
@@ -39,34 +52,53 @@ const groups = [
   { label: "干线放大器", value: "干线放大器" },
 ]
 
+// 配置类型映射
+const CONFIG_TYPE_MAP = {
+  uplink_power: "上行功率",
+  uplink_attenuation: "上行衰减",
+  downlink_power: "下行功率",
+  downlink_attenuation: "下行衰减",
+} as const
+
+// 需要显示设置按钮的设备类型
+const SETTING_DEVICE_TYPES = ["数字远端机", "模拟远端机", "干线放大器"] as const
+
 const DeviceIndex: React.FC = () => {
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
   const [modalVisible, setModalVisible] = useState(false)
+  const [settingModalVisible, setSettingModalVisible] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [currentDevice, setCurrentDevice] = useState<Columns | null>(null)
   const [form] = Form.useForm<CreateFormValues>()
+  const [rfConfigForm] = Form.useForm<CreateSettingFormValues>()
 
-  const [allDeviceTypes, setAllDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
-  const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
+  const [allDeviceTypes, setAllDeviceTypes] = useState<DeviceTypeOption[]>([])
+  const [deviceTypes, setDeviceTypes] = useState<DeviceTypeOption[]>([])
+
+  // 初始化设备类型数据
+  useEffect(() => {
+    const initDeviceTypes = async () => {
+      try {
+        const res = await Services.api.postDeviceTypes({})
+        if (res?.res?.list) {
+          const formattedTypes = res.res.list.map((item) => ({
+            value: item.id,
+            label: item.device_type,
+            group: item.device_type_group,
+          }))
+          setAllDeviceTypes(formattedTypes)
+        }
+      } catch (error) {
+        console.error("获取设备类型失败:", error)
+      }
+    }
+    initDeviceTypes()
+  }, [])
 
   const getDeviceTypes = useCallback(async () => {
-    const res = await Services.api.postDeviceTypes({})
-
-    if (res) {
-      const enums: any[] = []
-      res.res.list.forEach((item) => {
-        enums.push({
-          value: item.id,
-          label: item.device_type,
-          group: item.device_type_group,
-        })
-      })
-      setAllDeviceTypes(enums)
-      return enums
-    }
-    return []
-  }, [])
+    return allDeviceTypes
+  }, [allDeviceTypes])
 
   const getLists = useCallback(async (params: any) => {
     const data = {
@@ -103,6 +135,50 @@ const DeviceIndex: React.FC = () => {
       setModalVisible(true)
     },
     [form, allDeviceTypes],
+  )
+
+  const openSettingModal = useCallback(
+    (record: Columns | null = null) => {
+      console.log("打开设置模态框，设备ID:", record?.id)
+      setCurrentDevice(record)
+
+      // 先打开模态框，确保表单已经挂载
+      setSettingModalVisible(true)
+
+      // 然后获取数据并设置表单值
+      Services.api
+        .postRFConfig({
+          device_id: record?.id,
+        })
+        .then((res) => {
+          console.log("API返回数据:", res)
+          console.log("配置数据:", {
+            uplink_power: res.res.uplink_power,
+            uplink_attenuation: res.res.uplink_attenuation,
+            downlink_power: res.res.downlink_power,
+            downlink_attenuation: res.res.downlink_attenuation,
+          })
+
+          // 使用setTimeout确保表单已经挂载完成
+          setTimeout(() => {
+            rfConfigForm.setFieldsValue({
+              uplink_power: res.res.uplink_power,
+              uplink_attenuation: res.res.uplink_attenuation,
+              downlink_power: res.res.downlink_power,
+              downlink_attenuation: res.res.downlink_attenuation,
+            })
+
+            // 验证表单字段是否设置成功
+            const fields = rfConfigForm.getFieldsValue()
+            console.log("表单字段值:", fields)
+          }, 100)
+        })
+        .catch((error) => {
+          console.error("获取设备配置失败:", error)
+          message.error("获取设备配置失败，请稍后重试")
+        })
+    },
+    [rfConfigForm],
   )
 
   const syncPanel = useCallback(async () => {
@@ -143,7 +219,6 @@ const DeviceIndex: React.FC = () => {
         return
       }
       console.error(error)
-      return
     } finally {
       setSubmitLoading(false)
     }
@@ -163,9 +238,42 @@ const DeviceIndex: React.FC = () => {
         return
       }
       console.error(error)
-      return
     }
   }, [])
+
+  // 配置类型对应的中文标签
+  const getConfigLabel = useCallback((configType: string): string => {
+    return CONFIG_TYPE_MAP[configType as keyof typeof CONFIG_TYPE_MAP] || configType
+  }, [])
+
+  // 统一的参数配置保存函数
+  const saveRFConfig = useCallback(
+    async (configType: string) => {
+      if (!currentDevice?.id) {
+        message.error("设备信息异常，无法保存配置")
+        return
+      }
+
+      const fieldValue = rfConfigForm.getFieldValue(configType)
+      if (fieldValue === undefined || fieldValue === null) {
+        message.error(`请输入${getConfigLabel(configType)}`)
+        return
+      }
+
+      try {
+        const res = await Services.api.postRFConfigSave({
+          device_id: currentDevice.id,
+          current_val: Number(fieldValue),
+          rf_config_type: configType,
+        })
+        message.success(res?.msg || `${getConfigLabel(configType)}保存成功`)
+      } catch (error) {
+        console.error(`${configType}保存失败:`, error)
+        message.error(`${getConfigLabel(configType)}保存失败`)
+      }
+    },
+    [currentDevice, getConfigLabel, rfConfigForm],
+  )
 
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
@@ -407,29 +515,61 @@ const DeviceIndex: React.FC = () => {
         align: "center",
         valueType: "option",
         fixed: "right",
-        render: (_, record) => [
-          <div key="actions">
-            <Button
-              key="edit"
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => openModal(record)}
-            >
-              修改
-            </Button>
-            <Button
-              key="toggle"
-              type="link"
-              icon={record?.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
-              onClick={() => handleToggleMaintaining(record)}
-            >
-              {record?.is_maintaining ? "维护结束" : "开始维护"}
-            </Button>
-          </div>,
-        ],
+        render: (_, record) => {
+          // 需要显示设置按钮的设备类型组
+          const showSettingButton = SETTING_DEVICE_TYPES.includes(
+            record.device_type_group as (typeof SETTING_DEVICE_TYPES)[number],
+          )
+
+          return [
+            <div key="actions">
+              <Button
+                key="edit"
+                type="link"
+                icon={<EditOutlined />}
+                onClick={() => openModal(record)}
+              >
+                修改
+              </Button>
+              <Button
+                key="delete"
+                type="link"
+                icon={<DeleteOutlined />}
+                onClick={() =>
+                  Modal.confirm({
+                    title: `确认删除设备${record.name}吗？`,
+                    onOk: () => {
+                      Modal.info({ title: `确认删除设备${record.name}成功` })
+                    },
+                  })
+                }
+              >
+                删除
+              </Button>
+              <Button
+                key="toggle"
+                type="link"
+                icon={record?.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
+                onClick={() => handleToggleMaintaining(record)}
+              >
+                {record?.is_maintaining ? "维护结束" : "开始维护"}
+              </Button>
+              {showSettingButton && (
+                <Button
+                  key="setting"
+                  type="link"
+                  icon={<SettingOutlined />}
+                  onClick={() => openSettingModal(record)}
+                >
+                  设置
+                </Button>
+              )}
+            </div>,
+          ]
+        },
       },
     ]
-  }, [getDeviceTypes, handleToggleMaintaining, openModal])
+  }, [getDeviceTypes, handleToggleMaintaining, openModal, openSettingModal])
 
   return (
     <PageContainer>
@@ -544,7 +684,7 @@ const DeviceIndex: React.FC = () => {
             rules={[{ required: true, message: "请选择设备名称" }]}
           >
             <Select
-              options={groups}
+              options={DEVICE_GROUPS}
               onChange={(item) => {
                 form.setFieldValue("device_type_id", undefined)
                 setDeviceTypes(allDeviceTypes.filter((types) => types.group == item))
@@ -563,6 +703,59 @@ const DeviceIndex: React.FC = () => {
           </Form.Item>
           <Form.Item name="is_online" label="在线状态" valuePropName="checked">
             <Switch />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={"设备设置"}
+        onCancel={() => {
+          setSettingModalVisible(false)
+          rfConfigForm.resetFields()
+        }}
+        open={settingModalVisible}
+        footer={null}
+      >
+        <Form form={rfConfigForm}>
+          <Form.Item label="上行功率">
+            <Space align="center">
+              <Form.Item name="uplink_power" noStyle>
+                <InputNumber placeholder="请输入上行功率" />
+              </Form.Item>
+              <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
+                保存
+              </Button>
+            </Space>
+          </Form.Item>
+          <Form.Item label="上行衰减">
+            <Space align="center">
+              <Form.Item name="uplink_attenuation" noStyle>
+                <InputNumber min={0} max={100} placeholder="请输入上行衰减" />
+              </Form.Item>
+              <Button type="link" onClick={() => saveRFConfig("uplink_attenuation")}>
+                保存
+              </Button>
+            </Space>
+          </Form.Item>
+          <Form.Item label="下行功率">
+            <Space align="center">
+              <Form.Item name="downlink_power" noStyle>
+                <InputNumber min={0} max={100} placeholder="请输入下行功率" />
+              </Form.Item>
+              <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
+                保存
+              </Button>
+            </Space>
+          </Form.Item>
+          <Form.Item label="下行衰减">
+            <Space align="center">
+              <Form.Item name="downlink_attenuation" noStyle>
+                <InputNumber placeholder="请输入下行衰减" />
+              </Form.Item>
+              <Button type="link" onClick={() => saveRFConfig("downlink_attenuation")}>
+                保存
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>

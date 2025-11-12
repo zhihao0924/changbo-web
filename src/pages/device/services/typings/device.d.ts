@@ -259,3 +259,31 @@ export namespace API_PostSyncPanelInfo {
     fail_count: number
   }
 }
+
+export namespace API_PostRFConfig {
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+  export interface Res {
+    uplink_power: number
+    uplink_attenuation: number
+    downlink_power: number
+    downlink_attenuation: number
+  }
+}
+
+export namespace API_PostRFConfigSave {
+  export interface Params {
+    device_id: number
+    current_val: number
+    rf_config_type: string
+  }
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+  export interface Res {}
+}

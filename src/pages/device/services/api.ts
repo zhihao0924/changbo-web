@@ -1,5 +1,5 @@
 import { getApi, postApi } from "@/utils/request"
-import {
+import type {
   API_PostDailyXlsxList,
   API_PostDeleteDailyXlsx,
   API_PostDeviceCreate,
@@ -14,6 +14,8 @@ import {
   API_PostTopologyData,
   API_PostDeviceDailyXlsxDownload,
   API_PostSyncPanelInfo,
+  API_PostRFConfigSave,
+  API_PostRFConfig,
 } from "@/pages/device/services/typings/device"
 
 // 订单列表
@@ -240,6 +242,36 @@ export async function postDeviceSyncPanel(
 ) {
   const res: API_PostSyncPanelInfo.Result = await postApi(
     "device/syncPanelInfo",
+    { ...obj },
+    { showLoading: false, showToast: false, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postRFConfig(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostRFConfig.Result = await postApi(
+    "device/RFConfig",
+    { ...obj },
+    { showLoading: false, showToast: false, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postRFConfigSave(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostRFConfigSave.Result = await postApi(
+    "device/RFConfigSave",
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
