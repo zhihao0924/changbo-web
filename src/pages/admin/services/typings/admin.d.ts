@@ -17,6 +17,7 @@ declare namespace API_PostAdminList {
     account: string
     name: string
     role: string
+    email: string
     is_disabled: boolean
   }
 }
@@ -35,7 +36,6 @@ declare namespace API_PostAdminResetPwd {
     res: any
   }
 }
-
 
 declare namespace API_PostAdminDisabled {
   export interface Result {

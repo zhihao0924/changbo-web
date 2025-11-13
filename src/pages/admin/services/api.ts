@@ -59,3 +59,33 @@ export async function postDisableAdmin(
   })
   return res
 }
+
+export async function postAdminUpdate(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostAdminCreate.Result = await postApi(
+    "admin/update",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postAdminDelete(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostAdminCreate.Result = await postApi(
+    "admin/delete",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}

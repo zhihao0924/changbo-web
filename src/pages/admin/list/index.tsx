@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ProColumns } from "@ant-design/pro-components"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
-import { Button, Form, Input, Modal, Radio } from "antd"
+import { Button, Form, Input, Modal, Radio, message } from "antd"
 import { PlusOutlined } from "@ant-design/icons"
 import Services from "@/pages/admin/services"
 import { USER_INFO } from "@/constants"
@@ -9,132 +9,194 @@ import { USER_INFO } from "@/constants"
 type Columns = API_PostAdminList.List
 
 type CreateFormValues = {
-  account: number
+  account: string
   name: string
   email: string
   role: string
   password: string
 }
 
+// 权限检查函数
+const canOperateAdmin = (record: Columns, currentUser?: API_USER.Res) => {
+  return record.account !== "admin" && (record.role !== "admin" || currentUser?.account === "admin")
+}
+
 const UserIndex: React.FC = () => {
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
   const [createAdminForm] = Form.useForm<CreateFormValues>()
+  const [updateAdminForm] = Form.useForm<CreateFormValues>()
   const [resetPwdForm] = Form.useForm<CreateFormValues>()
   const [createAdminModalVisible, setCreateAdminModalVisible] = useState(false)
   const [resetPwdModalVisible, setResetPwdModalVisible] = useState(false)
-  const [currentRecord, setCurrentRecord] = useState<API_PostAdminList.List>()
+  const [updateModalVisible, setUpdateModalVisible] = useState(false)
+  const [currentRecord, setCurrentRecord] = useState<Columns>()
   const [userinfo, setUserinfo] = useState<API_USER.Res>()
+  const [loading, setLoading] = useState(false)
 
-  const openCreateAdminModal = useCallback(
-    (record: Columns | null = null) => {
-      if (record) {
-      } else {
-        createAdminForm.resetFields()
-      }
-      setCreateAdminModalVisible(true)
-    },
-    [createAdminForm],
-  )
+  // 统一错误处理
+  const handleApiError = (error: any, operation: string) => {
+    console.error(`${operation}失败:`, error)
+    message.error(`${operation}失败，请稍后重试`)
+  }
 
-  const handleCreateAdminCancel = useCallback(() => {
-    setCreateAdminModalVisible(false)
+  const openCreateAdminModal = useCallback(() => {
     createAdminForm.resetFields()
+    setCreateAdminModalVisible(true)
   }, [createAdminForm])
 
   const openResetPwdModal = useCallback(
-    (record: Columns | null = null) => {
-      if (record) {
-        setCurrentRecord(record)
-        resetPwdForm.resetFields()
-      } else {
-        resetPwdForm.resetFields()
-      }
+    (record: Columns) => {
+      setCurrentRecord(record)
+      resetPwdForm.resetFields()
       setResetPwdModalVisible(true)
     },
     [resetPwdForm],
   )
 
-  const getLists = useCallback(async (params: any) => {
-    const data = {
-      page: params.current,
-      limit: params.pageSize,
-      ...params,
-    }
-    delete data.current
-    delete data.pageSize
-
-    const res = await Services.api.postAdminList(data)
-
-    if (res) {
-      return Promise.resolve({
-        total: res.res.total,
-        data: res.res.list || [],
-        success: true,
+  const openUpdateModal = useCallback(
+    (record: Columns) => {
+      setCurrentRecord(record)
+      updateAdminForm.setFieldsValue({
+        account: record.account,
+        name: record.name,
+        email: record.email,
+        role: record.role,
       })
+      setUpdateModalVisible(true)
+    },
+    [updateAdminForm],
+  )
+
+  const closeModal = useCallback((form: any, setVisible: (visible: boolean) => void) => {
+    setVisible(false)
+    form.resetFields()
+  }, [])
+
+  const handleApiCall = useCallback(async (apiCall: Promise<any>, successMessage: string) => {
+    try {
+      setLoading(true)
+      const res = await apiCall
+      if (res.err === 0) {
+        message.success(successMessage)
+        actionRef.current?.reload()
+        return true
+      }
+    } catch (error) {
+      handleApiError(error, successMessage)
+    } finally {
+      setLoading(false)
     }
-    return {}
+    return false
+  }, [])
+
+  const handleUpdateModalSubmit = useCallback(async () => {
+    try {
+      const values = await updateAdminForm.validateFields()
+      const success = await handleApiCall(
+        Services.api.postAdminUpdate({ id: currentRecord?.id, ...values }),
+        "修改用户成功",
+      )
+      if (success) {
+        closeModal(updateAdminForm, setUpdateModalVisible)
+      }
+    } catch (error) {
+      // 表单验证错误，不处理
+    }
+  }, [closeModal, currentRecord?.id, handleApiCall, updateAdminForm])
+
+  const deleteAdmin = useCallback((record: Columns) => {
+    Modal.confirm({
+      title: "确认删除该用户吗？",
+      onOk: async () => {
+        await handleApiCall(Services.api.postAdminDelete({ id: record?.id }), "删除用户成功")
+      },
+    })
+  }, [handleApiCall])
+
+  const getLists = useCallback(async (params: any) => {
+    try {
+      const data = {
+        page: params.current,
+        limit: params.pageSize,
+        ...params,
+      }
+      delete data.current
+      delete data.pageSize
+
+      const res = await Services.api.postAdminList(data)
+
+      if (res) {
+        return {
+          total: res.res.total,
+          data: res.res.list || [],
+          success: true,
+        }
+      }
+    } catch (error) {
+      handleApiError(error, "获取用户列表")
+    }
+    return { data: [], success: false }
   }, [])
 
   const getRoles = useCallback(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userinfo") as string)
+    const userInfo = JSON.parse(localStorage.getItem("userinfo") || "{}")
     return [
       {
         value: "admin",
         label: "超级管理员",
-        disabled: userInfo?.account != "admin",
+        disabled: userInfo?.account !== "admin",
       },
       { value: "user", label: "管理员" },
     ]
   }, [])
 
   const handleCreateAdminSubmit = useCallback(async () => {
-    const values = await createAdminForm.validateFields()
-    const res = await Services.api.postAdminCreate(values)
-    if (res.err == 0) {
-      setCreateAdminModalVisible(false)
-      createAdminForm.resetFields()
-      actionRef.current?.reload()
+    try {
+      const values = await createAdminForm.validateFields()
+      const success = await handleApiCall(Services.api.postAdminCreate(values), "添加用户成功")
+      if (success) {
+        closeModal(createAdminForm, setCreateAdminModalVisible)
+      }
+    } catch (error) {
+      // 表单验证错误，不处理
     }
-  }, [createAdminForm])
+  }, [closeModal, createAdminForm, handleApiCall])
 
   const handleResetPwdSubmit = useCallback(async () => {
-    const values = await resetPwdForm.validateFields()
-    const res = await Services.api.postAdminResetPwd({
-      target_admin_id: currentRecord?.id,
-      ...values,
-    })
-    if (res.err == 0) {
-      setResetPwdModalVisible(false)
-      resetPwdForm.resetFields()
-      actionRef.current?.reload()
+    try {
+      const values = await resetPwdForm.validateFields()
+      const success = await handleApiCall(
+        Services.api.postAdminResetPwd({
+          target_admin_id: currentRecord?.id,
+          ...values,
+        }),
+        "重置密码成功",
+      )
+      if (success) {
+        closeModal(resetPwdForm, setResetPwdModalVisible)
+      }
+    } catch (error) {
+      // 表单验证错误，不处理
     }
-  }, [currentRecord, resetPwdForm])
+  }, [closeModal, currentRecord?.id, handleApiCall, resetPwdForm])
 
-  const handleResetPwdCancel = useCallback(() => {
-    setResetPwdModalVisible(false)
-    resetPwdForm.resetFields()
-  }, [resetPwdForm])
-
-  const handleDisabledAdmin = useCallback((record: any) => {
+  const handleDisabledAdmin = useCallback((record: Columns) => {
+    const action = record.is_disabled ? "启用" : "禁用"
     Modal.confirm({
-      title: "确认禁用",
-      content: "确认禁用该账号？",
+      title: `确认${action}`,
+      content: `确认${action}该账号？`,
       onOk: async () => {
-        await Services.api
-          .postDisableAdmin({
+        await handleApiCall(
+          Services.api.postDisableAdmin({
             target_admin_id: record?.id,
             is_disabled: !record?.is_disabled,
-          })
-          .then((res) => {
-            if (res.err == 0) {
-              actionRef.current?.reload()
-            }
-          })
+          }),
+          `${action}用户成功`,
+        )
       },
-      onCancel() {},
     })
-  }, [])
+  }, [handleApiCall])
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem(USER_INFO) || "{}")
@@ -142,6 +204,8 @@ const UserIndex: React.FC = () => {
   }, [])
 
   const columns: ProColumns<Columns>[] = useMemo(() => {
+    const canOperateRecord = (record: Columns) => canOperateAdmin(record, userinfo)
+
     return [
       {
         key: "account",
@@ -167,7 +231,7 @@ const UserIndex: React.FC = () => {
         align: "center",
         dataIndex: "role",
         render: (val: string) => {
-          return getRoles().find((item) => item.value == val)?.label
+          return getRoles().find((item) => item.value === val)?.label
         },
       },
       {
@@ -180,31 +244,44 @@ const UserIndex: React.FC = () => {
         },
       },
       {
-        width: 160,
+        width: 200,
         title: "操作",
         align: "center",
         valueType: "option",
-        render: (_, record) => [
-          record.account != "admin" && (record.role != "admin" || userinfo?.account == "admin") && (
-            <>
-              <Button
-                type={"primary"}
-                onClick={() => {
-                  console.log(userinfo?.account)
-                  handleDisabledAdmin(record)
-                }}
-              >
+        render: (_, record) => {
+          const actionButtons = []
+
+          if (canOperateRecord(record)) {
+            actionButtons.push(
+              <Button key="disable" type="link" onClick={() => handleDisabledAdmin(record)}>
                 {record.is_disabled ? "启用" : "禁用"}
-              </Button>
-              <Button type={"primary"} onClick={() => openResetPwdModal(record)}>
+              </Button>,
+              <Button key="reset" type="link" onClick={() => openResetPwdModal(record)}>
                 重置密码
-              </Button>
-            </>
-          ),
-        ],
+              </Button>,
+              <Button key="delete" type="link" onClick={() => deleteAdmin(record)}>
+                删除
+              </Button>,
+            )
+          }
+
+          if (
+            record.role !== "admin" ||
+            record.account === userinfo?.account ||
+            userinfo?.account === "admin"
+          ) {
+            actionButtons.push(
+              <Button key="edit" type="link" onClick={() => openUpdateModal(record)}>
+                修改
+              </Button>,
+            )
+          }
+
+          return actionButtons
+        },
       },
     ]
-  }, [getRoles, handleDisabledAdmin, openResetPwdModal, userinfo?.account])
+  }, [deleteAdmin, getRoles, handleDisabledAdmin, openResetPwdModal, openUpdateModal, userinfo])
 
   return (
     <PageContainer>
@@ -214,6 +291,7 @@ const UserIndex: React.FC = () => {
         columns={columns}
         request={getLists}
         rowKey="id"
+        loading={loading}
         pagination={{
           showSizeChanger: true,
           size: "default",
@@ -224,7 +302,7 @@ const UserIndex: React.FC = () => {
             key="button"
             icon={<PlusOutlined />}
             type="primary"
-            onClick={() => openCreateAdminModal()}
+            onClick={openCreateAdminModal}
           >
             添加账号
           </Button>,
@@ -232,12 +310,13 @@ const UserIndex: React.FC = () => {
       />
 
       <Modal
-        title={"添加管理员"}
+        title="添加管理员"
         open={createAdminModalVisible}
         onOk={handleCreateAdminSubmit}
-        onCancel={handleCreateAdminCancel}
+        onCancel={() => closeModal(createAdminForm, setCreateAdminModalVisible)}
+        confirmLoading={loading}
       >
-        <Form form={createAdminForm}>
+        <Form form={createAdminForm} layout="vertical">
           <Form.Item
             name="account"
             label="登录账号"
@@ -252,7 +331,14 @@ const UserIndex: React.FC = () => {
           >
             <Input />
           </Form.Item>
-          <Form.Item name="email" label="邮箱" rules={[{ required: true, message: "请输入邮箱" }]}>
+          <Form.Item
+            name="email"
+            label="邮箱"
+            rules={[
+              { required: true, message: "请输入邮箱" },
+              { type: "email", message: "请输入有效的邮箱地址" },
+            ]}
+          >
             <Input />
           </Form.Item>
           <Form.Item
@@ -263,7 +349,7 @@ const UserIndex: React.FC = () => {
             <Radio.Group options={getRoles()} />
           </Form.Item>
           <Form.Item
-            name={"password"}
+            name="password"
             label="密码"
             rules={[{ required: true, message: "请输入密码" }]}
           >
@@ -271,17 +357,61 @@ const UserIndex: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
       <Modal
-        title={"重置密码"}
+        title="更新管理员"
+        open={updateModalVisible}
+        onOk={handleUpdateModalSubmit}
+        onCancel={() => closeModal(updateAdminForm, setUpdateModalVisible)}
+        confirmLoading={loading}
+      >
+        <Form form={updateAdminForm} layout="vertical">
+          <Form.Item
+            name="account"
+            label="登录账号"
+            rules={[{ required: true, message: "请输入登录账号" }]}
+          >
+            <Input readOnly />
+          </Form.Item>
+          <Form.Item
+            name="name"
+            label="管理员名称"
+            rules={[{ required: true, message: "请输入管理员名称" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="邮箱"
+            rules={[
+              { required: true, message: "请输入邮箱" },
+              { type: "email", message: "请输入有效的邮箱地址" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="role"
+            label="角色"
+            rules={[{ required: true, message: "请选择管理员角色" }]}
+          >
+            <Radio.Group options={getRoles()} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="重置密码"
         open={resetPwdModalVisible}
         onOk={handleResetPwdSubmit}
-        onCancel={handleResetPwdCancel}
+        onCancel={() => closeModal(resetPwdForm, setResetPwdModalVisible)}
+        confirmLoading={loading}
       >
-        <Form form={resetPwdForm}>
+        <Form form={resetPwdForm} layout="vertical">
           <Form.Item
             name="password"
-            label="密码"
-            rules={[{ required: true, message: "请输入密码" }]}
+            label="新密码"
+            rules={[{ required: true, message: "请输入新密码" }]}
           >
             <Input.Password />
           </Form.Item>
