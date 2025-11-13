@@ -77,7 +77,7 @@ const DeviceIndex: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<DeviceTypeOption[]>([])
 
   // 初始化设备类型数据
-  const [deviceTypesLoading, setDeviceTypesLoading] = useState(false)
+  const [, setDeviceTypesLoading] = useState(false)
 
   const getDeviceTypes = useCallback(async () => {
     // 如果已经有数据，直接返回

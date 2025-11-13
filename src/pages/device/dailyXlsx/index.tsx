@@ -41,16 +41,14 @@ const DailyXlsx: React.FC = () => {
       const response = await Services.api.postDeviceDailyXlsxDownload(
         { id: row.id },
         {
-          responseType: 'blob',
+          responseType: "blob",
           showLoading: false,
-          showToast: false
-        }
+          showToast: false,
+        },
       )
 
-      if (response && response.res) {
-        // response.res 包含实际的blob数据
-        const blobData = response.res
-        const blob = new Blob([blobData])
+      if (response) {
+        const blob = new Blob([response])
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
@@ -61,7 +59,7 @@ const DailyXlsx: React.FC = () => {
         window.URL.revokeObjectURL(url)
       }
     } catch (error) {
-      console.error('下载失败:', error)
+      console.error("下载失败:", error)
       // 可以添加错误提示
     }
   }
