@@ -280,3 +280,18 @@ export async function postRFConfigSave(
   })
   return res
 }
+
+export async function postDeleteDevice(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostRFConfigSave.Result = await postApi(
+    "device/delete",
+    { ...obj },
+    { showLoading: false, showToast: false, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}

@@ -241,6 +241,27 @@ const DeviceIndex: React.FC = () => {
     }
   }, [])
 
+  const handleDelDevice = useCallback(async (record: Columns) => {
+    Modal.confirm({
+      title: `确认删除${record.device_type_group}(${record.name})吗？`,
+      onOk: async () => {
+        try {
+          const data = {
+            device_id: record.id,
+          }
+          const res = await Services.api.postDeleteDevice(data)
+          message.success(res?.msg || "更新设备成功")
+          actionRef.current?.reload()
+        } catch (error: any) {
+          if (error?.errorFields) {
+            return
+          }
+          console.error(error)
+        }
+      },
+    })
+  }, [])
+
   // 配置类型对应的中文标签
   const getConfigLabel = useCallback((configType: string): string => {
     return CONFIG_TYPE_MAP[configType as keyof typeof CONFIG_TYPE_MAP] || configType
@@ -535,14 +556,7 @@ const DeviceIndex: React.FC = () => {
                 key="delete"
                 type="link"
                 icon={<DeleteOutlined />}
-                onClick={() =>
-                  Modal.confirm({
-                    title: `确认删除设备${record.name}吗？`,
-                    onOk: () => {
-                      Modal.info({ title: `确认删除设备${record.name}成功` })
-                    },
-                  })
-                }
+                onClick={() => handleDelDevice(record)}
               >
                 删除
               </Button>
