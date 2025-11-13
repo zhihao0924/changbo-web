@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined } from "@ant-design/icons"
-import { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
+import type { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
 import { SYSTEM_CONFIG } from "@/constants"
 
 // 常量配置
@@ -62,70 +62,6 @@ interface DeviceCardProps {
   device: API_PostDeviceList.List
   onDoubleClick: () => void
   isEvenRow?: boolean
-}
-
-const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRow = false }) => {
-  const deviceTitle = `${device.device_type_alias || device.device_type_group}:${device.name}`
-
-  return (
-    <Card
-      title={deviceTitle}
-      extra={<Tag color={device.tag_color}>{device.status_text}</Tag>}
-      onDoubleClick={onDoubleClick}
-      style={{
-        boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.1)",
-        transition: "0.3s",
-        borderRadius: "8px",
-        backgroundColor: isEvenRow ? "#fafafa" : "#ffffff",
-        border: isEvenRow ? "1px solid #f0f0f0" : "1px solid #e8e8e8",
-        position: "relative", // 添加相对定位
-      }}
-      hoverable
-    >
-      {/* 右上角标签区域 */}
-      <div
-        style={{
-          position: "absolute",
-          top: "48px", // 在extra区域下面
-          right: "24px", // 右侧对齐
-          zIndex: 1,
-        }}
-      >
-        {device.is_online && !device.is_maintaining && device.is_alarm && (
-          <Tag color={"red"}>告警中</Tag>
-        )}
-        {device.is_online && !device.is_maintaining && !device.is_module_online && (
-          <Tag color={"red"}>模块离线</Tag>
-        )}
-      </div>
-
-      <Row>
-        {device?.metric_items
-          ?.filter((metricItem) => metricItem.show_in_list)
-          .map((metricItem, index) => (
-            <React.Fragment key={index}>
-              <Col span={8}>{metricItem.config_type_name}</Col>
-              <Col span={12}>
-                <MetricItem metricItem={metricItem} alarmItems={device?.alarm_items} />
-              </Col>
-              <Col
-                span={4}
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {metricItem.is_set_current_val &&
-                  (typeof metricItem.alarm_min === "number" ||
-                    typeof metricItem.alarm_max === "number") &&
-                  getStatusIcon(metricItem, device?.alarm_items)}
-              </Col>
-            </React.Fragment>
-          ))}
-      </Row>
-    </Card>
-  )
 }
 
 const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
@@ -193,6 +129,70 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   )
 }
 
+const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRow = false }) => {
+  const deviceTitle = `${device.device_type_alias || device.device_type_group}:${device.name}`
+
+  return (
+    <Card
+      title={deviceTitle}
+      extra={<Tag color={device.tag_color}>{device.status_text}</Tag>}
+      onDoubleClick={onDoubleClick}
+      style={{
+        boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.1)",
+        transition: "0.3s",
+        borderRadius: "8px",
+        backgroundColor: isEvenRow ? "#fafafa" : "#ffffff",
+        border: isEvenRow ? "1px solid #f0f0f0" : "1px solid #e8e8e8",
+        position: "relative", // 添加相对定位
+      }}
+      hoverable
+    >
+      {/* 右上角标签区域 */}
+      <div
+        style={{
+          position: "absolute",
+          top: "48px", // 在extra区域下面
+          right: "24px", // 右侧对齐
+          zIndex: 1,
+        }}
+      >
+        {device.is_online && !device.is_maintaining && device.is_alarm && (
+          <Tag color={"red"}>告警中</Tag>
+        )}
+        {device.is_online && !device.is_maintaining && !device.is_module_online && (
+          <Tag color={"red"}>模块离线</Tag>
+        )}
+      </div>
+
+      <Row>
+        {device?.metric_items
+          ?.filter((metricItem) => metricItem.show_in_list)
+          .map((metricItem) => (
+            <React.Fragment key={`fragment_Key_${metricItem.config_type}`}>
+              <Col span={8}>{metricItem.config_type_name}</Col>
+              <Col span={12}>
+                <MetricItem metricItem={metricItem} alarmItems={device?.alarm_items} key={`MetricItem_${metricItem.config_type}`} />
+              </Col>
+              <Col
+                span={4}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {metricItem.is_set_current_val &&
+                  (typeof metricItem.alarm_min === "number" ||
+                    typeof metricItem.alarm_max === "number") &&
+                  getStatusIcon(metricItem, device?.alarm_items)}
+              </Col>
+            </React.Fragment>
+          ))}
+      </Row>
+    </Card>
+  )
+}
+
 // 设备详情模态框组件
 interface DeviceDetailModalProps {
   visible: boolean
@@ -231,7 +231,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
           {selectedDevice.metric_items
             ?.filter((metricItem) => metricItem.show_in_detail)
             ?.map((metricItem, index) => (
-              <React.Fragment key={index}>
+              <React.Fragment key={`React.Fragment.${metricItem.config_type}`}>
                 <Col
                   span={8}
                   style={{

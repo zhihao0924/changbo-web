@@ -60,29 +60,25 @@ declare namespace API_PostDeviceCreate {
   export interface Result {
     err: number
     msg: string
-    res: Res
+    res: any
   }
-
-  export interface Res {}
 }
 declare namespace API_PostDeviceUpdate {
   export interface Result {
     err: number
     msg: string
-    res: Res
+    res: any
   }
 
-  export interface Res {}
 }
 
 declare namespace API_PostToggleMaintaining {
   export interface Result {
     err: number
     msg: string
-    res: Res
+    res: any
   }
 
-  export interface Res {}
 }
 
 declare namespace API_PostDeviceTypes {
@@ -283,7 +279,6 @@ export namespace API_PostRFConfigSave {
   export interface Result {
     err: number
     msg: string
-    res: Res
+    res: any
   }
-  export interface Res {}
 }

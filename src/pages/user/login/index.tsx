@@ -34,7 +34,7 @@ const Login: React.FC = () => {
   const [userLoginState, setUserLoginState] = useState("")
   const [type, setType] = useState<LoginType>("account")
   const [systemConfig, setSystemConfig] = useState<any>(null)
-  const { loading, setInitialState } = useModel("@@initialState")
+  const { setInitialState } = useModel("@@initialState")
 
   const handleLoginAuto = () => {
     const token = localStorage.getItem(ACCESS_TOKEN)

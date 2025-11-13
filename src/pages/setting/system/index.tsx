@@ -28,6 +28,8 @@ const beforeUpload = (file: RcFile) => {
 
 const SystemSetting: React.FC = () => {
   const [form] = Form.useForm()
+  const [loading, setLoading] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string>()
 
   const getSystemConfig = useCallback(async () => {
     const res = await Services.api.postSystemConfig({})
@@ -48,12 +50,11 @@ const SystemSetting: React.FC = () => {
         localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
       })
       .then((res) => {
+        console.log(res)
         window.location.reload()
       })
   }
 
-  const [loading, setLoading] = useState(false)
-  const [imageUrl, setImageUrl] = useState<string>()
 
   const handleChange: UploadProps["onChange"] = (info: UploadChangeParam<UploadFile>) => {
     if (info.file.status === "uploading") {

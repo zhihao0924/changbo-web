@@ -183,9 +183,9 @@ const DeviceIndex: React.FC = () => {
 
   const syncPanel = useCallback(async () => {
     try {
-      const res = await Services.api.postDeviceSyncPanel({}).then((res) => {
+      const res = await Services.api.postDeviceSyncPanel({}).then((ret) => {
         message.success(
-          `同步面板信息成功${res.res.success_count}条，失败${res.res.fail_count}条`,
+          `同步面板信息成功${res.res.success_count}条，失败${ret.res.fail_count}条`,
           2,
           actionRef.current?.reload,
         )
@@ -583,7 +583,7 @@ const DeviceIndex: React.FC = () => {
         },
       },
     ]
-  }, [getDeviceTypes, handleToggleMaintaining, openModal, openSettingModal])
+  }, [getDeviceTypes, handleDelDevice, handleToggleMaintaining, openModal, openSettingModal])
 
   return (
     <PageContainer>

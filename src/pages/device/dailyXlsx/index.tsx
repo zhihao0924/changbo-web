@@ -65,8 +65,7 @@ const DailyXlsx: React.FC = () => {
       // 可以添加错误提示
     }
   }
-
-  const deleteRow = useCallback(async (row) => {
+  useCallback(async (row) => {
     try {
       const res = await Services.api.postDeleterDailyXlsx(
         {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { PageContainer } from "@ant-design/pro-components"
-import { Card, Row, Col, Typography, Button, Space, Image, Switch, List } from "antd"
+import { Card, Row, Col, Typography, Button, Space, Image, List } from "antd"
 import { Line, Pie } from "@ant-design/charts"
 import styles from "./index.less"
 import Services from "@/pages/dashboard/services"
@@ -247,8 +247,8 @@ const usePieConfig = (
   total: number,
   isFirstRender: boolean,
 ) => {
-  return useMemo(
-    () => ({
+  return useMemo(() => {
+    return {
       data: data || [],
       angleField: "value",
       colorField: "type",
@@ -310,9 +310,8 @@ const usePieConfig = (
       },
       // height: 200,
       animation: isFirstRender,
-    }),
-    [data, total_healthy, total, isFirstRender],
-  )
+    }
+  }, [data, total_healthy, total, isFirstRender])
 }
 
 // 折线图配置
@@ -360,8 +359,8 @@ const Dashboard: React.FC = () => {
           return parsedTime
         }
       }
-    } catch (error) {
-      console.error("读取localStorage清除时间失败:", error)
+    } catch (err) {
+      console.error("读取localStorage清除时间失败:", err)
     }
     return null
   })
@@ -394,8 +393,8 @@ const Dashboard: React.FC = () => {
       try {
         const alarmTime = new Date(alarm.alarm_at)
         return alarmTime > lastClearTime
-      } catch (error) {
-        console.error("解析告警时间失败:", error)
+      } catch (err) {
+        console.error("解析告警时间失败:", err)
         return true
       }
     }).length
@@ -425,8 +424,8 @@ const Dashboard: React.FC = () => {
       } else {
         setError("获取数据失败")
       }
-    } catch (error) {
-      console.error("获取仪表盘数据失败:", error)
+    } catch (err) {
+      console.error("获取仪表盘数据失败:", err)
       setError("网络请求失败")
     } finally {
       setLoading(false)
@@ -526,7 +525,6 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const lightTimer = setInterval(() => {
       // 根据告警设备状态决定灯光图片和闪烁逻辑
-      let lightImg: string = "light_green"
 
       // 检查是否有告警设备
       const hasAlarms = dashboardData?.alarm_device && dashboardData.alarm_device.length > 0
@@ -550,8 +548,8 @@ const Dashboard: React.FC = () => {
                 } else {
                   hasHistoryAlarms = true
                 }
-              } catch (error) {
-                console.error("解析告警时间失败:", error)
+              } catch (err) {
+                console.error("解析告警时间失败:", err)
                 hasNewAlarms = true
               }
             }
@@ -565,7 +563,6 @@ const Dashboard: React.FC = () => {
       // 确定灯光状态
       if (hasNewAlarms) {
         // 有新告警：红灯闪烁
-        lightImg = "light_red"
         setCurrentLightImage((prevImage) => {
           console.log("有新告警，红灯闪烁", prevImage)
           // 在"关闭"状态和"红灯"状态之间切换实现闪烁
@@ -576,12 +573,10 @@ const Dashboard: React.FC = () => {
         })
       } else if (hasHistoryAlarms) {
         // 只有历史告警：稳定红灯，不闪烁
-        lightImg = "light_red"
         setCurrentLightImage("light_red")
         console.log("只有历史告警，稳定红灯")
       } else {
         // 无告警：稳定绿灯
-        lightImg = "light_green"
         setCurrentLightImage("light_green")
         console.log("无告警，稳定绿灯")
       }
@@ -654,8 +649,8 @@ const Dashboard: React.FC = () => {
                 const config = JSON.parse(systemConfig)
                 return config.system_name || "专网通信智能网管平台"
               }
-            } catch (error) {
-              console.error("获取系统配置失败:", error)
+            } catch (err) {
+              console.error("获取系统配置失败:", err)
             }
             return "专网通信智能网管平台"
           })()}
@@ -966,7 +961,7 @@ const Dashboard: React.FC = () => {
         {/* 设备类型统计详情 */}
         {dashboardData?.type_statistic && dashboardData?.type_statistic.length > 0 && (
           <Row gutter={24} style={{ marginBottom: 16 }}>
-            {dashboardData?.type_statistic.map((item: any, index: number) => (
+            {dashboardData?.type_statistic.map((item: any, ) => (
               <Col key={item.type} xs={12} sm={8} md={6} lg={4}>
                 <Card
                   title={
