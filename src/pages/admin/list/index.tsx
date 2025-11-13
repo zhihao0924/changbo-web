@@ -105,14 +105,17 @@ const UserIndex: React.FC = () => {
     }
   }, [closeModal, currentRecord?.id, handleApiCall, updateAdminForm])
 
-  const deleteAdmin = useCallback((record: Columns) => {
-    Modal.confirm({
-      title: "确认删除该用户吗？",
-      onOk: async () => {
-        await handleApiCall(Services.api.postAdminDelete({ id: record?.id }), "删除用户成功")
-      },
-    })
-  }, [handleApiCall])
+  const deleteAdmin = useCallback(
+    (record: Columns) => {
+      Modal.confirm({
+        title: "确认删除该用户吗？",
+        onOk: async () => {
+          await handleApiCall(Services.api.postAdminDelete({ id: record?.id }), "删除用户成功")
+        },
+      })
+    },
+    [handleApiCall],
+  )
 
   const getLists = useCallback(async (params: any) => {
     try {
@@ -181,22 +184,25 @@ const UserIndex: React.FC = () => {
     }
   }, [closeModal, currentRecord?.id, handleApiCall, resetPwdForm])
 
-  const handleDisabledAdmin = useCallback((record: Columns) => {
-    const action = record.is_disabled ? "启用" : "禁用"
-    Modal.confirm({
-      title: `确认${action}`,
-      content: `确认${action}该账号？`,
-      onOk: async () => {
-        await handleApiCall(
-          Services.api.postDisableAdmin({
-            target_admin_id: record?.id,
-            is_disabled: !record?.is_disabled,
-          }),
-          `${action}用户成功`,
-        )
-      },
-    })
-  }, [handleApiCall])
+  const handleDisabledAdmin = useCallback(
+    (record: Columns) => {
+      const action = record.is_disabled ? "启用" : "禁用"
+      Modal.confirm({
+        title: `确认${action}`,
+        content: `确认${action}该账号？`,
+        onOk: async () => {
+          await handleApiCall(
+            Services.api.postDisableAdmin({
+              target_admin_id: record?.id,
+              is_disabled: !record?.is_disabled,
+            }),
+            `${action}用户成功`,
+          )
+        },
+      })
+    },
+    [handleApiCall],
+  )
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem(USER_INFO) || "{}")
@@ -334,10 +340,7 @@ const UserIndex: React.FC = () => {
           <Form.Item
             name="email"
             label="邮箱"
-            rules={[
-              { required: true, message: "请输入邮箱" },
-              { type: "email", message: "请输入有效的邮箱地址" },
-            ]}
+            rules={[{ type: "email", message: "请输入有效的邮箱地址" }]}
           >
             <Input />
           </Form.Item>
@@ -383,10 +386,7 @@ const UserIndex: React.FC = () => {
           <Form.Item
             name="email"
             label="邮箱"
-            rules={[
-              { required: true, message: "请输入邮箱" },
-              { type: "email", message: "请输入有效的邮箱地址" },
-            ]}
+            rules={[{ type: "email", message: "请输入有效的邮箱地址" }]}
           >
             <Input />
           </Form.Item>

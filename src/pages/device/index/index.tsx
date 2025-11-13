@@ -77,6 +77,37 @@ const DeviceIndex: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<DeviceTypeOption[]>([])
 
   // 初始化设备类型数据
+  const [deviceTypesLoading, setDeviceTypesLoading] = useState(false)
+
+  const getDeviceTypes = useCallback(async () => {
+    // 如果已经有数据，直接返回
+    if (allDeviceTypes.length > 0) {
+      return allDeviceTypes
+    }
+
+    // 如果没有数据，重新获取
+    setDeviceTypesLoading(true)
+    try {
+      const res = await Services.api.postDeviceTypes({})
+      if (res?.res?.list) {
+        const formattedTypes = res.res.list.map((item) => ({
+          value: item.id,
+          label: item.device_type,
+          group: item.device_type_group,
+        }))
+        setAllDeviceTypes(formattedTypes)
+        return formattedTypes
+      }
+    } catch (error) {
+      console.error("获取设备类型失败:", error)
+      return []
+    } finally {
+      setDeviceTypesLoading(false)
+    }
+    return []
+  }, [allDeviceTypes])
+
+  // 初始化设备类型数据（首次加载）
   useEffect(() => {
     const initDeviceTypes = async () => {
       try {
@@ -95,10 +126,6 @@ const DeviceIndex: React.FC = () => {
     }
     initDeviceTypes()
   }, [])
-
-  const getDeviceTypes = useCallback(async () => {
-    return allDeviceTypes
-  }, [allDeviceTypes])
 
   const getLists = useCallback(async (params: any) => {
     const data = {
@@ -185,7 +212,7 @@ const DeviceIndex: React.FC = () => {
     try {
       const res = await Services.api.postDeviceSyncPanel({}).then((ret) => {
         message.success(
-          `同步面板信息成功${res.res.success_count}条，失败${ret.res.fail_count}条`,
+          `同步面板信息成功${ret.res.success_count}条，失败${ret.res.fail_count}条`,
           2,
           actionRef.current?.reload,
         )
@@ -734,7 +761,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="上行功率">
             <Space align="center">
               <Form.Item name="uplink_power" noStyle>
-                <InputNumber placeholder="请输入上行功率" />
+                <InputNumber placeholder="请输入上行功率" addonAfter={"dBm"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
                 保存
@@ -744,7 +771,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="上行衰减">
             <Space align="center">
               <Form.Item name="uplink_attenuation" noStyle>
-                <InputNumber min={0} max={100} placeholder="请输入上行衰减" />
+                <InputNumber min={0} max={100} placeholder="请输入上行衰减" addonAfter={"dB"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_attenuation")}>
                 保存
@@ -754,7 +781,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="下行功率">
             <Space align="center">
               <Form.Item name="downlink_power" noStyle>
-                <InputNumber min={0} max={100} placeholder="请输入下行功率" />
+                <InputNumber min={0} max={100} placeholder="请输入下行功率" addonAfter={"dBm"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
                 保存
@@ -764,7 +791,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="下行衰减">
             <Space align="center">
               <Form.Item name="downlink_attenuation" noStyle>
-                <InputNumber placeholder="请输入下行衰减" />
+                <InputNumber placeholder="请输入下行衰减" addonAfter={"dB"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_attenuation")}>
                 保存
