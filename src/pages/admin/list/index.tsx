@@ -37,7 +37,7 @@ const UserIndex: React.FC = () => {
   // 统一错误处理
   const handleApiError = (error: any, operation: string) => {
     console.error(`${operation}失败:`, error)
-    message.error(`${operation}失败，请稍后重试`)
+    message.error(`${operation}失败，请稍后重试`, 1)
   }
 
   const openCreateAdminModal = useCallback(() => {
@@ -78,12 +78,14 @@ const UserIndex: React.FC = () => {
       setLoading(true)
       const res = await apiCall
       if (res.err === 0) {
-        message.success(successMessage)
-        actionRef.current?.reload()
+        message.success(successMessage, 1, () => {
+          actionRef.current?.reload()
+        })
+
         return true
       }
     } catch (error) {
-      handleApiError(error, successMessage)
+      handleApiError(error, "操作")
     } finally {
       setLoading(false)
     }
