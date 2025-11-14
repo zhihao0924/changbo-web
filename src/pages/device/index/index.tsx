@@ -179,26 +179,18 @@ const DeviceIndex: React.FC = () => {
         })
         .then((res) => {
           console.log("API返回数据:", res)
-          console.log("配置数据:", {
-            uplink_power: res.res.uplink_power,
-            uplink_attenuation: res.res.uplink_attenuation,
-            downlink_power: res.res.downlink_power,
-            downlink_attenuation: res.res.downlink_attenuation,
-          })
 
           // 使用setTimeout确保表单已经挂载完成
-          setTimeout(() => {
-            rfConfigForm.setFieldsValue({
-              uplink_power: res.res.uplink_power,
-              uplink_attenuation: res.res.uplink_attenuation,
-              downlink_power: res.res.downlink_power,
-              downlink_attenuation: res.res.downlink_attenuation,
-            })
-
-            // 验证表单字段是否设置成功
-            const fields = rfConfigForm.getFieldsValue()
-            console.log("表单字段值:", fields)
-          }, 100)
+          rfConfigForm.setFieldsValue({
+            uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "-",
+            uplink_attenuation: res.res.is_set_uplink_attenuation
+              ? res.res.uplink_attenuation
+              : "-",
+            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "-",
+            downlink_attenuation: res.res.is_set_downlink_attenuation
+              ? res.res.downlink_attenuation
+              : "-",
+          })
         })
         .catch((error) => {
           console.error("获取设备配置失败:", error)

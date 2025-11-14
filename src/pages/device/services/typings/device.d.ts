@@ -69,7 +69,6 @@ declare namespace API_PostDeviceUpdate {
     msg: string
     res: any
   }
-
 }
 
 declare namespace API_PostToggleMaintaining {
@@ -78,7 +77,6 @@ declare namespace API_PostToggleMaintaining {
     msg: string
     res: any
   }
-
 }
 
 declare namespace API_PostDeviceTypes {
@@ -264,9 +262,13 @@ export namespace API_PostRFConfig {
   }
   export interface Res {
     uplink_power: number
+    is_set_uplink_power: boolean
     uplink_attenuation: number
+    is_set_uplink_attenuation: boolean
     downlink_power: number
+    is_set_downlink_power: boolean
     downlink_attenuation: number
+    is_set_downlink_attenuation: boolean
   }
 }
 
