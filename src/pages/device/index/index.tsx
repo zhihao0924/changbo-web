@@ -9,7 +9,17 @@ import {
 } from "@ant-design/icons"
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import { Button, Form, Input, InputNumber, message, Modal, Select, Space, Switch } from "antd"
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Select,
+  Space,
+  Switch,
+} from "antd"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
@@ -27,9 +37,17 @@ type CreateFormValues = {
 
 type CreateSettingFormValues = {
   uplink_power: number | null
+  uplink_power_min: number
+  uplink_power_max: number
   uplink_attenuation: number | null
+  uplink_attenuation_min: number
+  uplink_attenuation_max: number
   downlink_power: number | null
+  downlink_power_min: number
+  downlink_power_max: number
   downlink_attenuation: number | null
+  downlink_attenuation_min: number
+  downlink_attenuation_max: number
 }
 
 type DeviceTypeOption = {
@@ -75,6 +93,9 @@ const DeviceIndex: React.FC = () => {
 
   const [allDeviceTypes, setAllDeviceTypes] = useState<DeviceTypeOption[]>([])
   const [deviceTypes, setDeviceTypes] = useState<DeviceTypeOption[]>([])
+  const [configRangeMap, setConfigRangeMap] = useState<
+    Record<string, { min: number; max: number; unit: string }>
+  >({})
 
   // 初始化设备类型数据
   const [, setDeviceTypesLoading] = useState(false)
@@ -169,9 +190,6 @@ const DeviceIndex: React.FC = () => {
       console.log("打开设置模态框，设备ID:", record?.id)
       setCurrentDevice(record)
 
-      // 先打开模态框，确保表单已经挂载
-      setSettingModalVisible(true)
-
       // 然后获取数据并设置表单值
       Services.api
         .postRFConfig({
@@ -180,17 +198,46 @@ const DeviceIndex: React.FC = () => {
         .then((res) => {
           console.log("API返回数据:", res)
 
-          // 使用setTimeout确保表单已经挂载完成
+          // 从API响应中提取范围配置
+          const newConfigRangeMap = {
+            uplink_power: {
+              min: res.res.uplink_power_min,
+              max: res.res.uplink_power_max,
+              unit: "dBm",
+            },
+            uplink_attenuation: {
+              min: res.res.uplink_attenuation_min,
+              max: res.res.uplink_attenuation_max,
+              unit: "dB",
+            },
+            downlink_power: {
+              min: res.res.downlink_power_min,
+              max: res.res.downlink_power_max,
+              unit: "dBm",
+            },
+            downlink_attenuation: {
+              min: res.res.downlink_attenuation_min,
+              max: res.res.downlink_attenuation_max,
+              unit: "dB",
+            },
+          }
+          setConfigRangeMap(newConfigRangeMap)
+
+          // 设置表单值
           rfConfigForm.setFieldsValue({
-            uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "-",
+            uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "——",
             uplink_attenuation: res.res.is_set_uplink_attenuation
               ? res.res.uplink_attenuation
-              : "-",
-            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "-",
+              : "——",
+            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
             downlink_attenuation: res.res.is_set_downlink_attenuation
               ? res.res.downlink_attenuation
-              : "-",
+              : "——",
           })
+        })
+        .then(() => {
+          // 先打开模态框，确保表单已经挂载
+          setSettingModalVisible(true)
         })
         .catch((error) => {
           console.error("获取设备配置失败:", error)
@@ -286,14 +333,6 @@ const DeviceIndex: React.FC = () => {
     return CONFIG_TYPE_MAP[configType as keyof typeof CONFIG_TYPE_MAP] || configType
   }, [])
 
-  // 配置类型范围和单位映射
-  const CONFIG_RANGE_MAP = {
-    uplink_power: { min: -40, max: 11, unit: "dBm" },
-    uplink_attenuation: { min: 0, max: 31, unit: "dB" },
-    downlink_power: { min: 11, max: 48, unit: "dBm" },
-    downlink_attenuation: { min: 0, max: 31, unit: "dB" },
-  } as const
-
   // 统一的参数配置保存函数
   const saveRFConfig = useCallback(
     async (configType: string) => {
@@ -308,11 +347,15 @@ const DeviceIndex: React.FC = () => {
         return
       }
 
-      // 检查数值范围
-      const configRange = CONFIG_RANGE_MAP[configType as keyof typeof CONFIG_RANGE_MAP]
+      // 检查数值范围（从API获取的范围）
+      const configRange = configRangeMap[configType]
       if (configRange) {
         if (fieldValue < configRange.min || fieldValue > configRange.max) {
-          message.error(`${getConfigLabel(configType)}必须在${configRange.min}~${configRange.max}${configRange.unit}范围内`)
+          message.error(
+            `${getConfigLabel(configType)}必须在${configRange.min}~${configRange.max}${
+              configRange.unit
+            }范围内`,
+          )
           return
         }
       }
@@ -329,7 +372,7 @@ const DeviceIndex: React.FC = () => {
         message.error(`${getConfigLabel(configType)}保存失败`)
       }
     },
-    [currentDevice, getConfigLabel, rfConfigForm],
+    [currentDevice, getConfigLabel, rfConfigForm, configRangeMap],
   )
 
   const columns: ProColumns<Columns>[] = useMemo(() => {
@@ -772,7 +815,10 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="上行功率">
             <Space align="center">
               <Form.Item name="uplink_power" noStyle>
-                <InputNumber min={-40} max={11} placeholder="请输入上行功率" addonAfter={"dBm"} />
+                <InputNumber
+                  placeholder="请输入上行功率"
+                  addonAfter={`(${configRangeMap.uplink_power?.min}-${configRangeMap.uplink_power?.max})dBm`}
+                />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
                 保存
@@ -782,7 +828,10 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="上行衰减">
             <Space align="center">
               <Form.Item name="uplink_attenuation" noStyle>
-                <InputNumber min={0} max={31} placeholder="请输入上行衰减" addonAfter={"dB"} />
+                <InputNumber
+                  placeholder="请输入上行衰减"
+                  addonAfter={`(${configRangeMap.uplink_attenuation?.min}-${configRangeMap.uplink_attenuation?.max})dB`}
+                />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_attenuation")}>
                 保存
@@ -792,7 +841,10 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="下行功率">
             <Space align="center">
               <Form.Item name="downlink_power" noStyle>
-                <InputNumber min={11} max={48} placeholder="请输入下行功率" addonAfter={"dBm"} />
+                <InputNumber
+                  placeholder="请输入下行功率"
+                  addonAfter={`(${configRangeMap.downlink_power?.min}-${configRangeMap.downlink_power?.max})dBm`}
+                />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
                 保存
@@ -802,7 +854,10 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="下行衰减">
             <Space align="center">
               <Form.Item name="downlink_attenuation" noStyle>
-                <InputNumber min={0} max={31} placeholder="请输入下行衰减" addonAfter={"dB"} />
+                <InputNumber
+                  placeholder="请输入下行衰减"
+                  addonAfter={`(${configRangeMap.downlink_attenuation?.min}-${configRangeMap.downlink_attenuation?.max})dB`}
+                />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_attenuation")}>
                 保存

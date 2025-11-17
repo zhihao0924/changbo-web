@@ -30,6 +30,11 @@ export default [
     icon: "hdd",
     routes: [
       {
+        name: "status",
+        path: "/device/status",
+        component: "./device/status",
+      },
+      {
         path: "/device",
         redirect: "/device/index",
         access: "adminRouteFilter",
@@ -45,11 +50,6 @@ export default [
         path: "/device/types",
         component: "./device/types",
         access: "adminRouteFilter",
-      },
-      {
-        name: "status",
-        path: "/device/status",
-        component: "./device/status",
       },
       {
         name: "logs",

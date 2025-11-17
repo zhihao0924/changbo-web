@@ -262,12 +262,20 @@ export namespace API_PostRFConfig {
   }
   export interface Res {
     uplink_power: number
+    uplink_power_min: number
+    uplink_power_max: number
     is_set_uplink_power: boolean
     uplink_attenuation: number
+    uplink_attenuation_min: number
+    uplink_attenuation_max: number
     is_set_uplink_attenuation: boolean
     downlink_power: number
+    downlink_power_min: number
+    downlink_power_max: number
     is_set_downlink_power: boolean
     downlink_attenuation: number
+    downlink_attenuation_min: number
+    downlink_attenuation_max: number
     is_set_downlink_attenuation: boolean
   }
 }
