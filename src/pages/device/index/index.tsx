@@ -286,6 +286,14 @@ const DeviceIndex: React.FC = () => {
     return CONFIG_TYPE_MAP[configType as keyof typeof CONFIG_TYPE_MAP] || configType
   }, [])
 
+  // 配置类型范围和单位映射
+  const CONFIG_RANGE_MAP = {
+    uplink_power: { min: -40, max: 11, unit: "dBm" },
+    uplink_attenuation: { min: 0, max: 31, unit: "dB" },
+    downlink_power: { min: 11, max: 48, unit: "dBm" },
+    downlink_attenuation: { min: 0, max: 31, unit: "dB" },
+  } as const
+
   // 统一的参数配置保存函数
   const saveRFConfig = useCallback(
     async (configType: string) => {
@@ -298,6 +306,15 @@ const DeviceIndex: React.FC = () => {
       if (fieldValue === undefined || fieldValue === null) {
         message.error(`请输入${getConfigLabel(configType)}`)
         return
+      }
+
+      // 检查数值范围
+      const configRange = CONFIG_RANGE_MAP[configType as keyof typeof CONFIG_RANGE_MAP]
+      if (configRange) {
+        if (fieldValue < configRange.min || fieldValue > configRange.max) {
+          message.error(`${getConfigLabel(configType)}必须在${configRange.min}~${configRange.max}${configRange.unit}范围内`)
+          return
+        }
       }
 
       try {
@@ -741,19 +758,21 @@ const DeviceIndex: React.FC = () => {
       </Modal>
 
       <Modal
-        title={"设备设置"}
+        title={`设备设置-${currentDevice?.name}`}
         onCancel={() => {
           setSettingModalVisible(false)
           rfConfigForm.resetFields()
         }}
         open={settingModalVisible}
-        footer={null}
+        footer={
+          <Button onClick={() => currentDevice && openSettingModal(currentDevice)}>刷新</Button>
+        }
       >
         <Form form={rfConfigForm}>
           <Form.Item label="上行功率">
             <Space align="center">
               <Form.Item name="uplink_power" noStyle>
-                <InputNumber placeholder="请输入上行功率" addonAfter={"dBm"} />
+                <InputNumber min={-40} max={11} placeholder="请输入上行功率" addonAfter={"dBm"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
                 保存
@@ -763,7 +782,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="上行衰减">
             <Space align="center">
               <Form.Item name="uplink_attenuation" noStyle>
-                <InputNumber min={0} max={100} placeholder="请输入上行衰减" addonAfter={"dB"} />
+                <InputNumber min={0} max={31} placeholder="请输入上行衰减" addonAfter={"dB"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_attenuation")}>
                 保存
@@ -773,7 +792,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="下行功率">
             <Space align="center">
               <Form.Item name="downlink_power" noStyle>
-                <InputNumber min={0} max={100} placeholder="请输入下行功率" addonAfter={"dBm"} />
+                <InputNumber min={11} max={48} placeholder="请输入下行功率" addonAfter={"dBm"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
                 保存
@@ -783,7 +802,7 @@ const DeviceIndex: React.FC = () => {
           <Form.Item label="下行衰减">
             <Space align="center">
               <Form.Item name="downlink_attenuation" noStyle>
-                <InputNumber placeholder="请输入下行衰减" addonAfter={"dB"} />
+                <InputNumber min={0} max={31} placeholder="请输入下行衰减" addonAfter={"dB"} />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_attenuation")}>
                 保存
