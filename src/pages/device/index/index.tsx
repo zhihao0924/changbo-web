@@ -817,7 +817,7 @@ const DeviceIndex: React.FC = () => {
               <Form.Item name="uplink_power" noStyle>
                 <InputNumber
                   placeholder="请输入上行功率"
-                  addonAfter={`(${configRangeMap.uplink_power?.min}-${configRangeMap.uplink_power?.max})dBm`}
+                  addonAfter={`(${configRangeMap.uplink_power?.min}~${configRangeMap.uplink_power?.max})dBm`}
                 />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
@@ -830,7 +830,7 @@ const DeviceIndex: React.FC = () => {
               <Form.Item name="uplink_attenuation" noStyle>
                 <InputNumber
                   placeholder="请输入上行衰减"
-                  addonAfter={`(${configRangeMap.uplink_attenuation?.min}-${configRangeMap.uplink_attenuation?.max})dB`}
+                  addonAfter={`(${configRangeMap.uplink_attenuation?.min}~${configRangeMap.uplink_attenuation?.max})dB`}
                 />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_attenuation")}>
@@ -843,7 +843,7 @@ const DeviceIndex: React.FC = () => {
               <Form.Item name="downlink_power" noStyle>
                 <InputNumber
                   placeholder="请输入下行功率"
-                  addonAfter={`(${configRangeMap.downlink_power?.min}-${configRangeMap.downlink_power?.max})dBm`}
+                  addonAfter={`(${configRangeMap.downlink_power?.min}~${configRangeMap.downlink_power?.max})dBm`}
                 />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
@@ -856,7 +856,7 @@ const DeviceIndex: React.FC = () => {
               <Form.Item name="downlink_attenuation" noStyle>
                 <InputNumber
                   placeholder="请输入下行衰减"
-                  addonAfter={`(${configRangeMap.downlink_attenuation?.min}-${configRangeMap.downlink_attenuation?.max})dB`}
+                  addonAfter={`(${configRangeMap.downlink_attenuation?.min}~${configRangeMap.downlink_attenuation?.max})dB`}
                 />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_attenuation")}>
