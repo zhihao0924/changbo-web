@@ -135,11 +135,17 @@ const DeviceTypes: React.FC = () => {
   }
 
   const onDetailSelectChange = (list: CheckboxValueType[]) => {
-    setDetailIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
-    setDetailCheckAll(list.length === currentRecord?.shows?.length)
+    // 安全检查：确保 currentRecord 存在且 shows 有值
+    const showsLength = currentRecord?.shows?.length ?? 0
+    
+    setDetailIndeterminate(!!list.length && list.length < showsLength)
+    setDetailCheckAll(list.length === showsLength)
+    
     const checkedList: number[] = []
-    list.map((val) => {
-      checkedList.push(val)
+    list.forEach((val) => {
+      if (typeof val === 'number') {
+        checkedList.push(val)
+      }
     })
     setDetailCheckedList(checkedList)
   }
@@ -206,10 +212,11 @@ const DeviceTypes: React.FC = () => {
                 }
               })
               setAlarmCheckedList(alarms)
+              const recordShowsLength = record?.shows?.length ?? 0
               setAlarmIndeterminate(
-                alarms.length > 0 && alarms.length < currentRecord?.shows?.length,
+                alarms.length > 0 && alarms.length < recordShowsLength,
               )
-              setAlarmCheckAll(alarms.length === currentRecord?.shows?.length)
+              setAlarmCheckAll(alarms.length === recordShowsLength)
               setAlarmModalVisible(true)
             }}
           >
@@ -232,9 +239,10 @@ const DeviceTypes: React.FC = () => {
               })
               setListCheckedList(showListData)
               setDetailCheckedList(showDetailData)
-              setDetailCheckAll(showDetailData.length === record?.shows?.length)
+              const recordShowsLength = record?.shows?.length ?? 0
+              setDetailCheckAll(showDetailData.length === recordShowsLength)
               setDetailIndeterminate(
-                showDetailData.length > 0 && showDetailData.length < record?.shows?.length,
+                showDetailData.length > 0 && showDetailData.length < recordShowsLength,
               )
               setShowModalVisible(true)
             }}
@@ -438,8 +446,8 @@ const DeviceTypes: React.FC = () => {
                 indeterminate={alarmIndeterminate}
                 checked={alarmCheckAll}
                 onChange={(e) => {
-                  const alarms = []
-                  currentRecord?.shows?.map((val) => {
+                  const alarms: number[] = []
+                  currentRecord?.shows?.forEach((val) => {
                     alarms.push(val.config_type)
                   })
 
@@ -455,11 +463,14 @@ const DeviceTypes: React.FC = () => {
                 key="alarms"
                 value={alramCheckedList}
                 onChange={(list) => {
-                  setAlarmIndeterminate(!!list.length && list.length < currentRecord?.shows?.length)
-                  setAlarmCheckAll(list.length === currentRecord?.shows?.length)
+                  const currentShowsLength = currentRecord?.shows?.length ?? 0
+                  setAlarmIndeterminate(!!list.length && list.length < currentShowsLength)
+                  setAlarmCheckAll(list.length === currentShowsLength)
                   const checkedList: number[] = []
                   list.map((val) => {
-                    checkedList.push(val)
+                    if (typeof val === "number") {
+                      checkedList.push(val)
+                    }
                   })
                   setAlarmCheckedList(checkedList)
                 }}
@@ -520,7 +531,7 @@ const DeviceTypes: React.FC = () => {
                 indeterminate={detailIndeterminate}
                 checked={detailCheckAll}
                 onChange={(e) => {
-                  const showInDetail = []
+                  const showInDetail: React.SetStateAction<CheckboxValueType[] | undefined> = []
                   currentRecord?.shows?.map((val) => {
                     showInDetail.push(val.config_type)
                   })

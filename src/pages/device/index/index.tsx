@@ -800,7 +800,7 @@ const DeviceIndex: React.FC = () => {
         open={settingModalVisible}
         footer={
           <Button
-            type={'link'}
+            type={"link"}
             icon={<ReloadOutlined />}
             onClick={() => currentDevice && openSettingModal(currentDevice)}
           >
