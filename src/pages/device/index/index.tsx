@@ -4,22 +4,13 @@ import {
   PauseCircleOutlined,
   PlayCircleOutlined,
   PlusOutlined,
+  ReloadOutlined,
   SettingOutlined,
   SyncOutlined,
 } from "@ant-design/icons"
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import {
-  Button,
-  Form,
-  Input,
-  InputNumber,
-  message,
-  Modal,
-  Select,
-  Space,
-  Switch,
-} from "antd"
+import { Button, Form, Input, InputNumber, message, Modal, Select, Space, Switch } from "antd"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
@@ -36,16 +27,16 @@ type CreateFormValues = {
 }
 
 type CreateSettingFormValues = {
-  uplink_power: number | null
+  uplink_power: number | null | string
   uplink_power_min: number
   uplink_power_max: number
-  uplink_attenuation: number | null
+  uplink_attenuation: number | null | string
   uplink_attenuation_min: number
   uplink_attenuation_max: number
-  downlink_power: number | null
+  downlink_power: number | null | string
   downlink_power_min: number
   downlink_power_max: number
-  downlink_attenuation: number | null
+  downlink_attenuation: number | null | string
   downlink_attenuation_min: number
   downlink_attenuation_max: number
 }
@@ -225,14 +216,14 @@ const DeviceIndex: React.FC = () => {
 
           // 设置表单值
           rfConfigForm.setFieldsValue({
-            uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "——",
-            uplink_attenuation: res.res.is_set_uplink_attenuation
-              ? res.res.uplink_attenuation
-              : "——",
-            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
             downlink_attenuation: res.res.is_set_downlink_attenuation
               ? res.res.downlink_attenuation
               : "——",
+            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
+            uplink_attenuation: res.res.is_set_uplink_attenuation
+              ? res.res.uplink_attenuation
+              : "——",
+            uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "——",
           })
         })
         .then(() => {
@@ -808,7 +799,13 @@ const DeviceIndex: React.FC = () => {
         }}
         open={settingModalVisible}
         footer={
-          <Button onClick={() => currentDevice && openSettingModal(currentDevice)}>刷新</Button>
+          <Button
+            type={'link'}
+            icon={<ReloadOutlined />}
+            onClick={() => currentDevice && openSettingModal(currentDevice)}
+          >
+            刷新
+          </Button>
         }
       >
         <Form form={rfConfigForm}>
