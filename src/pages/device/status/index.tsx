@@ -147,6 +147,21 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
       }}
       hoverable
     >
+      {/* 左上角安装位置 */}
+      <div
+        style={{
+          position: "absolute",
+          top: "48px", // 在extra区域下面
+          left: "24px", // 左侧对齐
+          zIndex: 1,
+          fontSize: "12px",
+          color: "#666",
+          fontWeight: "normal",
+        }}
+      >
+        {device.position}
+      </div>
+
       {/* 右上角标签区域 */}
       <div
         style={{
@@ -215,17 +230,23 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
     <Modal title={`设备详情`} open={visible} onCancel={onCancel} footer={null} width={600}>
       <Card bordered={false}>
         <Row>
-          <Col span={8} style={{ backgroundColor: "#f8f9fa" }}>
+          <Col span={8} style={{ backgroundColor: "#ffffff" }}>
             设备类型
           </Col>
-          <Col span={16} style={{ backgroundColor: "#f8f9fa" }}>
+          <Col span={16} style={{ backgroundColor: "#ffffff" }}>
             {selectedDevice.device_type_alias}
           </Col>
-          <Col span={8} style={{ backgroundColor: "#ffffff" }}>
+          <Col span={8} style={{ backgroundColor: "#f8f9fa" }}>
             设备编号
           </Col>
-          <Col span={16} style={{ backgroundColor: "#ffffff" }}>
+          <Col span={16} style={{ backgroundColor: "#f8f9fa" }}>
             {selectedDevice.name}
+          </Col>
+          <Col span={8} style={{ backgroundColor: "#ffffff" }}>
+            安装位置
+          </Col>
+          <Col span={16} style={{ backgroundColor: "#ffffff" }}>
+            {selectedDevice.position}
           </Col>
 
           {selectedDevice.metric_items
