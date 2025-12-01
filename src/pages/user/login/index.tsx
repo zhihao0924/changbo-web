@@ -82,28 +82,39 @@ const Login: React.FC = () => {
         if (res.err == 0) {
           const defaultLoginSuccessMessage = "登录成功！"
           message.success(defaultLoginSuccessMessage)
-          await fetchUserInfo(res.res).then(() => {
-            /** 此方法会跳转到 redirect 参数所在的位置 */
-            if (!history) return
 
+          try {
+            await fetchUserInfo(res.res)
+
+            /** 此方法会跳转到 redirect 参数所在的位置 */
+            if (!history) {
+              console.error("history 不可用")
+              return
+            }
+
+            // 减少延迟时间，避免被其他逻辑干扰
             setTimeout(() => {
               const { query } = history.location
               const { redirect } = query as { redirect: string }
+              console.log("准备跳转到:", redirect || "/")
               history.push(redirect || "/")
-            }, 300)
-          })
+            }, 100)
+          } catch (fetchError) {
+            console.error("获取用户信息失败:", fetchError)
+            message.error("登录成功但获取用户信息失败，请重新登录")
+            setUserLoginState("error")
+          }
 
           return
         }
 
-        console.log(res)
-
-        // 如果失败去设置用户错误信息
-
+        console.log("登录失败:", res.msg || res)
         setUserLoginState("error")
+        message.error(res.msg || "登录失败，请重试")
       } catch (error) {
-        // const defaultLoginFailureMessage = "登录失败，请重试！"
-        // message.error(defaultLoginFailureMessage)
+        console.error("登录异常:", error)
+        setUserLoginState("error")
+        message.error("登录异常，请重试")
       }
     },
     [fetchUserInfo],

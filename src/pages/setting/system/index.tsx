@@ -125,8 +125,8 @@ const SystemSetting: React.FC = () => {
               options={[
                 { label: "每秒1次", value: 1 },
                 { label: "每秒5次", value: 5 },
-                { label: "每秒10次", value: 10 },
-                { label: "每秒20次", value: 20 },
+                // { label: "每秒10次", value: 10 },
+                // { label: "每秒20次", value: 20 },
               ]}
             />
           </Form.Item>
