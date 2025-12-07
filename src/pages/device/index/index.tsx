@@ -14,6 +14,7 @@ import { Button, Form, Input, InputNumber, message, Modal, Select, Space, Switch
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
+import DeviceNameSelect from "@/components/DeviceNameSelect"
 
 type Columns = API_PostDeviceList.List
 
@@ -374,19 +375,26 @@ const DeviceIndex: React.FC = () => {
         dataIndex: "ip",
         fixed: "left",
         key: "ip",
-        search: {
-          transform: (value) => ({
-            ip: value,
-          }),
-        },
+        // search: {
+        //   transform: (value) => ({
+        //     ip: value,
+        //   }),
+        // },
+        hideInSearch: true,
       },
       {
         key: "name",
         title: "设备编号",
         align: "center",
         dataIndex: "name",
-        hideInSearch: true,
         width: 200,
+        valueType: "select",
+        renderFormItem: () => <DeviceNameSelect />,
+        search: {
+          transform: (value) => ({
+            id_list: value,
+          }),
+        },
       },
       {
         key: "device_type_group",
