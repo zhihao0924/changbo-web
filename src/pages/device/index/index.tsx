@@ -376,7 +376,7 @@ const DeviceIndex: React.FC = () => {
         key: "ip",
         search: {
           transform: (value) => ({
-            order_no: value,
+            ip: value,
           }),
         },
       },
