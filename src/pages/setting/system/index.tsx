@@ -55,7 +55,6 @@ const SystemSetting: React.FC = () => {
       })
   }
 
-
   const handleChange: UploadProps["onChange"] = (info: UploadChangeParam<UploadFile>) => {
     if (info.file.status === "uploading") {
       setLoading(true)
@@ -140,10 +139,10 @@ const SystemSetting: React.FC = () => {
             <Select
               defaultValue={3000}
               options={[
-                { label: "500毫秒/次", value: 500 },
                 { label: "1秒/次", value: 1000 },
                 { label: "3秒/次", value: 3000 },
                 { label: "5秒/次", value: 5000 },
+                { label: "10秒/次", value: 10000 },
               ]}
             />
           </Form.Item>
