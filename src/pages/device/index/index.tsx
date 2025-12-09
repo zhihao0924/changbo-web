@@ -65,9 +65,9 @@ const DEVICE_GROUPS = [
 // 配置类型映射
 const CONFIG_TYPE_MAP = {
   uplink_power: "上行功率",
-  uplink_attenuation: "上行衰减",
+  uplink_gain: "上行增益",
   downlink_power: "下行功率",
-  downlink_attenuation: "下行衰减",
+  downlink_gain: "下行增益",
 } as const
 
 // 需要显示设置按钮的设备类型
@@ -197,9 +197,9 @@ const DeviceIndex: React.FC = () => {
               max: res.res.uplink_power_max,
               unit: "dBm",
             },
-            uplink_attenuation: {
-              min: res.res.uplink_attenuation_min,
-              max: res.res.uplink_attenuation_max,
+            uplink_gain: {
+              min: res.res.uplink_gain_min,
+              max: res.res.uplink_gain_max,
               unit: "dB",
             },
             downlink_power: {
@@ -207,9 +207,9 @@ const DeviceIndex: React.FC = () => {
               max: res.res.downlink_power_max,
               unit: "dBm",
             },
-            downlink_attenuation: {
-              min: res.res.downlink_attenuation_min,
-              max: res.res.downlink_attenuation_max,
+            downlink_gain: {
+              min: res.res.downlink_gain_min,
+              max: res.res.downlink_gain_max,
               unit: "dB",
             },
           }
@@ -217,12 +217,12 @@ const DeviceIndex: React.FC = () => {
 
           // 设置表单值
           rfConfigForm.setFieldsValue({
-            downlink_attenuation: res.res.is_set_downlink_attenuation
-              ? res.res.downlink_attenuation
+            downlink_gain: res.res.is_set_downlink_gain
+              ? res.res.downlink_gain
               : "——",
             downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
-            uplink_attenuation: res.res.is_set_uplink_attenuation
-              ? res.res.uplink_attenuation
+            uplink_gain: res.res.is_set_uplink_gain
+              ? res.res.uplink_gain
               : "——",
             uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "——",
           })
@@ -866,15 +866,15 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
-          <Form.Item label="上行衰减">
+          <Form.Item label="上行增益">
             <Space align="center">
-              <Form.Item name="uplink_attenuation" noStyle>
+              <Form.Item name="uplink_gain" noStyle>
                 <InputNumber
-                  placeholder="请输入上行衰减"
-                  addonAfter={`(${configRangeMap.uplink_attenuation?.min}~${configRangeMap.uplink_attenuation?.max})dB`}
+                  placeholder="请输入上行增益"
+                  addonAfter={`(${configRangeMap.uplink_gain?.min}~${configRangeMap.uplink_gain?.max})dB`}
                 />
               </Form.Item>
-              <Button type="link" onClick={() => saveRFConfig("uplink_attenuation")}>
+              <Button type="link" onClick={() => saveRFConfig("uplink_gain")}>
                 保存
               </Button>
             </Space>
@@ -892,15 +892,15 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
-          <Form.Item label="下行衰减">
+          <Form.Item label="下行增益">
             <Space align="center">
-              <Form.Item name="downlink_attenuation" noStyle>
+              <Form.Item name="downlink_gain" noStyle>
                 <InputNumber
-                  placeholder="请输入下行衰减"
-                  addonAfter={`(${configRangeMap.downlink_attenuation?.min}~${configRangeMap.downlink_attenuation?.max})dB`}
+                  placeholder="请输入下行增益"
+                  addonAfter={`(${configRangeMap.downlink_gain?.min}~${configRangeMap.downlink_gain?.max})dB`}
                 />
               </Form.Item>
-              <Button type="link" onClick={() => saveRFConfig("downlink_attenuation")}>
+              <Button type="link" onClick={() => saveRFConfig("downlink_gain")}>
                 保存
               </Button>
             </Space>

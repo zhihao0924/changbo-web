@@ -84,7 +84,15 @@ const Login: React.FC = () => {
           message.success(defaultLoginSuccessMessage)
 
           try {
-            await fetchUserInfo(res.res)
+            await fetchUserInfo(res.res).then(()=>{
+              // 减少延迟时间，避免被其他逻辑干扰
+              setTimeout(() => {
+                const { query } = history.location
+                const { redirect } = query as { redirect: string }
+                console.log("准备跳转到:", redirect || "/")
+                history.push(redirect || "/")
+              }, 100)
+            })
 
             /** 此方法会跳转到 redirect 参数所在的位置 */
             if (!history) {
@@ -92,13 +100,7 @@ const Login: React.FC = () => {
               return
             }
 
-            // 减少延迟时间，避免被其他逻辑干扰
-            setTimeout(() => {
-              const { query } = history.location
-              const { redirect } = query as { redirect: string }
-              console.log("准备跳转到:", redirect || "/")
-              history.push(redirect || "/")
-            }, 100)
+
           } catch (fetchError) {
             console.error("获取用户信息失败:", fetchError)
             message.error("登录成功但获取用户信息失败，请重新登录")

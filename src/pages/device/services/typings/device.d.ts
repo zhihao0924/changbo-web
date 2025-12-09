@@ -265,18 +265,18 @@ export namespace API_PostRFConfig {
     uplink_power_min: number
     uplink_power_max: number
     is_set_uplink_power: boolean
-    uplink_attenuation: number
-    uplink_attenuation_min: number
-    uplink_attenuation_max: number
-    is_set_uplink_attenuation: boolean
+    uplink_gain: number
+    uplink_gain_min: number
+    uplink_gain_max: number
+    is_set_uplink_gain: boolean
     downlink_power: number
     downlink_power_min: number
     downlink_power_max: number
     is_set_downlink_power: boolean
-    downlink_attenuation: number
-    downlink_attenuation_min: number
-    downlink_attenuation_max: number
-    is_set_downlink_attenuation: boolean
+    downlink_gain: number
+    downlink_gain_min: number
+    downlink_gain_max: number
+    is_set_downlink_gain: boolean
   }
 }
 

@@ -125,8 +125,8 @@ const DailyXlsx: React.FC = () => {
         hideInTable: true,
         search: {
           transform: (value) => ({
-            begin_at: value[0],
-            end_at: value[1],
+            begin_at: value[0] + " 00:00:00",
+            end_at: value[1] + " 23:59:59",
           }),
         },
       },
