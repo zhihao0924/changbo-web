@@ -31,15 +31,15 @@ type CreateSettingFormValues = {
   uplink_power: number | null | string
   uplink_power_min: number
   uplink_power_max: number
-  uplink_attenuation: number | null | string
-  uplink_attenuation_min: number
-  uplink_attenuation_max: number
+  uplink_gain: number | null | string
+  uplink_gain_min: number
+  uplink_gain_max: number
   downlink_power: number | null | string
   downlink_power_min: number
   downlink_power_max: number
-  downlink_attenuation: number | null | string
-  downlink_attenuation_min: number
-  downlink_attenuation_max: number
+  downlink_gain: number | null | string
+  downlink_gain_min: number
+  downlink_gain_max: number
 }
 
 type DeviceTypeOption = {
@@ -241,15 +241,13 @@ const DeviceIndex: React.FC = () => {
 
   const syncPanel = useCallback(async () => {
     try {
-      const res = await Services.api.postDeviceSyncPanel({}).then((ret) => {
+      return await Services.api.postDeviceSyncPanel({}).then((ret) => {
         message.success(
           `同步面板信息成功${ret.res.success_count}条，失败${ret.res.fail_count}条`,
           2,
           actionRef.current?.reload,
         )
       })
-
-      return res
     } catch (error) {
       console.error("同步面板失败:", error)
       message.error("同步面板失败")
