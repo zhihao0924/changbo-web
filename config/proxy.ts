@@ -8,8 +8,8 @@ export default {
   },
   prod: {
     "/api/": {
-      target: "http://127.0.0.1:8090/api/",
-      changeOrigin: true,
+      target: "/api/",
+      changeOrigin: false,
       pathRewrite: { "^": "" },
     },
   },
