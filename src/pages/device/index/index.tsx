@@ -219,8 +219,8 @@ const DeviceIndex: React.FC = () => {
           // 设置表单值
           rfConfigForm.setFieldsValue({
             downlink_gain: res.res.is_set_downlink_gain ? res.res.downlink_gain : "——",
-            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
             uplink_gain: res.res.is_set_uplink_gain ? res.res.uplink_gain : "——",
+            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
             uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "——",
           })
         })
@@ -861,19 +861,21 @@ const DeviceIndex: React.FC = () => {
         }
       >
         <Form form={rfConfigForm}>
-          <Form.Item label="上行功率">
-            <Space align="center">
-              <Form.Item name="uplink_power" noStyle>
-                <InputNumber
-                  placeholder="请输入上行功率"
-                  addonAfter={`(${configRangeMap.uplink_power?.min}~${configRangeMap.uplink_power?.max})dBm`}
-                />
-              </Form.Item>
-              <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
-                保存
-              </Button>
-            </Space>
-          </Form.Item>
+          {!currentDevice?.device_type_group.includes("近端") && (
+            <Form.Item label="上行功率">
+              <Space align="center">
+                <Form.Item name="uplink_power" noStyle>
+                  <InputNumber
+                    placeholder="请输入上行功率"
+                    addonAfter={`(${configRangeMap.uplink_power?.min}~${configRangeMap.uplink_power?.max})dBm`}
+                  />
+                </Form.Item>
+                <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
+                  保存
+                </Button>
+              </Space>
+            </Form.Item>
+          )}
           <Form.Item label="上行增益">
             <Space align="center">
               <Form.Item name="uplink_gain" noStyle>
@@ -887,19 +889,21 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
-          <Form.Item label="下行功率">
-            <Space align="center">
-              <Form.Item name="downlink_power" noStyle>
-                <InputNumber
-                  placeholder="请输入下行功率"
-                  addonAfter={`(${configRangeMap.downlink_power?.min}~${configRangeMap.downlink_power?.max})dBm`}
-                />
-              </Form.Item>
-              <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
-                保存
-              </Button>
-            </Space>
-          </Form.Item>
+          {!currentDevice?.device_type_group.includes("近端") && (
+            <Form.Item label="下行功率">
+              <Space align="center">
+                <Form.Item name="downlink_power" noStyle>
+                  <InputNumber
+                    placeholder="请输入下行功率"
+                    addonAfter={`(${configRangeMap.downlink_power?.min}~${configRangeMap.downlink_power?.max})dBm`}
+                  />
+                </Form.Item>
+                <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
+                  保存
+                </Button>
+              </Space>
+            </Form.Item>
+          )}
           <Form.Item label="下行增益">
             <Space align="center">
               <Form.Item name="downlink_gain" noStyle>
