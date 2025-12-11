@@ -16,7 +16,7 @@ const Settings: LayoutSettings & {
   pwa: false,
   logo: "/logo.png",
   splitMenus: false,
-  title: "畅博系统管理",
+  title: "专网通信智能网管平台",
   token: {
     header: {
       colorBgHeader: "#292f33",

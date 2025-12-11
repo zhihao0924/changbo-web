@@ -20,7 +20,7 @@ const DeviceTypes: React.FC = () => {
   const [showModalVisible, setShowModalVisible] = useState(false)
   const [currentRecord, setCurrentRecord] = useState<Columns | null>(null)
 
-  const [alramCheckedList, setAlarmCheckedList] = useState<CheckboxValueType[]>()
+  const [alarmCheckedList, setAlarmCheckedList] = useState<CheckboxValueType[]>()
   const [alarmIndeterminate, setAlarmIndeterminate] = useState(true)
   const [alarmCheckAll, setAlarmCheckAll] = useState(false)
 
@@ -101,7 +101,7 @@ const DeviceTypes: React.FC = () => {
       await Services.api
         .postDeviceTypeAlarmSave({
           device_type_id: currentRecord?.id,
-          alarms: alramCheckedList,
+          alarms: alarmCheckedList,
         })
         .then(() => {
           message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
@@ -137,10 +137,10 @@ const DeviceTypes: React.FC = () => {
   const onDetailSelectChange = (list: CheckboxValueType[]) => {
     // 安全检查：确保 currentRecord 存在且 shows 有值
     const showsLength = currentRecord?.shows?.length ?? 0
-    
+
     setDetailIndeterminate(!!list.length && list.length < showsLength)
     setDetailCheckAll(list.length === showsLength)
-    
+
     const checkedList: number[] = []
     list.forEach((val) => {
       if (typeof val === 'number') {
@@ -192,7 +192,6 @@ const DeviceTypes: React.FC = () => {
             onClick={() => {
               setCurrentRecord(record)
               forEach(record?.configs, (item) => {
-                console.log(item)
                 configForm.setFieldValue(["configs", `${item.config_type}`], item)
               })
               setConfigModalVisible(true)
@@ -309,7 +308,9 @@ const DeviceTypes: React.FC = () => {
       >
         <Form form={configForm}>
           <Row>
-            {currentRecord?.configs?.map((item) => {
+            {currentRecord?.configs?.filter((val)=>{
+              return !(val.is_alarm || val.is_module)
+            }).map((item) => {
               return (
                 <>
                   <Col span={12} key={`${item.config_type}_alarm`}>
@@ -461,7 +462,7 @@ const DeviceTypes: React.FC = () => {
 
               <Checkbox.Group
                 key="alarms"
-                value={alramCheckedList}
+                value={alarmCheckedList}
                 onChange={(list) => {
                   const currentShowsLength = currentRecord?.shows?.length ?? 0
                   setAlarmIndeterminate(!!list.length && list.length < currentShowsLength)

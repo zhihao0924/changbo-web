@@ -181,7 +181,7 @@ const Login: React.FC = () => {
 
     // 如果没有获取到系统配置，使用默认值
     if (!logoUrl) logoUrl = "/logo.png"
-    if (!systemName) systemName = "畅博管理系统"
+    if (!systemName) systemName = "专网通信智能网管平台"
 
     return (
       <div className={styles.container}>

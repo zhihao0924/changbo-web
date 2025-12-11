@@ -1,4 +1,4 @@
-export const DEFAULT_NAME = "畅博管理系统"
+export const DEFAULT_NAME = "专网通信智能网管平台"
 export const VERSION_NUM = "V1.0.0"
 export const VERSION_DATE = "2025.10.01"
 

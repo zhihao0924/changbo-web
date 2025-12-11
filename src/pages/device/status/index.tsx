@@ -3,7 +3,7 @@ import { Card, Col, Row, Tag, Progress, Form, Select, Modal, Checkbox } from "an
 import React, { useCallback, useEffect, useState, useMemo } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
-import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined } from "@ant-design/icons"
+import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons"
 import type { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
 import { SYSTEM_CONFIG } from "@/constants"
 
@@ -29,10 +29,32 @@ const getStatusIcon = (
   metricItem: API_PostDeviceList.MetricItems,
   alarmItems: API_PostDeviceList.AlarmItems[],
 ) => {
-  const { alarm_min, alarm_max, show_min_val, show_max_val, current_val, config_type } = metricItem
+  const {
+    alarm_min,
+    alarm_max,
+    show_min_val,
+    show_max_val,
+    current_val,
+    is_set_current_val,
+    config_type,
+    is_module,
+    is_alarm,
+  } = metricItem
+
+  if (!is_set_current_val) {
+    return <></>
+  }
 
   if (alarmItems?.findIndex((item) => item.config_type == config_type) == -1) {
     return <></>
+  }
+
+  if (is_alarm || is_module) {
+    if (current_val) {
+      return <CheckOutlined style={{ color: "green" }} />
+    } else {
+      return <CloseOutlined style={{ color: "red" }} />
+    }
   }
 
   if (typeof show_min_val === "number" && current_val < show_min_val) {
@@ -67,7 +89,10 @@ interface DeviceCardProps {
 const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   // 判断是否显示值
   const shouldShowValue = useMemo(() => {
-    const { show_max_val, show_min_val, current_val } = metricItem
+    const { show_max_val, show_min_val, current_val, is_set_current_val } = metricItem
+    if (!is_set_current_val) {
+      return false
+    }
     const withinMaxBounds = typeof show_max_val !== "number" || current_val <= show_max_val
     const withinMinBounds = typeof show_min_val !== "number" || current_val > show_min_val
     return withinMaxBounds && withinMinBounds
@@ -107,6 +132,15 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
 
   if (metricItem.is_module) {
     return <span>{metricItem.current_val ? "在线" : "离线"}</span>
+  }
+  if (metricItem.is_alarm) {
+    if (metricItem.is_set_current_val) {
+      return metricItem.current_val ? (
+        <span style={{ color: "green" }}>██</span>
+      ) : (
+        <span style={{ color: "red" }}>██</span>
+      )
+    }
   }
 
   if (!shouldShowValue) {
@@ -186,7 +220,11 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
             <React.Fragment key={`fragment_Key_${metricItem.config_type}`}>
               <Col span={8}>{metricItem.config_type_name}</Col>
               <Col span={12}>
-                <MetricItem metricItem={metricItem} alarmItems={device?.alarm_items} key={`MetricItem_${metricItem.config_type}`} />
+                <MetricItem
+                  metricItem={metricItem}
+                  alarmItems={device?.alarm_items}
+                  key={`MetricItem_${metricItem.config_type}`}
+                />
               </Col>
               <Col
                 span={4}
@@ -196,10 +234,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
                   alignItems: "center",
                 }}
               >
-                {metricItem.is_set_current_val &&
-                  (typeof metricItem.alarm_min === "number" ||
-                    typeof metricItem.alarm_max === "number") &&
-                  getStatusIcon(metricItem, device?.alarm_items)}
+                {metricItem.is_set_current_val && getStatusIcon(metricItem, device?.alarm_items)}
               </Col>
             </React.Fragment>
           ))}
@@ -279,8 +314,6 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                   }}
                 >
                   {metricItem.is_set_current_val &&
-                    (typeof metricItem.alarm_min === "number" ||
-                      typeof metricItem.alarm_max === "number") &&
                     getStatusIcon(metricItem, selectedDevice?.alarm_items)}
                 </Col>
               </React.Fragment>

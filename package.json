@@ -2,7 +2,7 @@
   "name": "changbo-web",
   "version": "1.0.0",
   "private": true,
-  "description": "畅博管理系统",
+  "description": "专网通信智能网管平台",
   "author": "zhihao",
   "scripts": {
     "clean": "rm -rf node_modules .umi src/.umi",
