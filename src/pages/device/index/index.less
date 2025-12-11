@@ -1,27 +1,30 @@
-@import "~antd/es/style/themes/default.less";
 
-.style_overflow {
-  .Overflow(3); /* stylelint-ignore */
+@online-color: #4CAF50;      // 绿色 - 在线
+@maintaining-color: #FFC107; // 黄色 - 维护
+@alarm-color: #F44336;       // 红色 - 告警
+@offline-color: #9E9E9E;     // 灰色 - 离线
 
-  word-break: break-all;
+.device-online-row {
+  color: @online-color;
 }
 
-.purchase_container {
-  position: relative;
+.device-maintaining-row {
+  color: @maintaining-color;
 }
 
-.operationBtn {
-  .Flex(column, center, center);
+.device-alarm-row {
+  color: @alarm-color;
+}
 
-  width: 100%;
-  .stop_btn {
-    padding-top: 10px;
-    color: #faad14;
-    cursor: pointer;
-  }
-  .operation_btn {
-    padding-top: 10px;
-    color: #f5222d;
-    cursor: pointer;
-  }
+.device-offline-row {
+  color: @offline-color;
+}
+
+
+/* 确保样式应用到所有列，包括固定列 */
+.ant-table-tbody > tr.device-online-row > td,
+.ant-table-tbody > tr.device-maintaining-row > td,
+.ant-table-tbody > tr.device-alarm-row > td,
+.ant-table-tbody > tr.device-offline-row > td {
+  color: inherit !important;
 }

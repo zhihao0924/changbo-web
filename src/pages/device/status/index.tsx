@@ -3,7 +3,13 @@ import { Card, Col, Row, Tag, Progress, Form, Select, Modal, Checkbox } from "an
 import React, { useCallback, useEffect, useState, useMemo } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
-import { ArrowDownOutlined, ArrowUpOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons"
+import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  XFilled,
+} from "@ant-design/icons"
 import type { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
 import { SYSTEM_CONFIG } from "@/constants"
 
@@ -136,9 +142,9 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   if (metricItem.is_alarm) {
     if (metricItem.is_set_current_val) {
       return metricItem.current_val ? (
-        <span style={{ color: "green" }}>██</span>
+        <XFilled style={{ color: "green" }} />
       ) : (
-        <span style={{ color: "red" }}>██</span>
+        <XFilled style={{ color: "red" }} />
       )
     }
   }

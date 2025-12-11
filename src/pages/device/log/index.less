@@ -25,3 +25,20 @@
     cursor: pointer;
   }
 }
+
+
+.status-alarm {
+  color: #FFC107;
+}
+
+.status-recovery {
+  color: #4CAF50;
+}
+
+
+/* 确保样式应用到所有列，包括固定列 */
+.ant-table-tbody > tr.status-alarm > td,
+.ant-table-tbody > tr.status-recovery > td {
+  color: inherit !important;
+}
+

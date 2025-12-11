@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useRef } from "react"
 import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
+import "./index.less"
 
 type Columns = API_PostDeviceList.List
 
@@ -121,6 +122,9 @@ const DeviceLog: React.FC = () => {
     <PageContainer>
       <ProTable<Columns>
         actionRef={actionRef}
+        rowClassName={(record, index) => {
+          return record.content.includes("恢复") || record.content.includes("上线") ? "status-recovery" : "status-alarm"
+        }}
         formRef={formRef}
         columns={columns}
         request={getLists}

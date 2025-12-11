@@ -15,6 +15,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
+import "./index.less"
 
 type Columns = API_PostDeviceList.List
 
@@ -71,7 +72,7 @@ const CONFIG_TYPE_MAP = {
 } as const
 
 // 需要显示设置按钮的设备类型
-const SETTING_DEVICE_TYPES = ["数字远端机", "模拟远端机", "干线放大器"] as const
+const SETTING_DEVICE_TYPES = ["数字远端机", "模拟远端机", "干线放大器", "数字近端机"] as const
 
 const DeviceIndex: React.FC = () => {
   const actionRef = useRef<ActionType>()
@@ -217,13 +218,9 @@ const DeviceIndex: React.FC = () => {
 
           // 设置表单值
           rfConfigForm.setFieldsValue({
-            downlink_gain: res.res.is_set_downlink_gain
-              ? res.res.downlink_gain
-              : "——",
+            downlink_gain: res.res.is_set_downlink_gain ? res.res.downlink_gain : "——",
             downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
-            uplink_gain: res.res.is_set_uplink_gain
-              ? res.res.uplink_gain
-              : "——",
+            uplink_gain: res.res.is_set_uplink_gain ? res.res.uplink_gain : "——",
             uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "——",
           })
         })
@@ -693,6 +690,18 @@ const DeviceIndex: React.FC = () => {
     ]
   }, [getDeviceTypes, handleDelDevice, handleToggleMaintaining, openModal, openSettingModal])
 
+  // 根据设备状态返回行样式对象
+  const getRowClassName = useCallback((record: Columns) => {
+    let className = ""
+    // 根据在线状态设置背景色
+    if (record.is_online) {
+      className = "device-online-row"
+    } else {
+      className = "device-offline-row"
+    }
+    return className.trim()
+  }, [])
+
   return (
     <PageContainer>
       <ProTable<Columns>
@@ -701,6 +710,7 @@ const DeviceIndex: React.FC = () => {
         columns={columns}
         request={getLists}
         rowKey="id"
+        rowClassName={getRowClassName}
         pagination={{
           showSizeChanger: true,
           size: "default",
