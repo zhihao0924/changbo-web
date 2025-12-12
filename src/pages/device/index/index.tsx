@@ -72,7 +72,14 @@ const CONFIG_TYPE_MAP = {
 } as const
 
 // 需要显示设置按钮的设备类型
-const SETTING_DEVICE_TYPES = ["数字远端机", "模拟远端机", "干线放大器", "数字近端机"] as const
+const SETTING_DEVICE_TYPES = [
+  "数字远端机",
+  "模拟远端机",
+  "干线放大器",
+  "数字近端机",
+  "模拟近端机",
+  "接收分路器",
+] as const
 
 const DeviceIndex: React.FC = () => {
   const actionRef = useRef<ActionType>()
@@ -636,7 +643,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
-        width: 240,
+        width: 400,
         title: "操作",
         align: "center",
         valueType: "option",
@@ -861,7 +868,10 @@ const DeviceIndex: React.FC = () => {
         }
       >
         <Form form={rfConfigForm}>
-          {!currentDevice?.device_type_group.includes("近端") && (
+          {!(
+            currentDevice?.device_type_group.includes("近端") ||
+            currentDevice?.device_type_group.includes("分路")
+          ) && (
             <Form.Item label="上行功率">
               <Space align="center">
                 <Form.Item name="uplink_power" noStyle>
