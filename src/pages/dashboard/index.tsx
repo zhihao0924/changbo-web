@@ -664,7 +664,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <CodeSandboxOutlined style={{ color: "#0083FF" }} />
-                  <span>系统监控指数</span>
+                  <span>系统健康指数</span>
                 </Space>
               }
               loading={loading}
@@ -961,7 +961,7 @@ const Dashboard: React.FC = () => {
         {/* 设备类型统计详情 */}
         {dashboardData?.type_statistic && dashboardData?.type_statistic.length > 0 && (
           <Row gutter={24} style={{ marginBottom: 16 }}>
-            {dashboardData?.type_statistic.map((item: any, ) => (
+            {dashboardData?.type_statistic.map((item: any) => (
               <Col key={item.type} xs={12} sm={8} md={6} lg={4}>
                 <Card
                   title={
