@@ -664,7 +664,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <CodeSandboxOutlined style={{ color: "#0083FF" }} />
-                  <span>设备健康度</span>
+                  <span>系统监控指数</span>
                 </Space>
               }
               loading={loading}
@@ -726,7 +726,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <CodeSandboxOutlined style={{ color: "#0083FF" }} />
-                  <span>设备状态预览</span>
+                  <span>系统状态预览</span>
                 </Space>
               }
               loading={loading}
