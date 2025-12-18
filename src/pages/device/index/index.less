@@ -1,30 +1,42 @@
 
-@online-color: #4CAF50;      // 绿色 - 在线
-@maintaining-color: #FFC107; // 黄色 - 维护
-@alarm-color: #F44336;       // 红色 - 告警
-@offline-color: #9E9E9E;     // 灰色 - 离线
-
+/* 设备行样式 - 使用背景色 */
 .device-online-row {
-  color: @online-color;
-}
-
-.device-maintaining-row {
-  color: @maintaining-color;
-}
-
-.device-alarm-row {
-  color: @alarm-color;
+  background-color: #f6ffed !important; /* 浅绿色 */
 }
 
 .device-offline-row {
-  color: @offline-color;
+  background-color: #f5f5f5 !important; /* 浅灰色 */
 }
 
+.device-maintaining-row {
+  background-color: #fff2e8 !important; /* 浅橙色 */
+}
+
+.device-alarm-row {
+  background-color: #fff1f0 !important; /* 浅红色 */
+}
+
+/* 悬停效果 */
+.device-online-row:hover {
+  background-color: #d9f7be !important;
+}
+
+.device-offline-row:hover {
+  background-color: #e8e8e8 !important;
+}
+
+.device-maintaining-row:hover {
+  background-color: #ffd8bf !important;
+}
+
+.device-alarm-row:hover {
+  background-color: #ffccc7 !important;
+}
 
 /* 确保样式应用到所有列，包括固定列 */
 .ant-table-tbody > tr.device-online-row > td,
+.ant-table-tbody > tr.device-offline-row > td,
 .ant-table-tbody > tr.device-maintaining-row > td,
-.ant-table-tbody > tr.device-alarm-row > td,
-.ant-table-tbody > tr.device-offline-row > td {
-  color: inherit !important;
+.ant-table-tbody > tr.device-alarm-row > td {
+  background-color: inherit !important;
 }

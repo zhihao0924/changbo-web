@@ -154,6 +154,10 @@ const DeviceIndex: React.FC = () => {
       limit: params.pageSize,
       ...params,
     }
+    // 如果存在is_maintaining 将is_maintaining 转成int
+    if (data.is_maintaining) {
+      data.is_maintaining =  data.is_maintaining?1:0
+    }
     delete data.current
     delete data.pageSize
 
@@ -427,6 +431,20 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
+        title: "维护状态",
+        dataIndex: "is_maintaining",
+        key: "is_maintaining",
+        valueType: "select",
+        hideInTable: true,
+        valueEnum: {
+          1: { text: "维护中", status: "Processing" },
+        },
+        fieldProps: {
+          placeholder: "请选择维护状态",
+          allowClear: true,
+        },
+      },
+      {
         title: "设备状态",
         align: "center",
         dataIndex: "status_text",
@@ -649,6 +667,11 @@ const DeviceIndex: React.FC = () => {
         valueType: "option",
         fixed: "right",
         render: (_, record) => {
+          // 检查记录是否存在
+          if (!record || !record.id) {
+            return null
+          }
+
           // 需要显示设置按钮的设备类型组
           const showSettingButton = SETTING_DEVICE_TYPES.includes(
             record.device_type_group as (typeof SETTING_DEVICE_TYPES)[number],
@@ -699,6 +722,11 @@ const DeviceIndex: React.FC = () => {
 
   // 根据设备状态返回行样式对象
   const getRowClassName = useCallback((record: Columns) => {
+    // 检查记录是否存在，避免 null 错误
+    if (!record || !record.id) {
+      return ""
+    }
+
     let className = ""
     // 根据在线状态设置背景色
     if (record.is_online) {

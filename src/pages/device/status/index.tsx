@@ -444,7 +444,7 @@ const DeviceStatus: React.FC = () => {
         </Row>
       </Form>
       <Row gutter={[24, 24]}>
-        {deviceList?.map((device, index) => (
+        {deviceList?.filter((device): device is API_PostDeviceList.List => device != null && device.id != null).map((device, index) => (
           <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
             <DeviceCard
               device={device}
