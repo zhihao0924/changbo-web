@@ -63,17 +63,17 @@ const getStatusIcon = (
     }
   }
 
-  if (typeof show_min_val === "number" && current_val < show_min_val) {
+  if (typeof show_min_val === "number" && typeof current_val === "number" && current_val < show_min_val) {
     return <></>
   }
-  if (typeof show_max_val === "number" && current_val > show_max_val) {
+  if (typeof show_max_val === "number" && typeof current_val === "number" && current_val > show_max_val) {
     return <></>
   }
 
-  if (typeof alarm_min === "number" && current_val < alarm_min) {
+  if (typeof alarm_min === "number" && typeof current_val === "number" && current_val < alarm_min) {
     return <ArrowDownOutlined style={{ color: "red" }} />
   }
-  if (typeof alarm_max === "number" && current_val > alarm_max) {
+  if (typeof alarm_max === "number" && typeof current_val === "number" && current_val > alarm_max) {
     return <ArrowUpOutlined style={{ color: "red" }} />
   }
   return <CheckOutlined style={{ color: "green" }} />
@@ -99,8 +99,8 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
     if (!is_set_current_val) {
       return false
     }
-    const withinMaxBounds = typeof show_max_val !== "number" || current_val <= show_max_val
-    const withinMinBounds = typeof show_min_val !== "number" || current_val > show_min_val
+    const withinMaxBounds = typeof show_max_val !== "number" || (typeof current_val === "number" && current_val <= show_max_val)
+    const withinMinBounds = typeof show_min_val !== "number" || (typeof current_val === "number" && current_val > show_min_val)
     return withinMaxBounds && withinMinBounds
   }, [metricItem])
 
@@ -111,8 +111,8 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
 
     return (
       alarmItems?.findIndex((item) => item.config_type == config_type) != -1 &&
-      ((typeof alarm_min === "number" && current_val < alarm_min) ||
-        (typeof alarm_max === "number" && current_val > alarm_max))
+      ((typeof alarm_min === "number" && typeof current_val === "number" && current_val < alarm_min) ||
+        (typeof alarm_max === "number" && typeof current_val === "number" && current_val > alarm_max))
     )
   }, [metricItem, alarmItems])
 
@@ -120,10 +120,10 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   const formatValue = useCallback(() => {
     const { show_max_val, show_min_val, current_val, unit } = metricItem
 
-    if (typeof show_max_val === "number" && current_val > show_max_val) {
+    if (typeof show_max_val === "number" && typeof current_val === "number" && current_val > show_max_val) {
       return "∞"
     }
-    if (typeof show_min_val === "number" && current_val < show_min_val) {
+    if (typeof show_min_val === "number" && typeof current_val === "number" && current_val < show_min_val) {
       return "-∞"
     }
     return `${Number(current_val ?? 0).toFixed(2)} ${unit}`
@@ -132,7 +132,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   // 计算进度百分比
   const getProgressPercent = useCallback(() => {
     const { alarm_min, alarm_max, current_val } = metricItem
-    if (typeof alarm_min !== "number" || typeof alarm_max !== "number") return 0
+    if (typeof alarm_min !== "number" || typeof alarm_max !== "number" || typeof current_val !== "number") return 0
     return ((current_val - alarm_min) * 100) / (alarm_max - alarm_min)
   }, [metricItem])
 
@@ -393,10 +393,12 @@ const DeviceStatus: React.FC = () => {
 
   // 设备类型选项
   const deviceTypeOptions = useMemo(() => {
-    return deviceTypes.map((type) => ({
-      label: type.device_type_alias || type.device_type,
-      value: type.id,
-    }))
+    return deviceTypes
+      .filter((type) => type != null && type.id != null)
+      .map((type) => ({
+        label: type.device_type_alias || type.device_type,
+        value: type.id,
+      }))
   }, [deviceTypes])
 
   // 初始化数据

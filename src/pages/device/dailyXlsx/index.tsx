@@ -36,6 +36,10 @@ const DailyXlsx: React.FC = () => {
   }, [])
 
   const downloadLoad = async (row: any) => {
+    if (!row || !row.id) {
+      console.error('Invalid row data for download')
+      return
+    }
     try {
       // 使用项目统一的API请求方式
       const response = await Services.api.postDeviceDailyXlsxDownload(
@@ -48,7 +52,7 @@ const DailyXlsx: React.FC = () => {
       )
 
       if (response) {
-        const blob = new Blob([response])
+        const blob = new Blob([response as unknown as BlobPart])
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
@@ -64,6 +68,10 @@ const DailyXlsx: React.FC = () => {
     }
   }
   useCallback(async (row) => {
+    if (!row || !row.id) {
+      console.error('Invalid row data for delete')
+      return
+    }
     try {
       const res = await Services.api.postDeleterDailyXlsx(
         {

@@ -111,11 +111,13 @@ const DeviceIndex: React.FC = () => {
     try {
       const res = await Services.api.postDeviceTypes({})
       if (res?.res?.list) {
-        const formattedTypes = res.res.list.map((item) => ({
-          value: item.id,
-          label: item.device_type,
-          group: item.device_type_group,
-        }))
+        const formattedTypes = res.res.list
+          .filter((item) => item != null && item.id != null)
+          .map((item) => ({
+            value: item.id,
+            label: item.device_type,
+            group: item.device_type_group,
+          }))
         setAllDeviceTypes(formattedTypes)
         return formattedTypes
       }
@@ -134,11 +136,13 @@ const DeviceIndex: React.FC = () => {
       try {
         const res = await Services.api.postDeviceTypes({})
         if (res?.res?.list) {
-          const formattedTypes = res.res.list.map((item) => ({
-            value: item.id,
-            label: item.device_type,
-            group: item.device_type_group,
-          }))
+          const formattedTypes = res.res.list
+            .filter((item) => item != null && item.id != null)
+            .map((item) => ({
+              value: item.id,
+              label: item.device_type,
+              group: item.device_type_group,
+            }))
           setAllDeviceTypes(formattedTypes)
         }
       } catch (error) {
