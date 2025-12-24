@@ -35,13 +35,15 @@ const DeviceNameSelect: React.FC<DeviceNameSelectProps> = ({
           if (fetchId === fetchRef.current) {
             // 确保返回数据是数组格式
             const formattedOptions = Array.isArray(newOptions.res)
-              ? newOptions.res.map((item) => {
-                  console.log("选项项数据:", item)
-                  return {
-                    label: item.name || item.label || item.value,
-                    value: item.id || item.value,
-                  }
-                })
+              ? newOptions.res
+                  .filter((item) => item != null && (item.id != null || item.value != null))
+                  .map((item) => {
+                    console.log("选项项数据:", item)
+                    return {
+                      label: item.name || item.label || item.value,
+                      value: item.id || item.value,
+                    }
+                  })
               : []
             setOptions(formattedOptions)
             setFetching(false)

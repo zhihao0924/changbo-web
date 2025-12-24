@@ -39,13 +39,15 @@ const DeviceLog: React.FC = () => {
     if (res) {
       const enums: any[] = []
       res.res.list.forEach((item) => {
-        enums.push({
-          value: item.id,
-          label: item.device_type_alias
-            ? item.device_type_alias
-            : // : `${item.device_type_group}[${item.device_type}]`,
-              item.device_type,
-        })
+        if (item && item.id) {
+          enums.push({
+            value: item.id,
+            label: item.device_type_alias
+              ? item.device_type_alias
+              : // : `${item.device_type_group}[${item.device_type}]`,
+                item.device_type,
+          })
+        }
       })
       return enums
     }

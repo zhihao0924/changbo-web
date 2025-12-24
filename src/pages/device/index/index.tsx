@@ -289,6 +289,10 @@ const DeviceIndex: React.FC = () => {
   }, [actionRef, currentDevice, form])
 
   const handleToggleMaintaining = useCallback(async (record: Columns) => {
+    if (!record || !record.id) {
+      console.error('Invalid record provided for toggle maintaining')
+      return
+    }
     try {
       const data = {
         id: record.id,
@@ -306,6 +310,10 @@ const DeviceIndex: React.FC = () => {
   }, [])
 
   const handleDelDevice = useCallback(async (record: Columns) => {
+    if (!record || !record.id) {
+      console.error('Invalid record provided for delete')
+      return
+    }
     Modal.confirm({
       title: `确认删除${record.device_type_group}(${record.name})吗？`,
       onOk: async () => {
