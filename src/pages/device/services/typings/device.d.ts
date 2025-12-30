@@ -280,6 +280,14 @@ export namespace API_PostRFConfig {
     downlink_gain_min: number
     downlink_gain_max: number
     is_set_downlink_gain: boolean
+    is_set_same_frequency_forward_switch: boolean
+    same_frequency_forward_switch: number
+    is_set_downlink_switch: boolean
+    downlink_switch: number
+    is_set_uplink_switch: boolean
+    uplink_switch: number
+    is_set_pa4_alarm_switch: boolean
+    pa4_alarm_switch: number
   }
 }
 

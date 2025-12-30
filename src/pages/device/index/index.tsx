@@ -41,6 +41,10 @@ type CreateSettingFormValues = {
   downlink_gain: number | null | string
   downlink_gain_min: number
   downlink_gain_max: number
+  same_frequency_forward_switch: number | null | string
+  downlink_switch: number | null | string
+  uplink_switch: number | null | string
+  pa4_alarm_switch: number | null | string
 }
 
 type DeviceTypeOption = {
@@ -69,6 +73,10 @@ const CONFIG_TYPE_MAP = {
   uplink_gain: "上行增益",
   downlink_power: "下行功率",
   downlink_gain: "下行增益",
+  same_frequency_forward_switch: "同频转发",
+  downlink_switch: "下行开关",
+  uplink_switch: "上行开关",
+  pa4_alarm_switch: "PA4告警开关",
 } as const
 
 // 需要显示设置按钮的设备类型
@@ -160,7 +168,7 @@ const DeviceIndex: React.FC = () => {
     }
     // 如果存在is_maintaining 将is_maintaining 转成int
     if (data.is_maintaining) {
-      data.is_maintaining =  data.is_maintaining?1:0
+      data.is_maintaining = data.is_maintaining ? 1 : 0
     }
     delete data.current
     delete data.pageSize
@@ -232,11 +240,24 @@ const DeviceIndex: React.FC = () => {
           setConfigRangeMap(newConfigRangeMap)
 
           // 设置表单值
+          const { res: configRes } = res
           rfConfigForm.setFieldsValue({
-            downlink_gain: res.res.is_set_downlink_gain ? res.res.downlink_gain : "——",
-            uplink_gain: res.res.is_set_uplink_gain ? res.res.uplink_gain : "——",
-            downlink_power: res.res.is_set_downlink_power ? res.res.downlink_power : "——",
-            uplink_power: res.res.is_set_uplink_power ? res.res.uplink_power : "——",
+            downlink_gain: configRes.is_set_downlink_gain ? configRes.downlink_gain : "——",
+            uplink_gain: configRes.is_set_uplink_gain ? configRes.uplink_gain : "——",
+            downlink_power: configRes.is_set_downlink_power ? configRes.downlink_power : "——",
+            uplink_power: configRes.is_set_uplink_power ? configRes.uplink_power : "——",
+            same_frequency_forward_switch: configRes.is_set_same_frequency_forward_switch
+              ? (configRes.same_frequency_forward_switch ? "1" : "0")
+              : null,
+            downlink_switch: configRes.is_set_downlink_switch
+              ? (configRes.downlink_switch ? "1" : "0")
+              : null,
+            uplink_switch: configRes.is_set_uplink_switch
+              ? (configRes.uplink_switch ? "1" : "0")
+              : null,
+            pa4_alarm_switch: configRes.is_set_pa4_alarm_switch
+              ? (configRes.pa4_alarm_switch ? "1" : "0")
+              : null,
           })
         })
         .then(() => {
@@ -294,7 +315,7 @@ const DeviceIndex: React.FC = () => {
 
   const handleToggleMaintaining = useCallback(async (record: Columns) => {
     if (!record || !record.id) {
-      console.error('Invalid record provided for toggle maintaining')
+      console.error("Invalid record provided for toggle maintaining")
       return
     }
     try {
@@ -315,7 +336,7 @@ const DeviceIndex: React.FC = () => {
 
   const handleDelDevice = useCallback(async (record: Columns) => {
     if (!record || !record.id) {
-      console.error('Invalid record provided for delete')
+      console.error("Invalid record provided for delete")
       return
     }
     Modal.confirm({
@@ -912,10 +933,11 @@ const DeviceIndex: React.FC = () => {
             currentDevice?.device_type_group.includes("近端") ||
             currentDevice?.device_type_group.includes("分路")
           ) && (
-            <Form.Item label="上行功率">
+            <Form.Item label="上行功率" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
               <Space align="center">
                 <Form.Item name="uplink_power" noStyle>
                   <InputNumber
+                    style={{ width: 200 }}
                     placeholder="请输入上行功率"
                     addonAfter={`(${configRangeMap.uplink_power?.min}~${configRangeMap.uplink_power?.max})dBm`}
                   />
@@ -926,10 +948,11 @@ const DeviceIndex: React.FC = () => {
               </Space>
             </Form.Item>
           )}
-          <Form.Item label="上行增益">
+          <Form.Item label="上行增益" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
             <Space align="center">
               <Form.Item name="uplink_gain" noStyle>
                 <InputNumber
+                  style={{ width: 200 }}
                   placeholder="请输入上行增益"
                   addonAfter={`(${configRangeMap.uplink_gain?.min}~${configRangeMap.uplink_gain?.max})dB`}
                 />
@@ -940,10 +963,11 @@ const DeviceIndex: React.FC = () => {
             </Space>
           </Form.Item>
           {!currentDevice?.device_type_group.includes("近端") && (
-            <Form.Item label="下行功率">
+            <Form.Item label="下行功率" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
               <Space align="center">
                 <Form.Item name="downlink_power" noStyle>
                   <InputNumber
+                    style={{ width: 200 }}
                     placeholder="请输入下行功率"
                     addonAfter={`(${configRangeMap.downlink_power?.min}~${configRangeMap.downlink_power?.max})dBm`}
                   />
@@ -954,10 +978,11 @@ const DeviceIndex: React.FC = () => {
               </Space>
             </Form.Item>
           )}
-          <Form.Item label="下行增益">
+          <Form.Item label="下行增益" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
             <Space align="center">
               <Form.Item name="downlink_gain" noStyle>
                 <InputNumber
+                  style={{ width: 200 }}
                   placeholder="请输入下行增益"
                   addonAfter={`(${configRangeMap.downlink_gain?.min}~${configRangeMap.downlink_gain?.max})dB`}
                 />
@@ -967,6 +992,75 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
+          {(currentDevice?.device_type_group.includes("远端") ||
+            currentDevice?.device_type_group.includes("放大")) && (
+            <>
+              <Form.Item label="同频转发" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+                <Space align="center">
+                  <Form.Item name="same_frequency_forward_switch" noStyle>
+                    <Select
+                      style={{ width: 200 }}
+                      options={[
+                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                      ]}
+                    />
+                  </Form.Item>
+                  <Button type="link" onClick={() => saveRFConfig("same_frequency_forward_switch")}>
+                    保存
+                  </Button>
+                </Space>
+              </Form.Item>
+              <Form.Item label="下行开关" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+                <Space align="center">
+                  <Form.Item name="downlink_switch" noStyle>
+                    <Select
+                      style={{ width: 200 }}
+                      options={[
+                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                      ]}
+                    />
+                  </Form.Item>
+                  <Button type="link" onClick={() => saveRFConfig("downlink_switch")}>
+                    保存
+                  </Button>
+                </Space>
+              </Form.Item>
+              <Form.Item label="上行开关" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+                <Space align="center">
+                  <Form.Item name="uplink_switch" noStyle>
+                    <Select
+                      style={{ width: 200 }}
+                      options={[
+                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                      ]}
+                    />
+                  </Form.Item>
+                  <Button type="link" onClick={() => saveRFConfig("uplink_switch")}>
+                    保存
+                  </Button>
+                </Space>
+              </Form.Item>
+              <Form.Item label="PA4告警开关" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+                <Space align="center">
+                  <Form.Item name="pa4_alarm_switch" noStyle>
+                    <Select
+                      style={{ width: 200 }}
+                      options={[
+                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                      ]}
+                    />
+                  </Form.Item>
+                  <Button type="link" onClick={() => saveRFConfig("pa4_alarm_switch")}>
+                    保存
+                  </Button>
+                </Space>
+              </Form.Item>
+            </>
+          )}
         </Form>
       </Modal>
     </PageContainer>
