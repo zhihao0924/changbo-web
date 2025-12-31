@@ -95,8 +95,11 @@ interface DeviceCardProps {
 const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   // 判断是否显示值
   const shouldShowValue = useMemo(() => {
-    const { show_max_val, show_min_val, current_val, is_set_current_val } = metricItem
-    if (!is_set_current_val) {
+    const { show_max_val, show_min_val, current_val, is_set_current_val ,is_alarm} = metricItem
+    if (is_alarm) {
+      return true
+    }
+    if (!is_set_current_val ) {
       return false
     }
     const withinMaxBounds = typeof show_max_val !== "number" || (typeof current_val === "number" && current_val <= show_max_val)
@@ -146,6 +149,8 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
       ) : (
         <XFilled style={{ color: "red" }} />
       )
+    }else{
+      return  <XFilled style={{ color: "grey" }} />
     }
   }
 
