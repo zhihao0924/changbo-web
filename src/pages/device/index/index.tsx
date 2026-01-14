@@ -9,10 +9,11 @@ import {
   ReloadOutlined,
   SettingOutlined,
   SyncOutlined,
+  MoreOutlined,
 } from "@ant-design/icons"
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import { Button, Form, Input, InputNumber, message, Modal, Select, Space, Switch } from "antd"
+import { Button, Dropdown, Form, Input, InputNumber, message, Modal, Select, Space, Switch } from "antd"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
@@ -716,7 +717,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
-        width: 600,
+        width: 400,
         title: "操作",
         align: "center",
         valueType: "option",
@@ -731,6 +732,27 @@ const DeviceIndex: React.FC = () => {
           const showSettingButton = SETTING_DEVICE_TYPES.includes(
             record.device_type_group as (typeof SETTING_DEVICE_TYPES)[number],
           )
+
+          const actionItems = [
+            ...(showSettingButton ? [{
+              key: 'setting',
+              label: '设置',
+              icon: <SettingOutlined />,
+              onClick: () => openSettingModal(record),
+            }] : []),
+            {
+              key: 'moveUp',
+              label: '上移',
+              icon: <ArrowUpOutlined />,
+              onClick: () => handleMoveDevice(record, 'up'),
+            },
+            {
+              key: 'moveDown',
+              label: '下移',
+              icon: <ArrowDownOutlined />,
+              onClick: () => handleMoveDevice(record, 'down'),
+            },
+          ]
 
           return [
             <div key="actions">
@@ -758,34 +780,15 @@ const DeviceIndex: React.FC = () => {
               >
                 {record?.is_maintaining ? "维护结束" : "开始维护"}
               </Button>
-              {showSettingButton && (
-                <Button
-                  key="setting"
-                  type="link"
-                  icon={<SettingOutlined />}
-                  onClick={() => openSettingModal(record)}
-                >
-                  设置
+              <Dropdown
+                key="dropdown"
+                menu={{ items: actionItems }}
+                trigger={['click']}
+              >
+                <Button type="link" icon={<MoreOutlined />}>
+                  更多
                 </Button>
-              )}
-              <Button
-                key="moveUp"
-                type="link"
-                icon={<ArrowUpOutlined />}
-                onClick={() => handleMoveDevice(record, "up")}
-                title="上移"
-              >
-                上移
-              </Button>
-              <Button
-                key="moveDown"
-                type="link"
-                icon={<ArrowDownOutlined />}
-                onClick={() => handleMoveDevice(record, "down")}
-                title="下移"
-              >
-                下移
-              </Button>
+              </Dropdown>
             </div>,
           ]
         },
