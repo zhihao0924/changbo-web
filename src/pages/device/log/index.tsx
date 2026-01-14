@@ -124,7 +124,7 @@ const DeviceLog: React.FC = () => {
     <PageContainer>
       <ProTable<Columns>
         actionRef={actionRef}
-        rowClassName={(record, index) => {
+        rowClassName={(record) => {
           return record.content.includes("恢复") || record.content.includes("上线") ? "status-recovery" : "status-alarm"
         }}
         formRef={formRef}

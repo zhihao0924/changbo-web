@@ -16,6 +16,7 @@ import type {
   API_PostSyncPanelInfo,
   API_PostRFConfigSave,
   API_PostRFConfig,
+  API_PostDeviceMove,
 } from "@/pages/device/services/typings/device"
 
 // 订单列表
@@ -289,6 +290,21 @@ export async function postDeleteDevice(
     "device/delete",
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+  return res
+}
+
+export async function postDeviceMove(
+  obj: API_PostDeviceMove.Params,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostDeviceMove.Result = await postApi(
+    "device/move",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
     console.error(err)
     throw err

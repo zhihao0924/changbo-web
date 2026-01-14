@@ -1,4 +1,6 @@
 import {
+  ArrowDownOutlined,
+  ArrowUpOutlined,
   DeleteOutlined,
   EditOutlined,
   PauseCircleOutlined,
@@ -359,6 +361,26 @@ const DeviceIndex: React.FC = () => {
     })
   }, [])
 
+  const handleMoveDevice = useCallback(async (record: Columns, direction: "up" | "down") => {
+    if (!record || !record.id) {
+      console.error("Invalid record provided for move")
+      return
+    }
+    try {
+      const res = await Services.api.postDeviceMove({
+        device_id: record.id,
+        direction,
+      })
+      message.success(res?.msg || "移动设备成功")
+      actionRef.current?.reload()
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return
+      }
+      console.error(error)
+    }
+  }, [])
+
   // 配置类型对应的中文标签
   const getConfigLabel = useCallback((configType: string): string => {
     return CONFIG_TYPE_MAP[configType as keyof typeof CONFIG_TYPE_MAP] || configType
@@ -694,7 +716,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
-        width: 400,
+        width: 600,
         title: "操作",
         align: "center",
         valueType: "option",
@@ -746,12 +768,30 @@ const DeviceIndex: React.FC = () => {
                   设置
                 </Button>
               )}
+              <Button
+                key="moveUp"
+                type="link"
+                icon={<ArrowUpOutlined />}
+                onClick={() => handleMoveDevice(record, "up")}
+                title="上移"
+              >
+                上移
+              </Button>
+              <Button
+                key="moveDown"
+                type="link"
+                icon={<ArrowDownOutlined />}
+                onClick={() => handleMoveDevice(record, "down")}
+                title="下移"
+              >
+                下移
+              </Button>
             </div>,
           ]
         },
       },
     ]
-  }, [getDeviceTypes, handleDelDevice, handleToggleMaintaining, openModal, openSettingModal])
+  }, [getDeviceTypes, handleDelDevice, handleMoveDevice, handleToggleMaintaining, openModal, openSettingModal])
 
   // 根据设备状态返回行样式对象
   const getRowClassName = useCallback((record: Columns) => {

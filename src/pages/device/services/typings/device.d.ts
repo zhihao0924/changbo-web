@@ -291,6 +291,29 @@ export namespace API_PostRFConfig {
   }
 }
 
+export namespace API_PostDeleteDevice {
+  export interface Params {
+    device_id: number
+  }
+  export interface Result {
+    err: number
+    msg: string
+    res: any
+  }
+}
+
+export namespace API_PostDeviceMove {
+  export interface Params {
+    device_id: number
+    direction: "up" | "down"
+  }
+  export interface Result {
+    err: number
+    msg: string
+    res: any
+  }
+}
+
 export namespace API_PostRFConfigSave {
   export interface Params {
     device_id: number
