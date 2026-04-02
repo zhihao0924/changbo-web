@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from "react"
-import { Button, Modal, Form, Input, message, Space, InputNumber, Checkbox, Row, Col } from "antd"
+import { Button, Modal, Form, Input, message, Space, InputNumber, Checkbox, Row, Col, Tooltip } from "antd"
 import Services from "@/pages/device/services"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
 import { forEach } from "lodash"
@@ -8,6 +8,19 @@ import type { CheckboxValueType } from "antd/es/checkbox/Group"
 import { useIntl } from "umi"
 
 type Columns = API_PostDeviceTypes.List
+
+const thresholdItemLayout = {
+  labelCol: { style: { width: 120 } },
+  wrapperCol: { style: { flex: 1, minWidth: 0 } },
+}
+
+const thresholdLabelStyle: React.CSSProperties = {
+  display: "inline-block",
+  maxWidth: "100%",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+}
 
 const DeviceTypes: React.FC = () => {
   const intl = useIntl()
@@ -320,10 +333,22 @@ const DeviceTypes: React.FC = () => {
               return (
                 <>
                   <Col span={12} key={`${item.config_type}_alarm`}>
-                    <Form.Item label={`${item.config_type_name}`} labelCol={{ span: 6 }}>
-                      <Space align="center" style={{ display: "flex", alignItems: "center" }}>
+                    <Form.Item
+                      {...thresholdItemLayout}
+                      label={
+                        <Tooltip title={item.config_type_name}>
+                          <span style={thresholdLabelStyle}>{item.config_type_name}</span>
+                        </Tooltip>
+                      }
+                      style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
+                    >
+                      <Space
+                        align="center"
+                        style={{ display: "flex", alignItems: "center", width: "100%" }}
+                      >
                         <Form.Item
                           name={["configs", `${item.config_type}`, "alarm_min"]}
+                          style={{ flex: 1, marginBottom: 0 }}
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
@@ -349,9 +374,10 @@ const DeviceTypes: React.FC = () => {
                             style={{ width: "100%" }}
                           />
                         </Form.Item>
-                        <Form.Item>{t("app.common.to", "to")}</Form.Item>
+                        <Form.Item style={{ marginBottom: 0 }}>{t("app.common.to", "to")}</Form.Item>
                         <Form.Item
                           name={["configs", `${item.config_type}`, "alarm_max"]}
+                          style={{ flex: 1, marginBottom: 0 }}
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
@@ -381,10 +407,24 @@ const DeviceTypes: React.FC = () => {
                     </Form.Item>
                   </Col>
                   <Col span={12} key={`${item.config_type}_range`}>
-                    <Form.Item label={t("app.device.types.displayRange", "Display Range")} labelCol={{ span: 6 }}>
-                      <Space align="center" style={{ display: "flex", alignItems: "center" }}>
+                    <Form.Item
+                      {...thresholdItemLayout}
+                      label={
+                        <Tooltip title={t("app.device.types.displayRange", "Display Range")}>
+                          <span style={thresholdLabelStyle}>
+                            {t("app.device.types.displayRange", "Display Range")}
+                          </span>
+                        </Tooltip>
+                      }
+                      style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
+                    >
+                      <Space
+                        align="center"
+                        style={{ display: "flex", alignItems: "center", width: "100%" }}
+                      >
                         <Form.Item
                           name={["configs", `${item.config_type}`, "show_min"]}
+                          style={{ flex: 1, marginBottom: 0 }}
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
@@ -406,9 +446,10 @@ const DeviceTypes: React.FC = () => {
                             style={{ width: "100%" }}
                           />
                         </Form.Item>
-                        <Form.Item>{t("app.common.to", "to")}</Form.Item>
+                        <Form.Item style={{ marginBottom: 0 }}>{t("app.common.to", "to")}</Form.Item>
                         <Form.Item
                           name={["configs", `${item.config_type}`, "show_max"]}
+                          style={{ flex: 1, marginBottom: 0 }}
                           rules={[
                             ({ getFieldValue }) => ({
                               validator(_, value) {
