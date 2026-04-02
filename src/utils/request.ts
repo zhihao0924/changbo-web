@@ -23,6 +23,16 @@ import { refreshToken } from "@/pages/user/services/api"
 // 防抖机制，避免频繁调用刷新token
 let lastRefreshTime = 0
 const REFRESH_DEBOUNCE_TIME = 30000 // 30秒防抖时间
+const DEFAULT_LOCALE = "zh-CN"
+const LOCALE_STORAGE_KEY = "umi_locale"
+
+const getRequestLocale = () => {
+  if (typeof window === "undefined") {
+    return DEFAULT_LOCALE
+  }
+
+  return localStorage.getItem(LOCALE_STORAGE_KEY) || DEFAULT_LOCALE
+}
 
 // const notify = (msg: string, title="提示") => {
 //   notification.error({
@@ -131,6 +141,8 @@ export const request = async (
     if (typeof document !== "undefined") {
       headers = {
         "Content-Type": extParams["Content-Type"] ?? "application/json",
+        "Accept-Language": getRequestLocale(),
+        "X-App-Language": getRequestLocale(),
       }
     }
 
