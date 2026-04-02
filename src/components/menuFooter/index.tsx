@@ -1,5 +1,5 @@
 import { CarOutlined } from "@ant-design/icons"
-import { useModel } from "umi"
+import { useIntl, useModel } from "umi"
 import React, { useCallback, useMemo } from "react"
 import PackageJson from "../../../package.json"
 import styles from "./index.less"
@@ -11,6 +11,7 @@ type MenuFooterProps = {
 const MenuFooter: React.FC<MenuFooterProps> = (props) => {
   const { collapsed } = props
   const { setShowModalCB } = useModel("useGlobal")
+  const intl = useIntl()
 
   const onClick = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
@@ -28,11 +29,18 @@ const MenuFooter: React.FC<MenuFooterProps> = (props) => {
 
         <div onClick={onClick} className={styles["footer__area-btn"]}>
           <CarOutlined />
-          {!collapsed && <span>版本更新记录</span>}
+          {!collapsed && (
+            <span>
+              {intl.formatMessage({
+                id: "app.version.history",
+                defaultMessage: "Version History",
+              })}
+            </span>
+          )}
         </div>
       </div>
     )
-  }, [onClick, collapsed])
+  }, [collapsed, intl, onClick])
 }
 
 export default MenuFooter

@@ -5,10 +5,12 @@ import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-compon
 import { forEach } from "lodash"
 import type { API_PostDeviceTypes } from "@/pages/device/services/typings/device"
 import type { CheckboxValueType } from "antd/es/checkbox/Group"
+import { useIntl } from "umi"
 
 type Columns = API_PostDeviceTypes.List
 
 const DeviceTypes: React.FC = () => {
+  const intl = useIntl()
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
   const [nameForm] = Form.useForm()
@@ -29,6 +31,10 @@ const DeviceTypes: React.FC = () => {
   const [detailCheckAll, setDetailCheckAll] = useState(false)
 
   const [listCheckedList, setListCheckedList] = useState<CheckboxValueType[]>()
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
 
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
@@ -54,7 +60,7 @@ const DeviceTypes: React.FC = () => {
       })
 
       message.success(
-        res?.msg || (currentRecord ? "更新设备类型成功" : "新增设备类型成功"),
+        res?.msg || (currentRecord ? t("app.device.types.updateSuccess", "Device type updated successfully") : t("app.device.types.createSuccess", "Device type created successfully")),
         1,
         () => {
           setNameModalVisible(false)
@@ -85,7 +91,7 @@ const DeviceTypes: React.FC = () => {
           configs: configs,
         })
         .then(() => {
-          message.success("保存成功", 1, () => {
+          message.success(t("app.common.saveSuccess", "Saved successfully"), 1, () => {
             setConfigModalVisible(false)
             configForm.resetFields()
             actionRef.current?.reload()
@@ -104,7 +110,7 @@ const DeviceTypes: React.FC = () => {
           alarms: alarmCheckedList,
         })
         .then(() => {
-          message.success(`${currentRecord?.device_type} 告警配置保存成功`, 1, () => {
+          message.success(`${currentRecord?.device_type} ${t("app.device.types.alarmSaveSuccess", "alarm configuration saved successfully")}`, 1, () => {
             setAlarmModalVisible(false)
             actionRef.current?.reload()
           })
@@ -123,7 +129,7 @@ const DeviceTypes: React.FC = () => {
           show_in_detail: detailCheckedList,
         })
         .then(() => {
-          message.success(`${currentRecord?.device_type} 展示配置保存成功`, 1, () => {
+          message.success(`${currentRecord?.device_type} ${t("app.device.types.displaySaveSuccess", "display configuration saved successfully")}`, 1, () => {
             setShowModalVisible(false)
             actionRef.current?.reload()
           })
@@ -152,25 +158,25 @@ const DeviceTypes: React.FC = () => {
 
   const columns = [
     {
-      title: "设备名称",
+      title: t("app.device.types.group", "Device Group"),
       dataIndex: "device_type_group",
       key: "device_type_group",
       hideInSearch: true,
     },
     {
-      title: "设备类型",
+      title: t("app.device.types.type", "Device Type"),
       dataIndex: "device_type",
       key: "device_type",
       hideInSearch: true,
     },
     {
-      title: "类型别名",
+      title: t("app.device.types.alias", "Type Alias"),
       dataIndex: "device_type_alias",
       key: "device_type_alias",
       hideInSearch: true,
     },
     {
-      title: "操作",
+      title: t("app.common.action", "Action"),
       key: "action",
       hideInSearch: true,
       render: (_: any, record: API_PostDeviceTypes.List) => (
@@ -184,7 +190,7 @@ const DeviceTypes: React.FC = () => {
               setNameModalVisible(true)
             }}
           >
-            别名
+            {t("app.device.types.aliasAction", "Alias")}
           </Button>
           <Button
             type="link"
@@ -197,7 +203,7 @@ const DeviceTypes: React.FC = () => {
               setConfigModalVisible(true)
             }}
           >
-            阈值
+            {t("app.device.types.threshold", "Threshold")}
           </Button>
           <Button
             type="link"
@@ -219,7 +225,7 @@ const DeviceTypes: React.FC = () => {
               setAlarmModalVisible(true)
             }}
           >
-            告警
+            {t("app.device.types.alarm", "Alarm")}
           </Button>
           <Button
             type="link"
@@ -246,7 +252,7 @@ const DeviceTypes: React.FC = () => {
               setShowModalVisible(true)
             }}
           >
-            展示
+            {t("app.device.types.display", "Display")}
           </Button>
         </Space>
       ),
@@ -279,7 +285,7 @@ const DeviceTypes: React.FC = () => {
       </PageContainer>
 
       <Modal
-        title={currentRecord ? "修改设备类型" : "添加设备类型"}
+        title={currentRecord ? t("app.device.types.edit", "Edit Device Type") : t("app.device.types.add", "Add Device Type")}
         open={nameModalVisible}
         onOk={handleNameSubmit}
         onCancel={() => setNameModalVisible(false)}
@@ -287,20 +293,20 @@ const DeviceTypes: React.FC = () => {
         <Form form={nameForm}>
           <Form.Item
             name="device_type"
-            label="设备类型"
+            label={t("app.device.types.type", "Device Type")}
             hidden={true}
-            rules={[{ required: true, message: "请输入设备类型名称" }]}
+            rules={[{ required: true, message: t("app.device.types.type.required", "Please enter the device type name") }]}
           >
             <Input readOnly={true} />
           </Form.Item>
-          <Form.Item name="device_type_alias" label="类型别名" key={"device_type_alias"}>
+          <Form.Item name="device_type_alias" label={t("app.device.types.alias", "Type Alias")} key={"device_type_alias"}>
             <Input />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} 设置`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t("app.common.settings", "Settings")}`}
         open={configModalVisible}
         onOk={handleConfigSubmit}
         onCancel={() => setConfigModalVisible(false)}
@@ -332,7 +338,7 @@ const DeviceTypes: React.FC = () => {
                                 if (value < max) {
                                   return Promise.resolve()
                                 }
-                                return Promise.reject(new Error("最小值必须小于最大值"))
+                                return Promise.reject(new Error(t("app.common.minLessThanMax", "Minimum value must be less than maximum value")))
                               },
                             }),
                           ]}
@@ -343,7 +349,7 @@ const DeviceTypes: React.FC = () => {
                             style={{ width: "100%" }}
                           />
                         </Form.Item>
-                        <Form.Item>至</Form.Item>
+                        <Form.Item>{t("app.common.to", "to")}</Form.Item>
                         <Form.Item
                           name={["configs", `${item.config_type}`, "alarm_max"]}
                           rules={[
@@ -360,7 +366,7 @@ const DeviceTypes: React.FC = () => {
                                 if (value > min) {
                                   return Promise.resolve()
                                 }
-                                return Promise.reject(new Error("最大值必须大于最小值"))
+                                return Promise.reject(new Error(t("app.common.maxGreaterThanMin", "Maximum value must be greater than minimum value")))
                               },
                             }),
                           ]}
@@ -375,7 +381,7 @@ const DeviceTypes: React.FC = () => {
                     </Form.Item>
                   </Col>
                   <Col span={12} key={`${item.config_type}_range`}>
-                    <Form.Item label={`显示范围`} labelCol={{ span: 6 }}>
+                    <Form.Item label={t("app.device.types.displayRange", "Display Range")} labelCol={{ span: 6 }}>
                       <Space align="center" style={{ display: "flex", alignItems: "center" }}>
                         <Form.Item
                           name={["configs", `${item.config_type}`, "show_min"]}
@@ -389,7 +395,7 @@ const DeviceTypes: React.FC = () => {
                                 if (value < max) {
                                   return Promise.resolve()
                                 }
-                                return Promise.reject(new Error("最小值必须小于最大值"))
+                                return Promise.reject(new Error(t("app.common.minLessThanMax", "Minimum value must be less than maximum value")))
                               },
                             }),
                           ]}
@@ -400,7 +406,7 @@ const DeviceTypes: React.FC = () => {
                             style={{ width: "100%" }}
                           />
                         </Form.Item>
-                        <Form.Item>至</Form.Item>
+                        <Form.Item>{t("app.common.to", "to")}</Form.Item>
                         <Form.Item
                           name={["configs", `${item.config_type}`, "show_max"]}
                           rules={[
@@ -413,7 +419,7 @@ const DeviceTypes: React.FC = () => {
                                 if (value > min) {
                                   return Promise.resolve()
                                 }
-                                return Promise.reject(new Error("最大值必须大于最小值"))
+                                return Promise.reject(new Error(t("app.common.maxGreaterThanMin", "Maximum value must be greater than minimum value")))
                               },
                             }),
                           ]}
@@ -435,7 +441,7 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} 设置`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t("app.common.settings", "Settings")}`}
         open={alarmModalVisible}
         onOk={handleAlarmSubmit}
         onCancel={() => setAlarmModalVisible(false)}
@@ -457,7 +463,7 @@ const DeviceTypes: React.FC = () => {
                   setAlarmCheckAll(e.target.checked)
                 }}
               >
-                全选
+                {t("app.common.selectAll", "Select All")}
               </Checkbox>
 
               <Checkbox.Group
@@ -494,20 +500,20 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} 设置`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t("app.common.settings", "Settings")}`}
         open={showModalVisible}
         onOk={handleShowSubmit}
         onCancel={() => setShowModalVisible(false)}
       >
         <Form layout={"vertical"}>
-          <Form.Item labelCol={{ span: 6 }} label={"列表中展示"}>
+          <Form.Item labelCol={{ span: 6 }} label={t("app.device.types.showInList", "Show in List")}>
             <Checkbox.Group
               key={"show_in_list"}
               value={listCheckedList}
               onChange={(checkedValues) => {
                 const maxSelected = 3
                 if (checkedValues.length > maxSelected) {
-                  message.warning(`展示项目最多只能选择${maxSelected}个`)
+                  message.warning(t("app.device.types.maxDisplayItems", `You can select up to ${maxSelected} display items`).replace("${maxSelected}", String(maxSelected)))
                   return // 直接返回，不更新状态
                 }
                 setListCheckedList(checkedValues)
@@ -526,7 +532,7 @@ const DeviceTypes: React.FC = () => {
               </Row>
             </Checkbox.Group>
           </Form.Item>
-          <Form.Item labelCol={{ span: 6 }} label={"详情中展示"}>
+          <Form.Item labelCol={{ span: 6 }} label={t("app.device.types.showInDetail", "Show in Detail")}>
             <Space direction="vertical" style={{ width: "100%" }}>
               <Checkbox
                 indeterminate={detailIndeterminate}
@@ -542,7 +548,7 @@ const DeviceTypes: React.FC = () => {
                   setDetailCheckAll(e.target.checked)
                 }}
               >
-                全选
+                {t("app.common.selectAll", "Select All")}
               </Checkbox>
               <Checkbox.Group value={detailCheckedList} onChange={onDetailSelectChange}>
                 <Row>

@@ -5,6 +5,7 @@ import { Button, Form, Input, Modal, Radio, message } from "antd"
 import { PlusOutlined } from "@ant-design/icons"
 import Services from "@/pages/admin/services"
 import { USER_INFO } from "@/constants"
+import { useIntl } from "umi"
 
 type Columns = API_PostAdminList.List
 
@@ -22,6 +23,7 @@ const canOperateAdmin = (record: Columns, currentUser?: API_USER.Res) => {
 }
 
 const UserIndex: React.FC = () => {
+  const intl = useIntl()
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
   const [createAdminForm] = Form.useForm<CreateFormValues>()
@@ -33,6 +35,10 @@ const UserIndex: React.FC = () => {
   const [currentRecord, setCurrentRecord] = useState<Columns>()
   const [userinfo, setUserinfo] = useState<API_USER.Res>()
   const [loading, setLoading] = useState(false)
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
 
   // 统一错误处理
   const handleApiError = (error: any, operation: string) => {
@@ -149,12 +155,12 @@ const UserIndex: React.FC = () => {
     return [
       {
         value: "admin",
-        label: "超级管理员",
+        label: t("app.admin.role.superAdmin", "Super Admin"),
         disabled: userInfo?.account !== "admin",
       },
-      { value: "user", label: "管理员" },
+      { value: "user", label: t("app.admin.role.admin", "Admin") },
     ]
-  }, [])
+  }, [t])
 
   const handleCreateAdminSubmit = useCallback(async () => {
     try {
@@ -217,25 +223,25 @@ const UserIndex: React.FC = () => {
     return [
       {
         key: "account",
-        title: "账号",
+        title: t("app.admin.account", "Account"),
         align: "center",
         dataIndex: "account",
       },
       {
         key: "name",
-        title: "名称",
+        title: t("app.admin.name", "Name"),
         align: "center",
         dataIndex: "name",
       },
       {
         key: "email",
-        title: "邮箱",
+        title: t("app.admin.email", "Email"),
         align: "center",
         dataIndex: "email",
       },
       {
         key: "role",
-        title: "角色",
+        title: t("app.admin.role", "Role"),
         align: "center",
         dataIndex: "role",
         render: (val: string) => {
@@ -244,16 +250,16 @@ const UserIndex: React.FC = () => {
       },
       {
         key: "is_disabled",
-        title: "状态",
+        title: t("app.admin.status", "Status"),
         align: "center",
         dataIndex: "is_disabled",
         render: (val) => {
-          return val ? "禁用" : "正常"
+          return val ? t("app.admin.status.disabled", "Disabled") : t("app.admin.status.normal", "Normal")
         },
       },
       {
         width: 200,
-        title: "操作",
+        title: t("app.common.action", "Action"),
         align: "center",
         valueType: "option",
         render: (_, record) => {
@@ -262,13 +268,15 @@ const UserIndex: React.FC = () => {
           if (canOperateRecord(record)) {
             actionButtons.push(
               <Button key="disable" type="link" onClick={() => handleDisabledAdmin(record)}>
-                {record.is_disabled ? "启用" : "禁用"}
+                {record.is_disabled
+                  ? t("app.admin.enable", "Enable")
+                  : t("app.admin.disable", "Disable")}
               </Button>,
               <Button key="reset" type="link" onClick={() => openResetPwdModal(record)}>
-                重置密码
+                {t("app.admin.resetPassword", "Reset Password")}
               </Button>,
               <Button key="delete" type="link" onClick={() => deleteAdmin(record)}>
-                删除
+                {t("app.common.delete", "Delete")}
               </Button>,
             )
           }
@@ -280,7 +288,7 @@ const UserIndex: React.FC = () => {
           ) {
             actionButtons.push(
               <Button key="edit" type="link" onClick={() => openUpdateModal(record)}>
-                修改
+                {t("app.common.edit", "Edit")}
               </Button>,
             )
           }
@@ -289,7 +297,7 @@ const UserIndex: React.FC = () => {
         },
       },
     ]
-  }, [deleteAdmin, getRoles, handleDisabledAdmin, openResetPwdModal, openUpdateModal, userinfo])
+  }, [deleteAdmin, getRoles, handleDisabledAdmin, openResetPwdModal, openUpdateModal, t, userinfo])
 
   return (
     <PageContainer>
@@ -312,13 +320,13 @@ const UserIndex: React.FC = () => {
             type="primary"
             onClick={openCreateAdminModal}
           >
-            添加账号
+            {t("app.admin.addAccount", "Add Account")}
           </Button>,
         ]}
       />
 
       <Modal
-        title="添加管理员"
+        title={t("app.admin.addAdmin", "Add Admin")}
         open={createAdminModalVisible}
         onOk={handleCreateAdminSubmit}
         onCancel={() => closeModal(createAdminForm, setCreateAdminModalVisible)}
@@ -327,36 +335,36 @@ const UserIndex: React.FC = () => {
         <Form form={createAdminForm} layout="vertical">
           <Form.Item
             name="account"
-            label="登录账号"
-            rules={[{ required: true, message: "请输入登录账号" }]}
+            label={t("app.admin.loginAccount", "Login Account")}
+            rules={[{ required: true, message: t("app.admin.loginAccount.required", "Please enter the login account") }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="name"
-            label="管理员名称"
-            rules={[{ required: true, message: "请输入管理员名称" }]}
+            label={t("app.admin.adminName", "Admin Name")}
+            rules={[{ required: true, message: t("app.admin.adminName.required", "Please enter the admin name") }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="email"
-            label="邮箱"
-            rules={[{ type: "email", message: "请输入有效的邮箱地址" }]}
+            label={t("app.admin.email", "Email")}
+            rules={[{ type: "email", message: t("app.admin.email.invalid", "Please enter a valid email address") }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="role"
-            label="角色"
-            rules={[{ required: true, message: "请选择管理员角色" }]}
+            label={t("app.admin.role", "Role")}
+            rules={[{ required: true, message: t("app.admin.role.required", "Please select an admin role") }]}
           >
             <Radio.Group options={getRoles()} />
           </Form.Item>
           <Form.Item
             name="password"
-            label="密码"
-            rules={[{ required: true, message: "请输入密码" }]}
+            label={t("app.admin.password", "Password")}
+            rules={[{ required: true, message: t("app.admin.password.required", "Please enter the password") }]}
           >
             <Input.Password />
           </Form.Item>
@@ -364,7 +372,7 @@ const UserIndex: React.FC = () => {
       </Modal>
 
       <Modal
-        title="更新管理员"
+        title={t("app.admin.updateAdmin", "Update Admin")}
         open={updateModalVisible}
         onOk={handleUpdateModalSubmit}
         onCancel={() => closeModal(updateAdminForm, setUpdateModalVisible)}
@@ -373,29 +381,29 @@ const UserIndex: React.FC = () => {
         <Form form={updateAdminForm} layout="vertical">
           <Form.Item
             name="account"
-            label="登录账号"
-            rules={[{ required: true, message: "请输入登录账号" }]}
+            label={t("app.admin.loginAccount", "Login Account")}
+            rules={[{ required: true, message: t("app.admin.loginAccount.required", "Please enter the login account") }]}
           >
             <Input readOnly />
           </Form.Item>
           <Form.Item
             name="name"
-            label="管理员名称"
-            rules={[{ required: true, message: "请输入管理员名称" }]}
+            label={t("app.admin.adminName", "Admin Name")}
+            rules={[{ required: true, message: t("app.admin.adminName.required", "Please enter the admin name") }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="email"
-            label="邮箱"
-            rules={[{ type: "email", message: "请输入有效的邮箱地址" }]}
+            label={t("app.admin.email", "Email")}
+            rules={[{ type: "email", message: t("app.admin.email.invalid", "Please enter a valid email address") }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="role"
-            label="角色"
-            rules={[{ required: true, message: "请选择管理员角色" }]}
+            label={t("app.admin.role", "Role")}
+            rules={[{ required: true, message: t("app.admin.role.required", "Please select an admin role") }]}
           >
             <Radio.Group options={getRoles()} />
           </Form.Item>
@@ -403,7 +411,7 @@ const UserIndex: React.FC = () => {
       </Modal>
 
       <Modal
-        title="重置密码"
+        title={t("app.admin.resetPassword", "Reset Password")}
         open={resetPwdModalVisible}
         onOk={handleResetPwdSubmit}
         onCancel={() => closeModal(resetPwdForm, setResetPwdModalVisible)}
@@ -412,8 +420,8 @@ const UserIndex: React.FC = () => {
         <Form form={resetPwdForm} layout="vertical">
           <Form.Item
             name="password"
-            label="新密码"
-            rules={[{ required: true, message: "请输入新密码" }]}
+            label={t("app.admin.newPassword", "New Password")}
+            rules={[{ required: true, message: t("app.admin.newPassword.required", "Please enter the new password") }]}
           >
             <Input.Password />
           </Form.Item>

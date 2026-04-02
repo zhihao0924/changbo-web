@@ -1,6 +1,6 @@
 import { Space } from "antd"
 import React from "react"
-import { useModel } from "umi"
+import { SelectLang, useModel } from "umi"
 import Avatar from "./AvatarDropdown"
 import TimeLine from "../timeLine"
 import styles from "./index.less"
@@ -27,7 +27,7 @@ const GlobalHeaderRight: React.FC = () => {
     <Space className={className}>
       <Avatar />
       <TimeLine showModal={showModal} onCloseModal={() => setShowModalCB(false)} />
-      {/* <SelectLang className={styles.action} /> */}
+      <SelectLang className={styles.action} />
     </Space>
   )
 }

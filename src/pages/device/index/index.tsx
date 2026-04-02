@@ -18,6 +18,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
+import { useIntl } from "umi"
 import "./index.less"
 
 type Columns = API_PostDeviceList.List
@@ -58,17 +59,17 @@ type DeviceTypeOption = {
 
 // 设备类型组常量
 const DEVICE_GROUPS = [
-  { label: "发射合路器", value: "发射合路器" },
-  { label: "接收分路器", value: "接收分路器" },
-  { label: "带通双工器", value: "带通双工器" },
-  { label: "上行信号剥离器", value: "上行信号剥离器" },
-  { label: "下行信号剥离器", value: "下行信号剥离器" },
-  { label: "数字近端机", value: "数字近端机" },
-  { label: "数字远端机", value: "数字远端机" },
-  { label: "模拟近端机", value: "模拟近端机" },
-  { label: "模拟远端机", value: "模拟远端机" },
-  { label: "干线放大器", value: "干线放大器" },
-]
+  "发射合路器",
+  "接收分路器",
+  "带通双工器",
+  "上行信号剥离器",
+  "下行信号剥离器",
+  "数字近端机",
+  "数字远端机",
+  "模拟近端机",
+  "模拟远端机",
+  "干线放大器",
+] as const
 
 // 配置类型映射
 const CONFIG_TYPE_MAP = {
@@ -93,6 +94,7 @@ const SETTING_DEVICE_TYPES = [
 ] as const
 
 const DeviceIndex: React.FC = () => {
+  const intl = useIntl()
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
   const [modalVisible, setModalVisible] = useState(false)
@@ -110,6 +112,30 @@ const DeviceIndex: React.FC = () => {
 
   // 初始化设备类型数据
   const [, setDeviceTypesLoading] = useState(false)
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
+  const translatedDeviceGroups = useMemo(
+    () =>
+      DEVICE_GROUPS.map((value) => ({
+        value,
+        label:
+          {
+            发射合路器: t("app.device.index.group.transmitterMixer", "Transmitter Mixer"),
+            接收分路器: t("app.device.index.group.receiverSplitter", "Receiver Splitter"),
+            带通双工器: t("app.device.index.group.bandpassDuplexer", "Bandpass Duplexer"),
+            上行信号剥离器: t("app.device.index.group.uplinkStripper", "Uplink Signal Stripper"),
+            下行信号剥离器: t("app.device.index.group.downlinkStripper", "Downlink Signal Stripper"),
+            数字近端机: t("app.device.index.group.digitalNearEnd", "Digital Near-end Unit"),
+            数字远端机: t("app.device.index.group.digitalRemote", "Digital Remote Unit"),
+            模拟近端机: t("app.device.index.group.analogNearEnd", "Analog Near-end Unit"),
+            模拟远端机: t("app.device.index.group.analogRemote", "Analog Remote Unit"),
+            干线放大器: t("app.device.index.group.trunkAmplifier", "Trunk Amplifier"),
+          }[value] || value,
+      })),
+    [t],
+  )
 
   const getDeviceTypes = useCallback(async () => {
     // 如果已经有数据，直接返回
@@ -269,28 +295,30 @@ const DeviceIndex: React.FC = () => {
         })
         .catch((error) => {
           console.error("获取设备配置失败:", error)
-          message.error("获取设备配置失败，请稍后重试")
+          message.error(t("app.device.index.fetchConfigFailed", "Failed to load device configuration. Please try again later."))
         })
     },
-    [rfConfigForm],
+    [rfConfigForm, t],
   )
 
   const syncPanel = useCallback(async () => {
     try {
       return await Services.api.postDeviceSyncPanel({}).then((ret) => {
         message.success(
-          `同步面板信息成功${ret.res.success_count}条，失败${ret.res.fail_count}条`,
+          t("app.device.index.syncSummary", `Panel sync succeeded: ${ret.res.success_count}, failed: ${ret.res.fail_count}`)
+            .replace("${success}", String(ret.res.success_count))
+            .replace("${failed}", String(ret.res.fail_count)),
           2,
           actionRef.current?.reload,
         )
       })
     } catch (error) {
       console.error("同步面板失败:", error)
-      message.error("同步面板失败")
+      message.error(t("app.device.index.syncFailed", "Panel sync failed"))
       throw error
     } finally {
     }
-  }, [])
+  }, [t])
 
   const handleCancel = useCallback(() => {
     setModalVisible(false)
@@ -302,7 +330,7 @@ const DeviceIndex: React.FC = () => {
       const values = await form.validateFields()
       setSubmitLoading(true)
       const res = await Services.api.postDeviceSave(values)
-      message.success(res?.msg || (currentDevice ? "更新设备成功" : "新增设备成功"))
+      message.success(res?.msg || (currentDevice ? t("app.device.index.updateSuccess", "Device updated successfully") : t("app.device.index.createSuccess", "Device created successfully")))
       setModalVisible(false)
       form.resetFields()
       actionRef.current?.reload()
@@ -314,7 +342,7 @@ const DeviceIndex: React.FC = () => {
     } finally {
       setSubmitLoading(false)
     }
-  }, [actionRef, currentDevice, form])
+  }, [actionRef, currentDevice, form, t])
 
   const handleToggleMaintaining = useCallback(async (record: Columns) => {
     if (!record || !record.id) {
@@ -327,7 +355,7 @@ const DeviceIndex: React.FC = () => {
         is_maintaining: !record?.is_maintaining,
       }
       const res = await Services.api.postToggleMaintaining(data)
-      message.success(res?.msg || "更新设备成功")
+      message.success(res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"))
       actionRef.current?.reload()
     } catch (error: any) {
       if (error?.errorFields) {
@@ -335,7 +363,7 @@ const DeviceIndex: React.FC = () => {
       }
       console.error(error)
     }
-  }, [])
+  }, [t])
 
   const handleDelDevice = useCallback(async (record: Columns) => {
     if (!record || !record.id) {
@@ -343,14 +371,16 @@ const DeviceIndex: React.FC = () => {
       return
     }
     Modal.confirm({
-      title: `确认删除${record.device_type_group}(${record.name})吗？`,
+      title: t("app.device.index.deleteConfirm", "Confirm deleting ${group}(${name})?")
+        .replace("${group}", record.device_type_group)
+        .replace("${name}", record.name),
       onOk: async () => {
         try {
           const data = {
             device_id: record.id,
           }
           const res = await Services.api.postDeleteDevice(data)
-          message.success(res?.msg || "更新设备成功")
+          message.success(res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"))
           actionRef.current?.reload()
         } catch (error: any) {
           if (error?.errorFields) {
@@ -360,7 +390,7 @@ const DeviceIndex: React.FC = () => {
         }
       },
     })
-  }, [])
+  }, [t])
 
   const handleMoveDevice = useCallback(async (record: Columns, direction: "up" | "down") => {
     if (!record || !record.id) {
@@ -372,7 +402,7 @@ const DeviceIndex: React.FC = () => {
         device_id: record.id,
         direction,
       })
-      message.success(res?.msg || "移动设备成功")
+      message.success(res?.msg || t("app.device.index.moveSuccess", "Device moved successfully"))
       actionRef.current?.reload()
     } catch (error: any) {
       if (error?.errorFields) {
@@ -380,7 +410,7 @@ const DeviceIndex: React.FC = () => {
       }
       console.error(error)
     }
-  }, [])
+  }, [t])
 
   // 配置类型对应的中文标签
   const getConfigLabel = useCallback((configType: string): string => {
@@ -391,13 +421,13 @@ const DeviceIndex: React.FC = () => {
   const saveRFConfig = useCallback(
     async (configType: string) => {
       if (!currentDevice?.id) {
-        message.error("设备信息异常，无法保存配置")
+        message.error(t("app.device.index.invalidDevice", "Invalid device information, unable to save configuration"))
         return
       }
 
       const fieldValue = rfConfigForm.getFieldValue(configType)
       if (fieldValue === undefined || fieldValue === null) {
-        message.error(`请输入${getConfigLabel(configType)}`)
+        message.error(`${t("app.common.pleaseEnter", "Please enter")} ${getConfigLabel(configType)}`)
         return
       }
 
@@ -406,9 +436,7 @@ const DeviceIndex: React.FC = () => {
       if (configRange) {
         if (fieldValue < configRange.min || fieldValue > configRange.max) {
           message.error(
-            `${getConfigLabel(configType)}必须在${configRange.min}~${configRange.max}${
-              configRange.unit
-            }范围内`,
+            `${getConfigLabel(configType)} ${t("app.device.index.rangeLimit", "must be within")} ${configRange.min}~${configRange.max}${configRange.unit}`,
           )
           return
         }
@@ -420,19 +448,19 @@ const DeviceIndex: React.FC = () => {
           current_val: Number(fieldValue),
           rf_config_type: configType,
         })
-        message.success(res?.msg || `${getConfigLabel(configType)}保存成功`)
+        message.success(res?.msg || `${getConfigLabel(configType)} ${t("app.device.index.configSaved", "saved successfully")}`)
       } catch (error) {
         console.error(`${configType}保存失败:`, error)
-        message.error(`${getConfigLabel(configType)}保存失败`)
+        message.error(`${getConfigLabel(configType)} ${t("app.device.index.configSaveFailed", "failed to save")}`)
       }
     },
-    [currentDevice, getConfigLabel, rfConfigForm, configRangeMap],
+    [currentDevice, getConfigLabel, rfConfigForm, configRangeMap, t],
   )
 
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
       {
-        title: "IP地址",
+        title: t("app.device.index.ip", "IP Address"),
         align: "center",
         dataIndex: "ip",
         fixed: "left",
@@ -446,7 +474,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "name",
-        title: "设备编号",
+        title: t("app.device.index.deviceId", "Device ID"),
         align: "center",
         dataIndex: "name",
         width: 200,
@@ -460,14 +488,14 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "device_type_group",
-        title: "设备名称",
+        title: t("app.device.index.deviceGroup", "Device Group"),
         align: "center",
         dataIndex: "device_type_group",
         hideInSearch: true,
         width: 200,
       },
       {
-        title: "设备类型",
+        title: t("app.device.index.deviceType", "Device Type"),
         align: "center",
         dataIndex: "device_type_id",
         key: "device_type_id",
@@ -479,7 +507,7 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
-        title: "安装位置",
+        title: t("app.device.index.position", "Installation Position"),
         align: "center",
         dataIndex: "position",
         key: "position",
@@ -487,21 +515,21 @@ const DeviceIndex: React.FC = () => {
         width: 200,
       },
       {
-        title: "维护状态",
+        title: t("app.device.index.maintainingStatus", "Maintenance Status"),
         dataIndex: "is_maintaining",
         key: "is_maintaining",
         valueType: "select",
         hideInTable: true,
         valueEnum: {
-          1: { text: "维护中", status: "Processing" },
+          1: { text: t("app.device.index.maintaining", "Maintaining"), status: "Processing" },
         },
         fieldProps: {
-          placeholder: "请选择维护状态",
+          placeholder: t("app.device.index.selectMaintainingStatus", "Please select a maintenance status"),
           allowClear: true,
         },
       },
       {
-        title: "设备状态",
+        title: t("app.device.index.deviceStatus", "Device Status"),
         align: "center",
         dataIndex: "status_text",
         key: "status_text",
@@ -510,7 +538,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_panel_type",
-        title: "设备类型",
+        title: t("app.device.index.panelType", "Panel Type"),
         align: "center",
         dataIndex: ["panel_info", "panel_type"],
         hideInSearch: true,
@@ -518,7 +546,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_panel_id",
-        title: "ID号",
+        title: t("app.device.index.panelId", "Panel ID"),
         align: "center",
         dataIndex: ["panel_info", "panel_id"],
         hideInSearch: true,
@@ -526,7 +554,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_name",
-        title: "名称",
+        title: t("app.device.index.name", "Name"),
         align: "center",
         dataIndex: ["panel_info", "name"],
         hideInSearch: true,
@@ -534,7 +562,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_model",
-        title: "型号",
+        title: t("app.device.index.model", "Model"),
         align: "center",
         dataIndex: ["panel_info", "model"],
         hideInSearch: true,
@@ -542,7 +570,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_serial_number",
-        title: "编码",
+        title: t("app.device.index.code", "Code"),
         align: "center",
         dataIndex: ["panel_info", "serial_number"],
         hideInSearch: true,
@@ -550,7 +578,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_area",
-        title: "区域",
+        title: t("app.device.index.area", "Area"),
         align: "center",
         dataIndex: ["panel_info", "area"],
         hideInSearch: true,
@@ -558,7 +586,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_sn",
-        title: "序列号",
+        title: t("app.device.index.serialNumber", "Serial Number"),
         align: "center",
         dataIndex: ["panel_info", "sn"],
         hideInSearch: true,
@@ -566,7 +594,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_physical_sn",
-        title: "物理序列号",
+        title: t("app.device.index.physicalSerialNumber", "Physical Serial Number"),
         align: "center",
         dataIndex: ["panel_info", "physical_sn"],
         hideInSearch: true,
@@ -574,7 +602,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_firmware_id",
-        title: "固件ID",
+        title: t("app.device.index.firmwareId", "Firmware ID"),
         align: "center",
         dataIndex: ["panel_info", "firmware_id"],
         hideInSearch: true,
@@ -582,7 +610,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_upstream_band",
-        title: "上行频段",
+        title: t("app.device.index.upstreamBand", "Upstream Band"),
         align: "center",
         dataIndex: ["panel_info", "upstream_band"],
         hideInSearch: true,
@@ -590,7 +618,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_downstream_band",
-        title: "下行频段",
+        title: t("app.device.index.downstreamBand", "Downstream Band"),
         align: "center",
         dataIndex: ["panel_info", "downstream_band"],
         hideInSearch: true,
@@ -598,7 +626,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_band_code",
-        title: "频段代码",
+        title: t("app.device.index.bandCode", "Band Code"),
         align: "center",
         dataIndex: ["panel_info", "band_code"],
         hideInSearch: true,
@@ -606,7 +634,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_power",
-        title: "功率（W）",
+        title: t("app.device.index.power", "Power (W)"),
         align: "center",
         dataIndex: ["panel_info", "power"],
         hideInSearch: true,
@@ -614,7 +642,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_uplink_power",
-        title: "上行功率（dBm）",
+        title: t("app.device.index.uplinkPower", "Uplink Power (dBm)"),
         align: "center",
         dataIndex: ["panel_info", "uplink_power"],
         hideInSearch: true,
@@ -622,7 +650,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_downlink_power",
-        title: "下行功率（dBm）",
+        title: t("app.device.index.downlinkPower", "Downlink Power (dBm)"),
         align: "center",
         dataIndex: ["panel_info", "downlink_power"],
         hideInSearch: true,
@@ -630,7 +658,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_uplink_gain",
-        title: "上行增益（dB）",
+        title: t("app.device.index.uplinkGain", "Uplink Gain (dB)"),
         align: "center",
         dataIndex: ["panel_info", "uplink_gain"],
         hideInSearch: true,
@@ -638,7 +666,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_downlink_gain",
-        title: "下行增益（dB）",
+        title: t("app.device.index.downlinkGain", "Downlink Gain (dB)"),
         align: "center",
         dataIndex: ["panel_info", "downlink_gain"],
         hideInSearch: true,
@@ -646,7 +674,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_firmware_type",
-        title: "固件类型",
+        title: t("app.device.index.firmwareType", "Firmware Type"),
         align: "center",
         dataIndex: ["panel_info", "firmware_type"],
         hideInSearch: true,
@@ -654,7 +682,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_firmware_version",
-        title: "固件版本",
+        title: t("app.device.index.firmwareVersion", "Firmware Version"),
         align: "center",
         dataIndex: ["panel_info", "firmware_version"],
         hideInSearch: true,
@@ -662,7 +690,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_internal_version",
-        title: "内码版本",
+        title: t("app.device.index.internalVersion", "Internal Version"),
         align: "center",
         dataIndex: ["panel_info", "internal_version"],
         hideInSearch: true,
@@ -670,7 +698,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_bootloader_version",
-        title: "引导程序版本",
+        title: t("app.device.index.bootloaderVersion", "Bootloader Version"),
         align: "center",
         dataIndex: ["panel_info", "bootloader_version"],
         hideInSearch: true,
@@ -678,7 +706,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_netmask",
-        title: "网络掩码",
+        title: t("app.device.index.netmask", "Netmask"),
         align: "center",
         dataIndex: ["panel_info", "netmask"],
         hideInSearch: true,
@@ -686,7 +714,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_wifi_mac",
-        title: "WiFi MAC地址",
+        title: t("app.device.index.wifiMac", "WiFi MAC Address"),
         align: "center",
         dataIndex: ["panel_info", "wifi_mac"],
         hideInSearch: true,
@@ -694,7 +722,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_ipv4",
-        title: "IPV4地址",
+        title: t("app.device.index.ipv4", "IPv4 Address"),
         align: "center",
         dataIndex: ["panel_info", "ipv4"],
         hideInSearch: true,
@@ -702,7 +730,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_ipv6",
-        title: "IPV6地址",
+        title: t("app.device.index.ipv6", "IPv6 Address"),
         align: "center",
         dataIndex: ["panel_info", "ipv6"],
         hideInSearch: true,
@@ -710,7 +738,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         key: "panel_info_last_program_time",
-        title: "上次编码时间",
+        title: t("app.device.index.lastProgramTime", "Last Program Time"),
         align: "center",
         dataIndex: ["panel_info", "last_program_time"],
         hideInSearch: true,
@@ -718,7 +746,7 @@ const DeviceIndex: React.FC = () => {
       },
       {
         width: 400,
-        title: "操作",
+        title: t("app.common.action", "Action"),
         align: "center",
         valueType: "option",
         fixed: "right",
@@ -736,19 +764,19 @@ const DeviceIndex: React.FC = () => {
           const actionItems = [
             ...(showSettingButton ? [{
               key: 'setting',
-              label: '设置',
+              label: t("app.common.settings", "Settings"),
               icon: <SettingOutlined />,
               onClick: () => openSettingModal(record),
             }] : []),
             {
               key: 'moveUp',
-              label: '上移',
+              label: t("app.common.moveUp", "Move Up"),
               icon: <ArrowUpOutlined />,
               onClick: () => handleMoveDevice(record, 'up'),
             },
             {
               key: 'moveDown',
-              label: '下移',
+              label: t("app.common.moveDown", "Move Down"),
               icon: <ArrowDownOutlined />,
               onClick: () => handleMoveDevice(record, 'down'),
             },
@@ -762,7 +790,7 @@ const DeviceIndex: React.FC = () => {
                 icon={<EditOutlined />}
                 onClick={() => openModal(record)}
               >
-                修改
+                {t("app.common.edit", "Edit")}
               </Button>
               <Button
                 key="delete"
@@ -770,7 +798,7 @@ const DeviceIndex: React.FC = () => {
                 icon={<DeleteOutlined />}
                 onClick={() => handleDelDevice(record)}
               >
-                删除
+                {t("app.common.delete", "Delete")}
               </Button>
               <Button
                 key="toggle"
@@ -778,7 +806,9 @@ const DeviceIndex: React.FC = () => {
                 icon={record?.is_maintaining ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
                 onClick={() => handleToggleMaintaining(record)}
               >
-                {record?.is_maintaining ? "维护结束" : "开始维护"}
+                {record?.is_maintaining
+                  ? t("app.device.index.endMaintenance", "End Maintenance")
+                  : t("app.device.index.startMaintenance", "Start Maintenance")}
               </Button>
               <Dropdown
                 key="dropdown"
@@ -786,7 +816,7 @@ const DeviceIndex: React.FC = () => {
                 trigger={['click']}
               >
                 <Button type="link" icon={<MoreOutlined />}>
-                  更多
+                  {t("app.common.more", "More")}
                 </Button>
               </Dropdown>
             </div>,
@@ -794,7 +824,7 @@ const DeviceIndex: React.FC = () => {
         },
       },
     ]
-  }, [getDeviceTypes, handleDelDevice, handleMoveDevice, handleToggleMaintaining, openModal, openSettingModal])
+  }, [getDeviceTypes, handleDelDevice, handleMoveDevice, handleToggleMaintaining, openModal, openSettingModal, t])
 
   // 根据设备状态返回行样式对象
   const getRowClassName = useCallback((record: Columns) => {
@@ -831,10 +861,10 @@ const DeviceIndex: React.FC = () => {
         }}
         toolBarRender={() => [
           <Button key="button" icon={<PlusOutlined />} type="primary" onClick={() => openModal()}>
-            添加设备
+            {t("app.device.index.addDevice", "Add Device")}
           </Button>,
           <Button key="button" icon={<SyncOutlined />} type="primary" onClick={() => syncPanel()}>
-            同步设备信息
+            {t("app.device.index.syncDeviceInfo", "Sync Device Info")}
           </Button>,
         ]}
         scroll={{ x: 0 }}
@@ -878,7 +908,7 @@ const DeviceIndex: React.FC = () => {
       />
 
       <Modal
-        title={currentDevice ? "修改设备" : "添加设备"}
+        title={currentDevice ? t("app.device.index.editDevice", "Edit Device") : t("app.device.index.addDevice", "Add Device")}
         open={modalVisible}
         onOk={handleSubmit}
         confirmLoading={submitLoading}
@@ -890,19 +920,19 @@ const DeviceIndex: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="name"
-            label="设备编号"
-            rules={[{ required: true, message: "请输入设备编号" }]}
+            label={t("app.device.index.deviceId", "Device ID")}
+            rules={[{ required: true, message: t("app.device.index.deviceId.required", "Please enter the device ID") }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="ip"
-            label="IP地址"
+            label={t("app.device.index.ip", "IP Address")}
             rules={[
-              { required: true, message: "请输入IP地址" },
+              { required: true, message: t("app.device.index.ip.required", "Please enter the IP address") },
               {
                 pattern: /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/,
-                message: "请输入有效的IP地址",
+                message: t("app.device.index.ip.invalid", "Please enter a valid IP address"),
               },
             ]}
           >
@@ -920,18 +950,18 @@ const DeviceIndex: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="position"
-            label="安装位置"
-            rules={[{ required: true, message: "请输入安装位置" }]}
+            label={t("app.device.index.position", "Installation Position")}
+            rules={[{ required: true, message: t("app.device.index.position.required", "Please enter the installation position") }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="device_type_group"
-            label="设备名称"
-            rules={[{ required: true, message: "请选择设备名称" }]}
+            label={t("app.device.index.deviceGroup", "Device Group")}
+            rules={[{ required: true, message: t("app.device.index.deviceGroup.required", "Please select a device group") }]}
           >
             <Select
-              options={DEVICE_GROUPS}
+              options={translatedDeviceGroups}
               onChange={(item) => {
                 form.setFieldValue("device_type_id", undefined)
                 setDeviceTypes(allDeviceTypes.filter((types) => types.group == item))
@@ -940,22 +970,22 @@ const DeviceIndex: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="device_type_id"
-            label="设备类型"
-            rules={[{ required: true, message: "请选择设备类型" }]}
+            label={t("app.device.index.deviceType", "Device Type")}
+            rules={[{ required: true, message: t("app.device.index.deviceType.required", "Please select a device type") }]}
           >
             <Select options={deviceTypes} />
           </Form.Item>
-          <Form.Item name="is_maintaining" label="维护状态" valuePropName="checked">
+          <Form.Item name="is_maintaining" label={t("app.device.index.maintainingStatus", "Maintenance Status")} valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Form.Item name="is_online" label="在线状态" valuePropName="checked">
+          <Form.Item name="is_online" label={t("app.device.index.onlineStatus", "Online Status")} valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={`设备设置-${currentDevice?.name}`}
+        title={`${t("app.device.index.deviceSettings", "Device Settings")}-${currentDevice?.name}`}
         onCancel={() => {
           setSettingModalVisible(false)
           rfConfigForm.resetFields()
@@ -967,7 +997,7 @@ const DeviceIndex: React.FC = () => {
             icon={<ReloadOutlined />}
             onClick={() => currentDevice && openSettingModal(currentDevice)}
           >
-            刷新
+            {t("app.common.refresh", "Refresh")}
           </Button>
         }
       >
@@ -976,129 +1006,129 @@ const DeviceIndex: React.FC = () => {
             currentDevice?.device_type_group.includes("近端") ||
             currentDevice?.device_type_group.includes("分路")
           ) && (
-            <Form.Item label="上行功率" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+            <Form.Item label={t("app.device.index.uplinkPowerShort", "Uplink Power")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
               <Space align="center">
                 <Form.Item name="uplink_power" noStyle>
                   <InputNumber
                     style={{ width: 200 }}
-                    placeholder="请输入上行功率"
+                    placeholder={t("app.device.index.uplinkPower.placeholder", "Please enter uplink power")}
                     addonAfter={`(${configRangeMap.uplink_power?.min}~${configRangeMap.uplink_power?.max})dBm`}
                   />
                 </Form.Item>
                 <Button type="link" onClick={() => saveRFConfig("uplink_power")}>
-                  保存
+                  {t("app.common.save", "Save")}
                 </Button>
               </Space>
             </Form.Item>
           )}
-          <Form.Item label="上行增益" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+          <Form.Item label={t("app.device.index.uplinkGainShort", "Uplink Gain")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
             <Space align="center">
               <Form.Item name="uplink_gain" noStyle>
                 <InputNumber
                   style={{ width: 200 }}
-                  placeholder="请输入上行增益"
+                  placeholder={t("app.device.index.uplinkGain.placeholder", "Please enter uplink gain")}
                   addonAfter={`(${configRangeMap.uplink_gain?.min}~${configRangeMap.uplink_gain?.max})dB`}
                 />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("uplink_gain")}>
-                保存
+                {t("app.common.save", "Save")}
               </Button>
             </Space>
           </Form.Item>
           {!currentDevice?.device_type_group.includes("近端") && (
-            <Form.Item label="下行功率" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+            <Form.Item label={t("app.device.index.downlinkPowerShort", "Downlink Power")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
               <Space align="center">
                 <Form.Item name="downlink_power" noStyle>
                   <InputNumber
                     style={{ width: 200 }}
-                    placeholder="请输入下行功率"
+                    placeholder={t("app.device.index.downlinkPower.placeholder", "Please enter downlink power")}
                     addonAfter={`(${configRangeMap.downlink_power?.min}~${configRangeMap.downlink_power?.max})dBm`}
                   />
                 </Form.Item>
                 <Button type="link" onClick={() => saveRFConfig("downlink_power")}>
-                  保存
+                  {t("app.common.save", "Save")}
                 </Button>
               </Space>
             </Form.Item>
           )}
-          <Form.Item label="下行增益" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+          <Form.Item label={t("app.device.index.downlinkGainShort", "Downlink Gain")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
             <Space align="center">
               <Form.Item name="downlink_gain" noStyle>
                 <InputNumber
                   style={{ width: 200 }}
-                  placeholder="请输入下行增益"
+                  placeholder={t("app.device.index.downlinkGain.placeholder", "Please enter downlink gain")}
                   addonAfter={`(${configRangeMap.downlink_gain?.min}~${configRangeMap.downlink_gain?.max})dB`}
                 />
               </Form.Item>
               <Button type="link" onClick={() => saveRFConfig("downlink_gain")}>
-                保存
+                {t("app.common.save", "Save")}
               </Button>
             </Space>
           </Form.Item>
           {(currentDevice?.device_type_group.includes("远端") ||
             currentDevice?.device_type_group.includes("放大")) && (
             <>
-              <Form.Item label="同频转发" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item label={t("app.device.index.sameFrequencyForward", "Same Frequency Forward")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
                 <Space align="center">
                   <Form.Item name="same_frequency_forward_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
                       ]}
                     />
                   </Form.Item>
                   <Button type="link" onClick={() => saveRFConfig("same_frequency_forward_switch")}>
-                    保存
+                    {t("app.common.save", "Save")}
                   </Button>
                 </Space>
               </Form.Item>
-              <Form.Item label="下行开关" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item label={t("app.device.index.downlinkSwitch", "Downlink Switch")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
                 <Space align="center">
                   <Form.Item name="downlink_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
                       ]}
                     />
                   </Form.Item>
                   <Button type="link" onClick={() => saveRFConfig("downlink_switch")}>
-                    保存
+                    {t("app.common.save", "Save")}
                   </Button>
                 </Space>
               </Form.Item>
-              <Form.Item label="上行开关" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item label={t("app.device.index.uplinkSwitch", "Uplink Switch")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
                 <Space align="center">
                   <Form.Item name="uplink_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
                       ]}
                     />
                   </Form.Item>
                   <Button type="link" onClick={() => saveRFConfig("uplink_switch")}>
-                    保存
+                    {t("app.common.save", "Save")}
                   </Button>
                 </Space>
               </Form.Item>
-              <Form.Item label="PA4告警开关" labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item label={t("app.device.index.pa4AlarmSwitch", "PA4 Alarm Switch")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
                 <Space align="center">
                   <Form.Item name="pa4_alarm_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>开启</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>关闭</span>, value: "0" },
+                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
+                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
                       ]}
                     />
                   </Form.Item>
                   <Button type="link" onClick={() => saveRFConfig("pa4_alarm_switch")}>
-                    保存
+                    {t("app.common.save", "Save")}
                   </Button>
                 </Space>
               </Form.Item>

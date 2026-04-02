@@ -4,13 +4,19 @@ import React, { useCallback, useMemo, useRef } from "react"
 import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
+import { useIntl } from "umi"
 import "./index.less"
 
 type Columns = API_PostDeviceList.List
 
 const DeviceLog: React.FC = () => {
+  const intl = useIntl()
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
 
   const getLists = useCallback(async (params: any) => {
     const data = {
@@ -57,13 +63,13 @@ const DeviceLog: React.FC = () => {
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
       {
-        title: "日志ID",
+        title: t("app.device.log.logId", "Log ID"),
         dataIndex: "id",
         hideInSearch: true,
         hideInTable: true,
       },
       {
-        title: "设备类型",
+        title: t("app.device.log.deviceType", "Device Type"),
         align: "center",
         dataIndex: "device_type_id",
         valueType: "select",
@@ -76,7 +82,7 @@ const DeviceLog: React.FC = () => {
         },
       },
       {
-        title: "设备编号",
+        title: t("app.device.log.deviceId", "Device ID"),
         align: "center",
         dataIndex: "id",
         hideInTable: true,
@@ -89,19 +95,19 @@ const DeviceLog: React.FC = () => {
         },
       },
       {
-        title: "设备编号",
+        title: t("app.device.log.deviceId", "Device ID"),
         align: "center",
         dataIndex: "device_name",
         hideInSearch: true,
       },
       {
-        title: "日志",
+        title: t("app.device.log.content", "Log"),
         align: "center",
         dataIndex: "content",
         hideInSearch: true,
       },
       {
-        title: "时间",
+        title: t("app.device.log.time", "Time"),
         align: "center",
         dataIndex: "created_at",
         valueType: "dateTimeRange",
@@ -118,7 +124,7 @@ const DeviceLog: React.FC = () => {
         },
       },
     ]
-  }, [getDeviceTypes])
+  }, [getDeviceTypes, t])
 
   return (
     <PageContainer>

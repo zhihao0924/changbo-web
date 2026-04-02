@@ -5,7 +5,7 @@ import type { MenuProps } from "antd"
 import { stringify } from "querystring"
 import type { MenuInfo } from "rc-menu/lib/interface"
 import React, { useCallback } from "react"
-import { history, useModel } from "umi"
+import { history, useIntl, useModel } from "umi"
 import { removeUserInfo } from "@/utils/biz"
 import { changePassword } from "@/pages/user/services/api"
 import { LOGINPATH } from "@/constants"
@@ -39,8 +39,18 @@ const loginOut = async () => {
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
   const { initialState, setInitialState } = useModel("@@initialState")
+  const intl = useIntl()
   const [visible, setVisible] = React.useState(false)
   const [form] = Form.useForm()
+
+  const formatMessage = useCallback(
+    (id: string, defaultMessage: string) =>
+      intl.formatMessage({
+        id,
+        defaultMessage,
+      }),
+    [intl],
+  )
 
   const handleChangePassword = () => {
     form.validateFields().then(async (values) => {
@@ -50,17 +60,17 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           new_password: values.newPassword,
         }).then((res) => {
           if (res?.err === 0) {
-            message.success("密码修改成功", 1, () => {
+            message.success(formatMessage("app.user.password.change.success", "Password changed successfully"), 1, () => {
               loginOut()
             })
             setVisible(false)
             form.resetFields()
           } else {
-            message.error(res?.msg || "密码修改失败")
+            message.error(res?.msg || formatMessage("app.user.password.change.failed", "Failed to change password"))
           }
         })
       } catch (error) {
-        message.error("密码修改失败")
+        message.error(formatMessage("app.user.password.change.failed", "Failed to change password"))
       }
     })
   }
@@ -116,12 +126,12 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           {
             key: "center",
             icon: <UserOutlined />,
-            label: "个人中心",
+            label: formatMessage("app.user.center", "Profile"),
           },
           {
             key: "settings",
             icon: <SettingOutlined />,
-            label: "个人设置",
+            label: formatMessage("app.user.settings", "Settings"),
           },
           {
             type: "divider" as const,
@@ -131,19 +141,19 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     {
       key: "changePassword",
       icon: <LockOutlined />,
-      label: "修改密码",
+      label: formatMessage("app.user.password.change", "Change Password"),
     },
     {
       key: "logout",
       icon: <LogoutOutlined />,
-      label: "退出登录",
+      label: formatMessage("app.user.logout", "Log out"),
     },
   ]
 
   return (
     <>
       <Modal
-        title="修改密码"
+        title={formatMessage("app.user.password.change", "Change Password")}
         open={visible}
         onOk={handleChangePassword}
         onCancel={() => setVisible(false)}
@@ -151,22 +161,40 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
         <Form form={form} layout="vertical">
           <Form.Item
             name="oldPassword"
-            label="旧密码"
-            rules={[{ required: true, message: "请输入旧密码" }]}
+            label={formatMessage("app.user.password.old", "Current Password")}
+            rules={[
+              {
+                required: true,
+                message: formatMessage("app.user.password.old.required", "Please enter your current password"),
+              },
+            ]}
           >
             <Input.Password />
           </Form.Item>
           <Form.Item
             name="newPassword"
-            label="新密码"
+            label={formatMessage("app.user.password.new", "New Password")}
             rules={[
-              { required: true, message: "请输入新密码" },
-              { min: 8, message: "密码长度至少8位" },
+              {
+                required: true,
+                message: formatMessage("app.user.password.new.required", "Please enter a new password"),
+              },
+              {
+                min: 8,
+                message: formatMessage("app.user.password.new.min", "Password must be at least 8 characters"),
+              },
               {
                 validator: (_, value) => {
                   // 检查是否包含非法字符
                   if (/[^a-zA-Z0-9!@#$%^&*]/.test(value)) {
-                    return Promise.reject(new Error("密码只能包含字母、数字和!@#$%^&*"))
+                    return Promise.reject(
+                      new Error(
+                        formatMessage(
+                          "app.user.password.new.charset",
+                          "Password can only contain letters, numbers, and !@#$%^&*",
+                        ),
+                      ),
+                    )
                   }
 
                   const hasLetter = /[a-zA-Z]/.test(value)
@@ -177,7 +205,14 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
                   if (typesCount >= 2) {
                     return Promise.resolve()
                   }
-                  return Promise.reject(new Error("密码需包含字母、数字及!@#$%^&*中的两种及以上"))
+                  return Promise.reject(
+                    new Error(
+                      formatMessage(
+                        "app.user.password.new.complexity",
+                        "Password must include at least two of the following: letters, numbers, and !@#$%^&*",
+                      ),
+                    ),
+                  )
                 },
               },
             ]}
@@ -186,16 +221,26 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           </Form.Item>
           <Form.Item
             name="confirmPassword"
-            label="确认密码"
+            label={formatMessage("app.user.password.confirm", "Confirm Password")}
             dependencies={["newPassword"]}
             rules={[
-              { required: true, message: "请确认新密码" },
+              {
+                required: true,
+                message: formatMessage("app.user.password.confirm.required", "Please confirm your new password"),
+              },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue("newPassword") === value) {
                     return Promise.resolve()
                   }
-                  return Promise.reject(new Error("两次输入的密码不一致"))
+                  return Promise.reject(
+                    new Error(
+                      formatMessage(
+                        "app.user.password.confirm.mismatch",
+                        "The two passwords do not match",
+                      ),
+                    ),
+                  )
                 },
               }),
             ]}

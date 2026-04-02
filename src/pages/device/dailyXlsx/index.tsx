@@ -7,12 +7,18 @@ import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { DownloadOutlined } from "@ant-design/icons"
 import { Button, Space } from "antd"
 import type { API_PostDailyXlsxList } from "@/pages/device/services/typings/device"
+import { useIntl } from "umi"
 
 type Columns = API_PostDailyXlsxList.List
 
 const DailyXlsx: React.FC = () => {
+  const intl = useIntl()
   const actionRef = useRef<ActionType>()
   const formRef = useRef<any>()
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
 
   const getLists = useCallback(async (params: any) => {
     const data = {
@@ -90,19 +96,19 @@ const DailyXlsx: React.FC = () => {
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
       {
-        title: "日志ID",
+        title: t("app.device.backup.logId", "Log ID"),
         dataIndex: "id",
         hideInSearch: true,
         hideInTable: true,
       },
       {
-        title: "文件名称",
+        title: t("app.device.backup.fileName", "File Name"),
         align: "center",
         dataIndex: "file_name",
         hideInSearch: true,
       },
       {
-        title: "设备编号",
+        title: t("app.device.backup.deviceId", "Device ID"),
         align: "center",
         dataIndex: "id",
         hideInTable: true,
@@ -115,13 +121,13 @@ const DailyXlsx: React.FC = () => {
         },
       },
       {
-        title: "日期",
+        title: t("app.device.backup.date", "Date"),
         align: "center",
         dataIndex: "file_date",
         hideInSearch: true,
       },
       {
-        title: "创建时间",
+        title: t("app.device.backup.createdAt", "Created At"),
         align: "center",
         dataIndex: "created_at",
         valueType: "dateRange",
@@ -139,13 +145,13 @@ const DailyXlsx: React.FC = () => {
         },
       },
       {
-        title: "操作",
+        title: t("app.common.action", "Action"),
         hideInSearch: true,
         render: (_, row: Columns) => {
           return (
             <Space>
               <Button type="link" icon={<DownloadOutlined />} onClick={() => downloadLoad(row)}>
-                下载
+                {t("app.common.download", "Download")}
               </Button>
               {/*<Button type="link" icon={<DeleteOutlined />} onClick={() => deleteRow(row)}>*/}
               {/*  删除*/}
@@ -155,7 +161,7 @@ const DailyXlsx: React.FC = () => {
         },
       },
     ]
-  }, [])
+  }, [t])
 
   return (
     <PageContainer>

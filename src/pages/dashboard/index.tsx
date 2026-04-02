@@ -13,6 +13,7 @@ import {
   ProductOutlined,
 } from "@ant-design/icons"
 import { SYSTEM_CONFIG } from "@/constants"
+import { useIntl } from "umi"
 
 const { Title } = Typography
 
@@ -246,6 +247,7 @@ const usePieConfig = (
   total_healthy: number,
   total: number,
   isFirstRender: boolean,
+  t: (id: string, defaultMessage: string) => string,
 ) => {
   return useMemo(() => {
     return {
@@ -263,11 +265,11 @@ const usePieConfig = (
       tooltip: {
         formatter: (item: any) => ({
           name: item.type,
-          value: `${item.value} 台 (${((item.value * 100) / (total || 1)).toFixed(2)}%)`,
+          value: `${item.value} ${t("app.dashboard.unit.device", "devices")} (${((item.value * 100) / (total || 1)).toFixed(2)}%)`,
         }),
       },
       statistic: {
-        title: { formatter: () => "健康率", style: { fontSize: 14 } },
+        title: { formatter: () => t("app.dashboard.healthRate", "Health Rate"), style: { fontSize: 14 } },
         content: {
           style: { fontSize: 12, fontWeight: "bold", color: "#30BF78" },
           content: `${total_healthy.toFixed(2) || 0}%`,
@@ -280,8 +282,8 @@ const usePieConfig = (
         itemName: {
           formatter: (text: string, item: any, index: number) => {
             // 设备总数显示在legend中
-            if (text === "设备总计") {
-              return `总计：${total}`
+            if (text === t("app.dashboard.deviceTotal", "Total Devices")) {
+              return `${t("app.dashboard.total", "Total")}: ${total}`
             }
             // 对于普通数据项，显示对应的值
             const itemData = data?.[index]
@@ -303,7 +305,7 @@ const usePieConfig = (
           })),
           {
             value: total,
-            name: `设备总计`,
+            name: t("app.dashboard.deviceTotal", "Total Devices"),
             marker: { symbol: "circle", style: { fill: "" } },
           },
         ],
@@ -311,7 +313,7 @@ const usePieConfig = (
       // height: 200,
       animation: isFirstRender,
     }
-  }, [data, total_healthy, total, isFirstRender])
+  }, [data, isFirstRender, t, total, total_healthy])
 }
 
 // 折线图配置
@@ -340,6 +342,7 @@ const useLineConfig = (data: any[]) => {
 }
 
 const Dashboard: React.FC = () => {
+  const intl = useIntl()
   const [dashboardData, setDashboardData] = useState<API_PostDashboard.Result>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -347,6 +350,10 @@ const Dashboard: React.FC = () => {
   const [currentTowerImage, setCurrentTowerImage] = useState<string>("tower_1")
   const [currentCabinetImage, setCurrentCabinetImage] = useState<string>("cabinet_none")
   const [currentLightImage, setCurrentLightImage] = useState<string>("light_none")
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
 
   // 清除告警状态的时间记录（从localStorage读取）
   const [lastClearTime, setLastClearTime] = useState<Date | null>(() => {
@@ -422,15 +429,15 @@ const Dashboard: React.FC = () => {
         console.log("Total devices:", res.res.total)
         setDashboardData(res.res)
       } else {
-        setError("获取数据失败")
+        setError(t("app.dashboard.fetchFailed", "Failed to load data"))
       }
     } catch (err) {
       console.error("获取仪表盘数据失败:", err)
-      setError("网络请求失败")
+      setError(t("app.dashboard.networkFailed", "Network request failed"))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   // 定时刷新数据
   useEffect(() => {
@@ -598,6 +605,7 @@ const Dashboard: React.FC = () => {
     dashboardData?.total_healthy || 0,
     dashboardData?.total || 0,
     isFirstRender,
+    t,
   )
 
   const lineConfig = useLineConfig(dashboardData?.energy_consumption || [])
@@ -609,7 +617,7 @@ const Dashboard: React.FC = () => {
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 48, color: "#1890ff", marginBottom: 16 }}>⚡</div>
             <Title level={3} style={{ color: "#595959" }}>
-              数据加载中...
+              {t("app.dashboard.loading", "Loading data...")}
             </Title>
           </div>
         </div>
@@ -625,11 +633,11 @@ const Dashboard: React.FC = () => {
             <AlertOutlined />
           </div>
           <Title level={3} type="danger">
-            数据加载失败
+            {t("app.dashboard.loadFailed", "Failed to load data")}
           </Title>
           <p style={{ color: "#595959", marginBottom: 24 }}>{error}</p>
           <Button type="primary" onClick={getDashboardData}>
-            重新加载
+            {t("app.dashboard.reload", "Reload")}
           </Button>
         </div>
       </div>
@@ -647,12 +655,12 @@ const Dashboard: React.FC = () => {
               const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
               if (systemConfig) {
                 const config = JSON.parse(systemConfig)
-                return config.system_name || "专网通信智能网管平台"
+                return config.system_name || t("app.system.defaultName", "Private Network Communication Intelligent NMS")
               }
             } catch (err) {
               console.error("获取系统配置失败:", err)
             }
-            return "专网通信智能网管平台"
+            return t("app.system.defaultName", "Private Network Communication Intelligent NMS")
           })()}
         </Title>
 
@@ -664,7 +672,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <CodeSandboxOutlined style={{ color: "#0083FF" }} />
-                  <span>系统健康指数</span>
+                  <span>{t("app.dashboard.systemHealthIndex", "System Health Index")}</span>
                 </Space>
               }
               loading={loading}
@@ -697,7 +705,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <AreaChartOutlined style={{ color: "#0083FF" }} />
-                  <span>能耗统计</span>
+                  <span>{t("app.dashboard.energyStats", "Energy Statistics")}</span>
                 </Space>
               }
               loading={loading}
@@ -726,7 +734,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <CodeSandboxOutlined style={{ color: "#0083FF" }} />
-                  <span>系统状态预览</span>
+                  <span>{t("app.dashboard.systemPreview", "System Status Preview")}</span>
                 </Space>
               }
               loading={loading}
@@ -828,7 +836,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <WarningOutlined style={{ color: "#0083FF" }} />
-                  <span>声光告警</span>
+                  <span>{t("app.dashboard.soundLightAlarm", "Sound and Light Alarm")}</span>
                 </Space>
               }
               extra={
@@ -897,7 +905,7 @@ const Dashboard: React.FC = () => {
               title={
                 <Space>
                   <RiseOutlined style={{ color: "#0083FF" }} />
-                  <span>最新告警</span>
+                  <span>{t("app.dashboard.latestAlarm", "Latest Alarms")}</span>
                 </Space>
               }
               style={{
@@ -929,7 +937,7 @@ const Dashboard: React.FC = () => {
                         >
                           <span style={{ color: "#222222", fontSize: "12px" }}>
                             {item.device_type_group}（{item.device_name}）
-                            {item.alarm_item.config_type_name} 告警
+                            {item.alarm_item.config_type_name} {t("app.dashboard.alarm", "Alarm")}
                           </span>
                         </div>
                         <div
@@ -991,7 +999,7 @@ const Dashboard: React.FC = () => {
                         />
                         <div>
                           <div style={{ fontSize: "10px", fontWeight: "500", color: "#333" }}>
-                            总数
+                            {t("app.dashboard.total", "Total")}
                           </div>
                           <div style={{ fontSize: "10px", color: "#999" }}>
                             {item.total_num || 0}
@@ -1006,7 +1014,7 @@ const Dashboard: React.FC = () => {
                         />
                         <div>
                           <div style={{ fontSize: "10px", fontWeight: "500", color: "#52c41a" }}>
-                            在线
+                            {t("app.dashboard.online", "Online")}
                           </div>
                           <div style={{ fontSize: "10px", color: "#999" }}>
                             {item.online_num || 0}
@@ -1025,7 +1033,7 @@ const Dashboard: React.FC = () => {
                         />
                         <div>
                           <div style={{ fontSize: "10px", fontWeight: "500", color: "#ff4d4f" }}>
-                            离线
+                            {t("app.dashboard.offline", "Offline")}
                           </div>
                           <div style={{ fontSize: "10px", color: "#999" }}>
                             {item.offline_num || 0}
@@ -1040,7 +1048,7 @@ const Dashboard: React.FC = () => {
                         />
                         <div>
                           <div style={{ fontSize: "10px", fontWeight: "500", color: "#faad14" }}>
-                            告警
+                            {t("app.dashboard.alarm", "Alarm")}
                           </div>
                           <div style={{ fontSize: "10px", color: "#999" }}>
                             {item.alarm_num || 0}

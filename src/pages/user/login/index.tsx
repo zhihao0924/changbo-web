@@ -12,7 +12,7 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { LoginFormPage, ProFormText } from "@ant-design/pro-form"
 import { Alert, message, Tabs } from "antd"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { history, useModel } from "umi"
+import { history, useIntl, useModel } from "umi"
 import styles from "./index.less"
 
 type LoginType = "account"
@@ -35,6 +35,16 @@ const Login: React.FC = () => {
   const [type, setType] = useState<LoginType>("account")
   const [systemConfig, setSystemConfig] = useState<any>(null)
   const { setInitialState } = useModel("@@initialState")
+  const intl = useIntl()
+
+  const formatMessage = useCallback(
+    (id: string, defaultMessage: string) =>
+      intl.formatMessage({
+        id,
+        defaultMessage,
+      }),
+    [intl],
+  )
 
   const handleLoginAuto = () => {
     const token = localStorage.getItem(ACCESS_TOKEN)
@@ -80,7 +90,7 @@ const Login: React.FC = () => {
         })
 
         if (res.err == 0) {
-          const defaultLoginSuccessMessage = "登录成功！"
+          const defaultLoginSuccessMessage = formatMessage("pages.login.success", "Login successful!")
           message.success(defaultLoginSuccessMessage)
 
           try {
@@ -103,7 +113,12 @@ const Login: React.FC = () => {
 
           } catch (fetchError) {
             console.error("获取用户信息失败:", fetchError)
-            message.error("登录成功但获取用户信息失败，请重新登录")
+            message.error(
+              formatMessage(
+                "app.login.fetchUserInfo.failed",
+                "Login succeeded, but loading user info failed. Please sign in again.",
+              ),
+            )
             setUserLoginState("error")
           }
 
@@ -112,14 +127,16 @@ const Login: React.FC = () => {
 
         console.log("登录失败:", res.msg || res)
         setUserLoginState("error")
-        message.error(res.msg || "登录失败，请重试")
+        message.error(res.msg || formatMessage("pages.login.failure", "Login failed, please try again!"))
       } catch (error) {
         console.error("登录异常:", error)
         setUserLoginState("error")
-        message.error("登录异常，请重试")
+        message.error(
+          formatMessage("app.login.exception", "A login error occurred. Please try again."),
+        )
       }
     },
-    [fetchUserInfo],
+    [fetchUserInfo, formatMessage],
   )
 
   // 获取系统配置
@@ -181,7 +198,9 @@ const Login: React.FC = () => {
 
     // 如果没有获取到系统配置，使用默认值
     if (!logoUrl) logoUrl = "/logo.png"
-    if (!systemName) systemName = "专网通信智能网管平台"
+    if (!systemName) {
+      systemName = formatMessage("app.system.defaultName", "Private Network Communication Intelligent NMS")
+    }
 
     return (
       <div className={styles.container}>
@@ -211,14 +230,19 @@ const Login: React.FC = () => {
               }}
               items={[
                 {
-                  label: "账户密码登录",
+                  label: formatMessage("pages.login.accountLogin.tab", "Account Login"),
                   key: "account",
                 },
               ]}
             />
 
             {userLoginState === "error" && type === "account" && (
-              <LoginMessage content={"账户或密码错误"} />
+              <LoginMessage
+                content={formatMessage(
+                  "app.login.account.error",
+                  "Incorrect username or password",
+                )}
+              />
             )}
             {type === "account" && (
               <>
@@ -228,11 +252,11 @@ const Login: React.FC = () => {
                     size: "large",
                     prefix: <UserOutlined className={styles.prefixIcon} />,
                   }}
-                  placeholder="请输入用户名"
+                  placeholder={formatMessage("app.login.username.placeholder", "Please enter username")}
                   rules={[
                     {
                       required: true,
-                      message: "请输入用户名!",
+                      message: formatMessage("app.login.username.required", "Please enter username"),
                     },
                   ]}
                 />
@@ -242,11 +266,11 @@ const Login: React.FC = () => {
                     size: "large",
                     prefix: <LockOutlined className={styles.prefixIcon} />,
                   }}
-                  placeholder="请输入密码"
+                  placeholder={formatMessage("app.login.password.placeholder", "Please enter password")}
                   rules={[
                     {
                       required: true,
-                      message: "请输入密码！",
+                      message: formatMessage("app.login.password.required", "Please enter password"),
                     },
                   ]}
                 />
@@ -256,7 +280,7 @@ const Login: React.FC = () => {
         </div>
       </div>
     )
-  }, [type, userLoginState, handleSubmit, systemConfig])
+  }, [formatMessage, type, userLoginState, handleSubmit, systemConfig])
 }
 
 export default Login

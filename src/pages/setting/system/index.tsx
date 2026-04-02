@@ -7,6 +7,7 @@ import { LoadingOutlined, PlusOutlined } from "@ant-design/icons"
 import type { RcFile, UploadChangeParam } from "antd/es/upload"
 import Services from "@/pages/setting/services"
 import { SYSTEM_CONFIG } from "@/constants"
+import { useIntl } from "umi"
 
 const getBase64 = (img: RcFile, callback: (url: string) => void) => {
   const reader = new FileReader()
@@ -27,9 +28,14 @@ const beforeUpload = (file: RcFile) => {
 }
 
 const SystemSetting: React.FC = () => {
+  const intl = useIntl()
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState<string>()
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
 
   const getSystemConfig = useCallback(async () => {
     const res = await Services.api.postSystemConfig({})
@@ -74,27 +80,27 @@ const SystemSetting: React.FC = () => {
   const uploadButton = (
     <div>
       {loading ? <LoadingOutlined /> : <PlusOutlined />}
-      <div style={{ marginTop: 8 }}>Upload</div>
+      <div style={{ marginTop: 8 }}>{t("app.common.upload", "Upload")}</div>
     </div>
   )
   return (
     <PageContainer>
       <Form form={form} layout="horizontal" onFinish={onFinish}>
-        <Card title="系统设置">
+        <Card title={t("app.setting.system.title", "System Settings")}>
           <Form.Item
             labelCol={{ span: 6 }}
-            label="系统名称"
+            label={t("app.setting.system.name", "System Name")}
             name="system_name"
-            rules={[{ required: true, message: "请输入系统名称" }]}
+            rules={[{ required: true, message: t("app.setting.system.name.required", "Please enter the system name") }]}
             style={{ maxWidth: 600 }}
           >
-            <Input placeholder="请输入系统名称" />
+            <Input placeholder={t("app.setting.system.name.placeholder", "Please enter the system name")} />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
-            label="系统Logo"
+            label={t("app.setting.system.logo", "System Logo")}
             name="system_logo"
-            rules={[{ required: true, message: "请上传logo" }]}
+            rules={[{ required: true, message: t("app.setting.system.logo.required", "Please upload a logo") }]}
             style={{ maxWidth: 600 }}
           >
             <Upload
@@ -114,114 +120,114 @@ const SystemSetting: React.FC = () => {
           <Divider dashed={true} />
           <Form.Item
             labelCol={{ span: 6 }}
-            label="数据采集频率"
+            label={t("app.setting.system.dps", "Data Collection Frequency")}
             name="dots_per_second"
-            rules={[{ required: true, message: "请选择数据采集频率" }]}
+            rules={[{ required: true, message: t("app.setting.system.dps.required", "Please select a data collection frequency") }]}
             style={{ maxWidth: 600 }}
           >
             <Select
               defaultValue={1}
               options={[
-                { label: "每秒1次", value: 1 },
-                { label: "每秒5次", value: 5 },
-                { label: "每秒10次", value: 10 },
+                { label: t("app.setting.system.dps.1", "1 time/sec"), value: 1 },
+                { label: t("app.setting.system.dps.5", "5 times/sec"), value: 5 },
+                { label: t("app.setting.system.dps.10", "10 times/sec"), value: 10 },
               ]}
             />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
-            label="页面刷新频率"
+            label={t("app.setting.system.refresh", "Page Refresh Frequency")}
             name="refresh_interval"
-            rules={[{ required: true, message: "请选择数据采集频率" }]}
+            rules={[{ required: true, message: t("app.setting.system.refresh.required", "Please select a refresh frequency") }]}
             style={{ maxWidth: 600 }}
           >
             <Select
               defaultValue={3000}
               options={[
-                { label: "500毫秒/次", value: 500 },
-                { label: "1秒/次", value: 1000 },
-                { label: "3秒/次", value: 3000 },
-                { label: "5秒/次", value: 5000 },
-                { label: "10秒/次", value: 10000 },
+                { label: t("app.setting.system.refresh.500", "500 ms/time"), value: 500 },
+                { label: t("app.setting.system.refresh.1000", "1 sec/time"), value: 1000 },
+                { label: t("app.setting.system.refresh.3000", "3 sec/time"), value: 3000 },
+                { label: t("app.setting.system.refresh.5000", "5 sec/time"), value: 5000 },
+                { label: t("app.setting.system.refresh.10000", "10 sec/time"), value: 10000 },
               ]}
             />
           </Form.Item>
           <Divider dashed={true} />
           <Form.Item
             labelCol={{ span: 6 }}
-            label="邮件服务器"
+            label={t("app.setting.system.email.host", "Mail Server")}
             name={["email_config", "host"]}
             style={{ maxWidth: 600 }}
             rules={[
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error("开启邮件发送必须填写邮件服务器"))
+                    return Promise.reject(new Error(t("app.setting.system.email.host.requiredWhenEnabled", "Mail server is required when email sending is enabled")))
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder="例如：smtp.qq.com" />
+            <Input placeholder={t("app.setting.system.email.host.placeholder", "For example: smtp.qq.com")} />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
-            label="邮件服务器端口"
+            label={t("app.setting.system.email.port", "Mail Server Port")}
             name={["email_config", "port"]}
             style={{ maxWidth: 600 }}
             rules={[
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error("开启邮件发送必须填写端口号"))
+                    return Promise.reject(new Error(t("app.setting.system.email.port.requiredWhenEnabled", "Port is required when email sending is enabled")))
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder="例如：465 或 587" />
+            <Input placeholder={t("app.setting.system.email.port.placeholder", "For example: 465 or 587")} />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
-            label="邮件服务器用户名"
+            label={t("app.setting.system.email.username", "Mail Server Username")}
             name={["email_config", "username"]}
             style={{ maxWidth: 600 }}
             rules={[
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error("开启邮件发送必须填写用户名"))
+                    return Promise.reject(new Error(t("app.setting.system.email.username.requiredWhenEnabled", "Username is required when email sending is enabled")))
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder="邮箱地址" />
+            <Input placeholder={t("app.setting.system.email.username.placeholder", "Email address")} />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
-            label="邮件服务器授权码"
+            label={t("app.setting.system.email.authCode", "Mail Server Authorization Code")}
             name={["email_config", "authorization_code"]}
             style={{ maxWidth: 600 }}
             rules={[
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error("开启邮件发送必须填写授权码"))
+                    return Promise.reject(new Error(t("app.setting.system.email.authCode.requiredWhenEnabled", "Authorization code is required when email sending is enabled")))
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder="邮箱授权码，非登录密码" />
+            <Input placeholder={t("app.setting.system.email.authCode.placeholder", "Email authorization code, not the login password")} />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
-            label="是否发送邮件"
+            label={t("app.setting.system.email.enable", "Enable Email Sending")}
             name={["email_config", "is_send"]}
             style={{ maxWidth: 600 }}
             valuePropName="checked"
@@ -236,7 +242,7 @@ const SystemSetting: React.FC = () => {
                       !emailConfig?.username ||
                       !emailConfig?.authorization_code
                     ) {
-                      return Promise.reject(new Error("开启邮件发送前请先配置完整邮箱信息"))
+                      return Promise.reject(new Error(t("app.setting.system.email.completeBeforeEnable", "Please complete the email configuration before enabling email sending")))
                     }
                   }
                   return Promise.resolve()
@@ -248,7 +254,7 @@ const SystemSetting: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              保存设置
+              {t("app.common.saveSettings", "Save Settings")}
             </Button>
           </Form.Item>
         </Card>

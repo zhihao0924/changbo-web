@@ -12,6 +12,7 @@ import {
 } from "@ant-design/icons"
 import type { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
 import { SYSTEM_CONFIG } from "@/constants"
+import { useIntl } from "umi"
 
 // 常量配置
 const PAGE_SIZE = 300
@@ -83,6 +84,7 @@ const getStatusIcon = (
 interface MetricItemProps {
   metricItem: API_PostDeviceList.MetricItems
   alarmItems?: API_PostDeviceList.AlarmItems[]
+  t: (id: string, defaultMessage: string) => string
 }
 
 // 设备卡片组件
@@ -90,9 +92,10 @@ interface DeviceCardProps {
   device: API_PostDeviceList.List
   onDoubleClick: () => void
   isEvenRow?: boolean
+  t: (id: string, defaultMessage: string) => string
 }
 
-const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
+const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) => {
   // 判断是否显示值
   const shouldShowValue = useMemo(() => {
     const { show_max_val, show_min_val, current_val, is_set_current_val ,is_alarm} = metricItem
@@ -140,7 +143,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   }, [metricItem])
 
   if (metricItem.is_module) {
-    return <span>{metricItem.current_val ? "在线" : "离线"}</span>
+    return <span>{metricItem.current_val ? t("app.device.status.online", "Online") : t("app.device.status.offline", "Offline")}</span>
   }
   if (metricItem.is_alarm) {
     if (metricItem.is_set_current_val) {
@@ -174,7 +177,7 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems }) => {
   )
 }
 
-const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRow = false }) => {
+const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRow = false, t }) => {
   const deviceTitle = `${device.device_type_alias || device.device_type_group}:${device.name}`
 
   return (
@@ -217,10 +220,10 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
         }}
       >
         {device.is_online && !device.is_maintaining && device.is_alarm && (
-          <Tag color={"red"}>告警中</Tag>
+          <Tag color={"red"}>{t("app.device.status.inAlarm", "In Alarm")}</Tag>
         )}
         {device.is_online && !device.is_maintaining && !device.is_module_online && (
-          <Tag color={"red"}>模块离线</Tag>
+          <Tag color={"red"}>{t("app.device.status.moduleOffline", "Module Offline")}</Tag>
         )}
       </div>
 
@@ -231,11 +234,12 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
             <React.Fragment key={`fragment_Key_${metricItem.config_type}`}>
               <Col span={8}>{metricItem.config_type_name}</Col>
               <Col span={12}>
-                <MetricItem
-                  metricItem={metricItem}
-                  alarmItems={device?.alarm_items}
-                  key={`MetricItem_${metricItem.config_type}`}
-                />
+                  <MetricItem
+                    metricItem={metricItem}
+                    alarmItems={device?.alarm_items}
+                    t={t}
+                    key={`MetricItem_${metricItem.config_type}`}
+                  />
               </Col>
               <Col
                 span={4}
@@ -260,6 +264,7 @@ interface DeviceDetailModalProps {
   deviceId: number | null
   deviceList: API_PostDeviceList.List[]
   onCancel: () => void
+  t: (id: string, defaultMessage: string) => string
 }
 
 const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
@@ -267,29 +272,30 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
   deviceId,
   deviceList,
   onCancel,
+  t,
 }) => {
   const selectedDevice = deviceList.find((d) => d.id === deviceId)
 
   if (!selectedDevice) return null
 
   return (
-    <Modal title={`设备详情`} open={visible} onCancel={onCancel} footer={null} width={600}>
+    <Modal title={t("app.device.status.detail", "Device Details")} open={visible} onCancel={onCancel} footer={null} width={600}>
       <Card bordered={false}>
         <Row>
           <Col span={8} style={{ backgroundColor: "#ffffff" }}>
-            设备类型
+            {t("app.device.status.deviceType", "Device Type")}
           </Col>
           <Col span={16} style={{ backgroundColor: "#ffffff" }}>
             {selectedDevice.device_type_alias}
           </Col>
           <Col span={8} style={{ backgroundColor: "#f8f9fa" }}>
-            设备编号
+            {t("app.device.status.deviceId", "Device ID")}
           </Col>
           <Col span={16} style={{ backgroundColor: "#f8f9fa" }}>
             {selectedDevice.name}
           </Col>
           <Col span={8} style={{ backgroundColor: "#ffffff" }}>
-            安装位置
+            {t("app.device.status.position", "Installation Position")}
           </Col>
           <Col span={16} style={{ backgroundColor: "#ffffff" }}>
             {selectedDevice.position}
@@ -313,7 +319,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                     backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
-                  <MetricItem metricItem={metricItem} alarmItems={selectedDevice?.alarm_items} />
+                  <MetricItem metricItem={metricItem} alarmItems={selectedDevice?.alarm_items} t={t} />
                 </Col>
                 <Col
                   span={4}
@@ -336,11 +342,16 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
 }
 
 const DeviceStatus: React.FC = () => {
+  const intl = useIntl()
   const [deviceTypes, setDeviceTypes] = useState<API_PostDeviceTypes.List[]>([])
   const [deviceList, setDeviceList] = useState<API_PostDeviceList.List[]>([])
   const [form] = Form.useForm()
   const [deviceId, setDeviceId] = useState<number | null>(null)
   const [showModalVisible, setShowModalVisible] = useState(false)
+  const t = useCallback(
+    (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
+    [intl],
+  )
 
   // 获取设备类型
   const getDeviceTypes = useCallback(async () => {
@@ -428,9 +439,9 @@ const DeviceStatus: React.FC = () => {
       <Form form={form}>
         <Row gutter={[24, 24]}>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="device_type_id" label="设备类型">
+            <Form.Item name="device_type_id" label={t("app.device.status.deviceType", "Device Type")}>
               <Select
-                placeholder="请选择类型"
+                placeholder={t("app.device.status.selectType", "Please select a type")}
                 allowClear
                 options={deviceTypeOptions}
                 filterOption={(input, option) => (option?.label ?? "").includes(input.trim())}
@@ -439,12 +450,12 @@ const DeviceStatus: React.FC = () => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="id_list" label="设备编号">
+            <Form.Item name="id_list" label={t("app.device.status.deviceId", "Device ID")}>
               <DeviceNameSelect />
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="is_alarm_or_module_offline" label="告警中" valuePropName="checked">
+            <Form.Item name="is_alarm_or_module_offline" label={t("app.device.status.inAlarm", "In Alarm")} valuePropName="checked">
               <Checkbox />
             </Form.Item>
           </Col>
@@ -460,6 +471,7 @@ const DeviceStatus: React.FC = () => {
                 setShowModalVisible(true)
               }}
               isEvenRow={index % 2 === 0}
+              t={t}
             />
           </Col>
         ))}
@@ -470,6 +482,7 @@ const DeviceStatus: React.FC = () => {
         deviceId={deviceId}
         deviceList={deviceList}
         onCancel={() => setShowModalVisible(false)}
+        t={t}
       />
     </PageContainer>
   )

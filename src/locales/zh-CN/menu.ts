@@ -4,7 +4,7 @@ export default {
   "menu.device": "设备中心",
   "menu.device.index": "设备管理",
   "menu.device.deviceDetail": "设备详情",
-  "menu.device.list": "设备列表",
+  "menu.device.list": "设备管理",
   "menu.device.types": "设备类型",
   "menu.device.status": "设备拓扑图",
   "menu.device.logs": "告警日志",
@@ -14,6 +14,4 @@ export default {
   "menu.dashboard": "仪表盘",
   "menu.setting": "系统设置",
   "menu.setting.system": "系统设置",
-
-  // "app.copyright.produced": "app.copyright.produced",
 }
