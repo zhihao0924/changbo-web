@@ -19,13 +19,13 @@ const Settings: LayoutSettings & {
   title: "专网通信智能网管平台",
   token: {
     header: {
-      colorBgHeader: "#292f33",
+      colorBgHeader: "#163b66",
       colorHeaderTitle: "#fff",
-      colorTextMenu: "#dfdfdf",
-      colorTextMenuSecondary: "#dfdfdf",
+      colorTextMenu: "rgba(255, 255, 255, 0.88)",
+      colorTextMenuSecondary: "rgba(255, 255, 255, 0.82)",
       colorTextMenuSelected: "#fff",
-      colorBgMenuItemSelected: "#22272b",
-      colorTextRightActionsItem: "#dfdfdf",
+      colorBgMenuItemSelected: "rgba(255, 255, 255, 0.12)",
+      colorTextRightActionsItem: "#fff",
       heightLayoutHeader: 48,
     },
     sider: {

@@ -20,6 +20,26 @@ import defaultSettings from "../config/defaultSettings"
 import { postSystemConfig } from "@/pages/setting/services/api"
 
 const excludePath = [LOGINPATH, CALLBACKPATH, SYSTEMCONFIGPATH]
+const DEFAULT_LOCALE = "zh-CN"
+const LOCALE_STORAGE_KEY = "umi_locale"
+
+const getDefaultSystemName = () => {
+  if (typeof window === "undefined") {
+    return "专网通信智能网管平台"
+  }
+
+  const locale = localStorage.getItem(LOCALE_STORAGE_KEY) || DEFAULT_LOCALE
+
+  return locale === "en-US"
+    ? "Private Network Communication Intelligent NMS"
+    : "专网通信智能网管平台"
+}
+
+const resolveSystemName = (systemName?: string) => {
+  const normalized = systemName?.trim()
+
+  return normalized || getDefaultSystemName()
+}
 
 /** 获取用户信息比较慢的时候会展示一个 loading */
 export const initialStateConfig = {
@@ -86,7 +106,7 @@ export async function getInitialState(): Promise<{
     const currentUser = await fetchUserInfo()
 
     const systemConfig = await fetchSystemConfig()
-    defaultSettings.title = systemConfig?.system_name
+    defaultSettings.title = resolveSystemName(systemConfig?.system_name)
     defaultSettings.logo = systemConfig?.system_logo
     const data = {
       fetchUserInfo,
@@ -97,6 +117,8 @@ export async function getInitialState(): Promise<{
     }
     return data
   }
+
+  defaultSettings.title = getDefaultSystemName()
 
   return {
     fetchUserInfo,

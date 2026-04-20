@@ -41,10 +41,19 @@ const UserIndex: React.FC = () => {
   )
 
   // 统一错误处理
-  const handleApiError = (error: any, operation: string) => {
-    console.error(`${operation}失败:`, error)
-    message.error(`${operation}失败，请稍后重试`, 1)
-  }
+  const handleApiError = useCallback(
+    (error: any, operation: string) => {
+      console.error(`${operation} failed:`, error)
+      message.error(
+        t("app.admin.operationFailed", "Operation failed. Please try again later.").replace(
+          "${operation}",
+          operation,
+        ),
+        1,
+      )
+    },
+    [t],
+  )
 
   const openCreateAdminModal = useCallback(() => {
     createAdminForm.resetFields()
@@ -79,31 +88,34 @@ const UserIndex: React.FC = () => {
     form.resetFields()
   }, [])
 
-  const handleApiCall = useCallback(async (apiCall: Promise<any>, successMessage: string) => {
-    try {
-      setLoading(true)
-      const res = await apiCall
-      if (res.err === 0) {
-        message.success(successMessage, 1, () => {
-          actionRef.current?.reload()
-        })
+  const handleApiCall = useCallback(
+    async (apiCall: Promise<any>, successMessage: string) => {
+      try {
+        setLoading(true)
+        const res = await apiCall
+        if (res.err === 0) {
+          message.success(successMessage, 1, () => {
+            actionRef.current?.reload()
+          })
 
-        return true
+          return true
+        }
+      } catch (error) {
+        handleApiError(error, t("app.admin.operation", "Operation"))
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      handleApiError(error, "操作")
-    } finally {
-      setLoading(false)
-    }
-    return false
-  }, [])
+      return false
+    },
+    [handleApiError, t],
+  )
 
   const handleUpdateModalSubmit = useCallback(async () => {
     try {
       const values = await updateAdminForm.validateFields()
       const success = await handleApiCall(
         Services.api.postAdminUpdate({ id: currentRecord?.id, ...values }),
-        "修改用户成功",
+        t("app.admin.updateSuccess", "User updated successfully"),
       )
       if (success) {
         closeModal(updateAdminForm, setUpdateModalVisible)
@@ -111,44 +123,50 @@ const UserIndex: React.FC = () => {
     } catch (error) {
       // 表单验证错误，不处理
     }
-  }, [closeModal, currentRecord?.id, handleApiCall, updateAdminForm])
+  }, [closeModal, currentRecord?.id, handleApiCall, t, updateAdminForm])
 
   const deleteAdmin = useCallback(
     (record: Columns) => {
       Modal.confirm({
-        title: "确认删除该用户吗？",
+        title: t("app.admin.deleteConfirmTitle", "Confirm deleting this user?"),
         onOk: async () => {
-          await handleApiCall(Services.api.postAdminDelete({ id: record?.id }), "删除用户成功")
+          await handleApiCall(
+            Services.api.postAdminDelete({ id: record?.id }),
+            t("app.admin.deleteSuccess", "User deleted successfully"),
+          )
         },
       })
     },
-    [handleApiCall],
+    [handleApiCall, t],
   )
 
-  const getLists = useCallback(async (params: any) => {
-    try {
-      const data = {
-        page: params.current,
-        limit: params.pageSize,
-        ...params,
-      }
-      delete data.current
-      delete data.pageSize
-
-      const res = await Services.api.postAdminList(data)
-
-      if (res) {
-        return {
-          total: res.res.total,
-          data: res.res.list || [],
-          success: true,
+  const getLists = useCallback(
+    async (params: any) => {
+      try {
+        const data = {
+          page: params.current,
+          limit: params.pageSize,
+          ...params,
         }
+        delete data.current
+        delete data.pageSize
+
+        const res = await Services.api.postAdminList(data)
+
+        if (res) {
+          return {
+            total: res.res.total,
+            data: res.res.list || [],
+            success: true,
+          }
+        }
+      } catch (error) {
+        handleApiError(error, t("app.admin.fetchUserList", "Fetch user list"))
       }
-    } catch (error) {
-      handleApiError(error, "获取用户列表")
-    }
-    return { data: [], success: false }
-  }, [])
+      return { data: [], success: false }
+    },
+    [handleApiError, t],
+  )
 
   const getRoles = useCallback(() => {
     const userInfo = JSON.parse(localStorage.getItem("userinfo") || "{}")
@@ -165,14 +183,17 @@ const UserIndex: React.FC = () => {
   const handleCreateAdminSubmit = useCallback(async () => {
     try {
       const values = await createAdminForm.validateFields()
-      const success = await handleApiCall(Services.api.postAdminCreate(values), "添加用户成功")
+      const success = await handleApiCall(
+        Services.api.postAdminCreate(values),
+        t("app.admin.createSuccess", "User created successfully"),
+      )
       if (success) {
         closeModal(createAdminForm, setCreateAdminModalVisible)
       }
     } catch (error) {
       // 表单验证错误，不处理
     }
-  }, [closeModal, createAdminForm, handleApiCall])
+  }, [closeModal, createAdminForm, handleApiCall, t])
 
   const handleResetPwdSubmit = useCallback(async () => {
     try {
@@ -182,7 +203,7 @@ const UserIndex: React.FC = () => {
           target_admin_id: currentRecord?.id,
           ...values,
         }),
-        "重置密码成功",
+        t("app.admin.resetPasswordSuccess", "Password reset successfully"),
       )
       if (success) {
         closeModal(resetPwdForm, setResetPwdModalVisible)
@@ -190,26 +211,34 @@ const UserIndex: React.FC = () => {
     } catch (error) {
       // 表单验证错误，不处理
     }
-  }, [closeModal, currentRecord?.id, handleApiCall, resetPwdForm])
+  }, [closeModal, currentRecord?.id, handleApiCall, resetPwdForm, t])
 
   const handleDisabledAdmin = useCallback(
     (record: Columns) => {
-      const action = record.is_disabled ? "启用" : "禁用"
+      const action = record.is_disabled
+        ? t("app.admin.enable", "Enable")
+        : t("app.admin.disable", "Disable")
       Modal.confirm({
-        title: `确认${action}`,
-        content: `确认${action}该账号？`,
+        title: t("app.admin.toggleConfirmTitle", "Confirm ${action}").replace("${action}", action),
+        content: t("app.admin.toggleConfirmContent", "Confirm ${action} this account?").replace(
+          "${action}",
+          action,
+        ),
         onOk: async () => {
           await handleApiCall(
             Services.api.postDisableAdmin({
               target_admin_id: record?.id,
               is_disabled: !record?.is_disabled,
             }),
-            `${action}用户成功`,
+            t("app.admin.toggleSuccess", "${action} user successfully").replace(
+              "${action}",
+              action,
+            ),
           )
         },
       })
     },
-    [handleApiCall],
+    [handleApiCall, t],
   )
 
   useEffect(() => {
@@ -254,7 +283,9 @@ const UserIndex: React.FC = () => {
         align: "center",
         dataIndex: "is_disabled",
         render: (val) => {
-          return val ? t("app.admin.status.disabled", "Disabled") : t("app.admin.status.normal", "Normal")
+          return val
+            ? t("app.admin.status.disabled", "Disabled")
+            : t("app.admin.status.normal", "Normal")
         },
       },
       {
@@ -336,35 +367,60 @@ const UserIndex: React.FC = () => {
           <Form.Item
             name="account"
             label={t("app.admin.loginAccount", "Login Account")}
-            rules={[{ required: true, message: t("app.admin.loginAccount.required", "Please enter the login account") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.loginAccount.required", "Please enter the login account"),
+              },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="name"
             label={t("app.admin.adminName", "Admin Name")}
-            rules={[{ required: true, message: t("app.admin.adminName.required", "Please enter the admin name") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.adminName.required", "Please enter the admin name"),
+              },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="email"
             label={t("app.admin.email", "Email")}
-            rules={[{ type: "email", message: t("app.admin.email.invalid", "Please enter a valid email address") }]}
+            rules={[
+              {
+                type: "email",
+                message: t("app.admin.email.invalid", "Please enter a valid email address"),
+              },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="role"
             label={t("app.admin.role", "Role")}
-            rules={[{ required: true, message: t("app.admin.role.required", "Please select an admin role") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.role.required", "Please select an admin role"),
+              },
+            ]}
           >
             <Radio.Group options={getRoles()} />
           </Form.Item>
           <Form.Item
             name="password"
             label={t("app.admin.password", "Password")}
-            rules={[{ required: true, message: t("app.admin.password.required", "Please enter the password") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.password.required", "Please enter the password"),
+              },
+            ]}
           >
             <Input.Password />
           </Form.Item>
@@ -382,28 +438,48 @@ const UserIndex: React.FC = () => {
           <Form.Item
             name="account"
             label={t("app.admin.loginAccount", "Login Account")}
-            rules={[{ required: true, message: t("app.admin.loginAccount.required", "Please enter the login account") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.loginAccount.required", "Please enter the login account"),
+              },
+            ]}
           >
             <Input readOnly />
           </Form.Item>
           <Form.Item
             name="name"
             label={t("app.admin.adminName", "Admin Name")}
-            rules={[{ required: true, message: t("app.admin.adminName.required", "Please enter the admin name") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.adminName.required", "Please enter the admin name"),
+              },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="email"
             label={t("app.admin.email", "Email")}
-            rules={[{ type: "email", message: t("app.admin.email.invalid", "Please enter a valid email address") }]}
+            rules={[
+              {
+                type: "email",
+                message: t("app.admin.email.invalid", "Please enter a valid email address"),
+              },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="role"
             label={t("app.admin.role", "Role")}
-            rules={[{ required: true, message: t("app.admin.role.required", "Please select an admin role") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.role.required", "Please select an admin role"),
+              },
+            ]}
           >
             <Radio.Group options={getRoles()} />
           </Form.Item>
@@ -421,7 +497,12 @@ const UserIndex: React.FC = () => {
           <Form.Item
             name="password"
             label={t("app.admin.newPassword", "New Password")}
-            rules={[{ required: true, message: t("app.admin.newPassword.required", "Please enter the new password") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.admin.newPassword.required", "Please enter the new password"),
+              },
+            ]}
           >
             <Input.Password />
           </Form.Item>

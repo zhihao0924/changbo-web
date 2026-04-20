@@ -17,6 +17,12 @@ import styles from "./index.less"
 
 type LoginType = "account"
 
+const getResolvedSystemName = (systemName: string | undefined, fallbackName: string) => {
+  const normalized = systemName?.trim()
+
+  return normalized || fallbackName
+}
+
 const LoginMessage: React.FC<{
   content: string
 }> = ({ content }) => (
@@ -36,6 +42,7 @@ const Login: React.FC = () => {
   const [systemConfig, setSystemConfig] = useState<any>(null)
   const { setInitialState } = useModel("@@initialState")
   const intl = useIntl()
+  const isEnglish = intl.locale === "en-US"
 
   const formatMessage = useCallback(
     (id: string, defaultMessage: string) =>
@@ -90,11 +97,14 @@ const Login: React.FC = () => {
         })
 
         if (res.err == 0) {
-          const defaultLoginSuccessMessage = formatMessage("pages.login.success", "Login successful!")
+          const defaultLoginSuccessMessage = formatMessage(
+            "pages.login.success",
+            "Login successful!",
+          )
           message.success(defaultLoginSuccessMessage)
 
           try {
-            await fetchUserInfo(res.res).then(()=>{
+            await fetchUserInfo(res.res).then(() => {
               // 减少延迟时间，避免被其他逻辑干扰
               setTimeout(() => {
                 const { query } = history.location
@@ -109,8 +119,6 @@ const Login: React.FC = () => {
               console.error("history 不可用")
               return
             }
-
-
           } catch (fetchError) {
             console.error("获取用户信息失败:", fetchError)
             message.error(
@@ -127,7 +135,9 @@ const Login: React.FC = () => {
 
         console.log("登录失败:", res.msg || res)
         setUserLoginState("error")
-        message.error(res.msg || formatMessage("pages.login.failure", "Login failed, please try again!"))
+        message.error(
+          res.msg || formatMessage("pages.login.failure", "Login failed, please try again!"),
+        )
       } catch (error) {
         console.error("登录异常:", error)
         setUserLoginState("error")
@@ -181,34 +191,39 @@ const Login: React.FC = () => {
     }
   }, [])
 
+  const systemName = useMemo(() => {
+    return getResolvedSystemName(
+      systemConfig?.system_name,
+      formatMessage("app.system.defaultName", "Private Network Communication Intelligent NMS"),
+    )
+  }, [formatMessage, systemConfig?.system_name])
+
+  useEffect(() => {
+    const loginTitle = formatMessage("app.login.pageTitle", "Login")
+    document.title = systemName ? `${loginTitle} - ${systemName}` : loginTitle
+  }, [formatMessage, systemName])
+
   return useMemo(() => {
-    // 使用状态中的系统配置数据
-    let logoUrl = "" // 默认logo
-    let systemName = "" // 默认名称
-
-    if (systemConfig) {
-      if (systemConfig.system_logo) {
-        logoUrl = systemConfig.system_logo
-      }
-
-      if (systemConfig.system_name) {
-        systemName = systemConfig.system_name
-      }
-    }
-
-    // 如果没有获取到系统配置，使用默认值
-    if (!logoUrl) logoUrl = "/logo.png"
-    if (!systemName) {
-      systemName = formatMessage("app.system.defaultName", "Private Network Communication Intelligent NMS")
-    }
-
     return (
       <div className={styles.container}>
         <div className={styles.content}>
           <LoginFormPage
             backgroundImageUrl="/logIn_bg.png"
-            logo={<img alt="logo" src={logoUrl} />}
-            title={systemName}
+            logo={null}
+            containerStyle={{
+              width: "100%",
+              maxWidth: isEnglish ? 440 : 400,
+            }}
+            mainStyle={{
+              width: "100%",
+            }}
+            title={
+              <div className={`${styles.brandTitle} ${isEnglish ? styles.brandTitleEn : ""}`}>
+                <span className={`${styles.brandText} ${isEnglish ? styles.brandTextEn : ""}`}>
+                  {systemName}
+                </span>
+              </div>
+            }
             subTitle=""
             initialValues={{
               autoLogin: true,
@@ -238,10 +253,7 @@ const Login: React.FC = () => {
 
             {userLoginState === "error" && type === "account" && (
               <LoginMessage
-                content={formatMessage(
-                  "app.login.account.error",
-                  "Incorrect username or password",
-                )}
+                content={formatMessage("app.login.account.error", "Incorrect username or password")}
               />
             )}
             {type === "account" && (
@@ -252,11 +264,17 @@ const Login: React.FC = () => {
                     size: "large",
                     prefix: <UserOutlined className={styles.prefixIcon} />,
                   }}
-                  placeholder={formatMessage("app.login.username.placeholder", "Please enter username")}
+                  placeholder={formatMessage(
+                    "app.login.username.placeholder",
+                    "Please enter username",
+                  )}
                   rules={[
                     {
                       required: true,
-                      message: formatMessage("app.login.username.required", "Please enter username"),
+                      message: formatMessage(
+                        "app.login.username.required",
+                        "Please enter username",
+                      ),
                     },
                   ]}
                 />
@@ -266,11 +284,17 @@ const Login: React.FC = () => {
                     size: "large",
                     prefix: <LockOutlined className={styles.prefixIcon} />,
                   }}
-                  placeholder={formatMessage("app.login.password.placeholder", "Please enter password")}
+                  placeholder={formatMessage(
+                    "app.login.password.placeholder",
+                    "Please enter password",
+                  )}
                   rules={[
                     {
                       required: true,
-                      message: formatMessage("app.login.password.required", "Please enter password"),
+                      message: formatMessage(
+                        "app.login.password.required",
+                        "Please enter password",
+                      ),
                     },
                   ]}
                 />
@@ -280,7 +304,7 @@ const Login: React.FC = () => {
         </div>
       </div>
     )
-  }, [formatMessage, type, userLoginState, handleSubmit, systemConfig])
+  }, [formatMessage, handleSubmit, isEnglish, systemName, type, userLoginState])
 }
 
 export default Login

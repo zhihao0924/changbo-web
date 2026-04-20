@@ -1,4 +1,3 @@
-import { Space } from "antd"
 import React from "react"
 import { SelectLang, useModel } from "umi"
 import Avatar from "./AvatarDropdown"
@@ -24,11 +23,11 @@ const GlobalHeaderRight: React.FC = () => {
   }
 
   return (
-    <Space className={className}>
-      <Avatar />
+    <div className={className}>
       <TimeLine showModal={showModal} onCloseModal={() => setShowModalCB(false)} />
-      <SelectLang className={styles.action} />
-    </Space>
+      <Avatar />
+      <SelectLang className={`${styles.action} ${styles.langAction}`} />
+    </div>
   )
 }
 export default GlobalHeaderRight

@@ -1,7 +1,5 @@
 @import "~antd/es/style/themes/default.less";
 
-@pro-header-hover-bg: rgba(0, 0, 0, 0.025);
-
 .menu {
   :global(.anticon) {
     margin-right: 8px;
@@ -14,30 +12,61 @@
 
 .right {
   display: flex;
+  gap: 6px;
+  align-items: center;
   float: right;
   height: 48px;
   margin-left: auto;
   overflow: hidden;
 
+  &.dark {
+    .action,
+    .account {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+
+      .name {
+        color: #fff;
+      }
+    }
+  }
+
   .action {
     display: flex;
     align-items: center;
-    height: 48px;
-    padding: 0 12px;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 
     > span {
       vertical-align: middle;
     }
 
+    :global(.anticon),
+    :global(.ant-pro-global-header-index-action) {
+      color: inherit;
+    }
+
     &:hover {
-      background: @pro-header-hover-bg;
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
     }
 
     &:global(.opened) {
-      background: @pro-header-hover-bg;
+      background: rgba(255, 255, 255, 0.12);
     }
+  }
+
+  .langAction {
+    flex: 0 0 auto;
   }
 
   .search {
@@ -49,14 +78,45 @@
   }
 
   .account {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    min-width: 0;
+    max-width: 140px;
+    height: 32px;
+    padding: 0 10px 0 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1px);
+    }
+
     .avatar {
-      margin-right: 8px;
+      flex: 0 0 auto;
+      margin-right: 6px;
       color: #fff;
       vertical-align: top;
       background: @primary-color;
     }
+
     .name {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
       color: #fff;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 1;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
   }
 }
@@ -76,6 +136,8 @@
     right: 12px;
 
     .account {
+      padding: 0 8px;
+
       .avatar {
         margin-right: 0;
       }
