@@ -1,0 +1,53 @@
+.libiio-config-page {
+  .libiio-config-shell {
+    border-radius: 18px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  }
+
+  .libiio-config-toolbar {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .libiio-config-summary {
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    border-radius: 14px;
+  }
+
+  .libiio-config-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .libiio-config-card {
+    background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+
+    .ant-card-body {
+      padding: 16px 18px 4px;
+    }
+
+    .ant-form-item {
+      margin-bottom: 12px;
+    }
+  }
+
+  .libiio-config-empty-action {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .libiio-config-page {
+    .libiio-config-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+}

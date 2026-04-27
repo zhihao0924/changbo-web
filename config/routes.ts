@@ -46,6 +46,25 @@ export default [
         access: "adminRouteFilter",
       },
       {
+        name: "libiioBoard",
+        path: "/device/libiio-board",
+        component: "./device/libiio/board",
+        access: "superAdminRouteFilter",
+      },
+      {
+        name: "libiio",
+        path: "/device/libiio",
+        component: "./device/libiio",
+        access: "superAdminRouteFilter",
+      },
+      {
+        name: "libiioConfig",
+        path: "/device/libiio/config/:deviceId",
+        component: "./device/libiio/config",
+        access: "superAdminRouteFilter",
+        hideInMenu: true,
+      },
+      {
         name: "types",
         path: "/device/types",
         component: "./device/types",
