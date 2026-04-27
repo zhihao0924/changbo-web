@@ -1,0 +1,120 @@
+.libiio-board-page {
+  .libiio-board-shell {
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+
+    .ant-card-body {
+      padding: 16px;
+    }
+  }
+
+  .libiio-board-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .libiio-board-section {
+    padding: 14px;
+    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    border: 1px solid #e5edf8;
+    border-radius: 16px;
+  }
+
+  .libiio-board-section__title {
+    margin-bottom: 4px;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  .libiio-board-section__meta {
+    margin-bottom: 12px;
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  .libiio-board-table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+  }
+
+  .libiio-board-table {
+    width: 100%;
+    min-width: 1100px;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    th,
+    td {
+      padding: 10px 8px;
+      color: #0f172a;
+      font-size: 14px;
+      text-align: center;
+      border-right: 1px solid #fff;
+      border-bottom: 1px solid #fff;
+    }
+
+    th:first-child,
+    td:first-child {
+      width: 96px;
+    }
+
+    td {
+      background: #dfe5f4;
+    }
+  }
+
+  .libiio-board-table__channel-row {
+    th {
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      background: linear-gradient(180deg, #3f7ad0 0%, #3b74c4 100%);
+    }
+  }
+
+  .libiio-board-table__row-label {
+    font-weight: 600;
+  }
+
+  .libiio-board-table__accent-open {
+    color: #16a34a;
+    font-weight: 700;
+  }
+
+  .libiio-board-table__accent-close {
+    color: #ef4444;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 768px) {
+  .libiio-board-page {
+    .libiio-board-shell {
+      .ant-card-body {
+        padding: 12px;
+      }
+    }
+
+    .libiio-board-section {
+      padding: 12px;
+    }
+
+    .libiio-board-section__title {
+      font-size: 18px;
+    }
+
+    .libiio-board-table {
+      min-width: 920px;
+
+      th,
+      td {
+        padding: 8px 6px;
+        font-size: 13px;
+      }
+    }
+  }
+}

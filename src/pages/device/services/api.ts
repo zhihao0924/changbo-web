@@ -17,6 +17,11 @@ import type {
   API_PostRFConfigSave,
   API_PostRFConfig,
   API_PostDeviceMove,
+  API_PostLibiioDeviceConfigDelete,
+  API_PostLibiioDeviceConfigList,
+  API_PostLibiioDeviceConfigSave,
+  API_PostLibiioDeviceList,
+  API_PostLibiioDeviceSave,
 } from "@/pages/device/services/typings/device"
 
 // 订单列表
@@ -36,6 +41,38 @@ export async function postDeviceList(
   return res
 }
 
+export async function postLibiioDeviceList(
+  obj: Record<string, any>,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLibiioDeviceList.Result = await postApi(
+    "libiio/device/list",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+
+  return res
+}
+
+export async function postLibiioDeviceConfigList(
+  obj: API_PostLibiioDeviceConfigList.Params,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLibiioDeviceConfigList.Result = await postApi(
+    "libiio/deviceConfig/list",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+
+  return res
+}
+
 // 新增设备
 export async function postDeviceSave(
   obj: Record<string, any>,
@@ -43,6 +80,54 @@ export async function postDeviceSave(
 ) {
   const res: API_PostDeviceCreate.Result = await postApi(
     "device/save",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+
+  return res
+}
+
+export async function postLibiioDeviceSave(
+  obj: API_PostLibiioDeviceSave.Params,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLibiioDeviceSave.Result = await postApi(
+    "libiio/device/save",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+
+  return res
+}
+
+export async function postLibiioDeviceConfigSave(
+  obj: API_PostLibiioDeviceConfigSave.Params,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLibiioDeviceConfigSave.Result = await postApi(
+    "libiio/deviceConfig/save",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+
+  return res
+}
+
+export async function postLibiioDeviceConfigDelete(
+  obj: API_PostLibiioDeviceConfigDelete.Params,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLibiioDeviceConfigDelete.Result = await postApi(
+    "libiio/deviceConfig/delete",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {

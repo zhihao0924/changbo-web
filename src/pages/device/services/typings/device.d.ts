@@ -57,6 +57,138 @@ declare namespace API_PostDeviceList {
   }
 }
 
+declare namespace API_PostLibiioDeviceList {
+  export interface OutputFrequencyConfig {
+    name?: string
+    frequency_mhz?: number
+  }
+
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+
+  export interface Res {
+    has_more: number
+    next_page: number
+    total: number
+    list: List[]
+  }
+
+  export interface List {
+    id: number
+    ip?: string
+    type?: number
+    center_freq: number
+    sampling_rate: number
+    fft_size: number
+    target_freq_count?: number
+    output_frequency_count?: number
+    output_frequency_configs?: OutputFrequencyConfig[]
+    created_at: string
+    updated_at: string
+  }
+}
+
+declare namespace API_PostLibiioDeviceConfigList {
+  export interface ConfigItem {
+    id?: number
+    device_id: number
+    sort?: number
+    target_freq_mhz: number
+    fs_dbm?: number
+    rx_gain?: number
+    is_alarm: number
+    min?: number
+    max?: number
+    created_at?: string
+    updated_at?: string
+  }
+
+  export interface Params {
+    page: number
+    limit: number
+    device_id: number
+    is_alarm?: number
+  }
+
+  export interface Result {
+    err: number
+    msg: string
+    res: Res
+  }
+
+  export interface Res {
+    has_more: number
+    next_page: number
+    total: number
+    list: ConfigItem[]
+  }
+}
+
+declare namespace API_PostLibiioDeviceConfigSave {
+  export interface ConfigItem {
+    id?: number
+    device_id: number
+    sort?: number
+    target_freq_mhz: number
+    fs_dbm?: number
+    rx_gain?: number
+    is_alarm: number
+    min?: number
+    max?: number
+  }
+
+  export interface BatchParams {
+    list: ConfigItem[]
+  }
+
+  export type Params = ConfigItem | BatchParams
+
+  export interface Result {
+    err: number
+    msg: string
+    res: any
+  }
+}
+
+declare namespace API_PostLibiioDeviceConfigDelete {
+  export interface Params {
+    id: number
+  }
+
+  export interface Result {
+    err: number
+    msg: string
+    res: any
+  }
+}
+
+declare namespace API_PostLibiioDeviceSave {
+  export interface OutputFrequencyConfig {
+    name?: string
+    frequency_mhz?: number
+  }
+
+  export interface Params {
+    id?: number
+    ip?: string
+    type?: number
+    center_freq: number
+    sampling_rate: number
+    fft_size: number
+  }
+
+  export interface Result {
+    err: number
+    msg: string
+    res: {
+      id: number
+    }
+  }
+}
+
 declare namespace API_PostDeviceCreate {
   export interface Result {
     err: number
