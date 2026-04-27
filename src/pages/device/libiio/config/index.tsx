@@ -22,7 +22,7 @@ import {
   SaveOutlined,
 } from "@ant-design/icons"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { history } from "umi"
+import { history, useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type {
   API_PostLibiioDeviceConfigDelete,
@@ -76,10 +76,16 @@ const buildConfigList = (configs?: API_PostLibiioDeviceConfigList.ConfigItem[]) 
   }))
 
 const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
+  const intl = useIntl()
   const [form] = Form.useForm<{ configs: API_PostLibiioDeviceConfigSave.Params[] }>()
   const [loading, setLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [initialIds, setInitialIds] = useState<number[]>([])
+  const t = useCallback(
+    (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
+      intl.formatMessage({ id, defaultMessage }, values),
+    [intl],
+  )
 
   const deviceId = Number(props.match?.params?.deviceId)
   const isValidDeviceId = Number.isFinite(deviceId) && deviceId > 0
@@ -110,11 +116,11 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
       })
     } catch (error) {
       console.error("获取频点配置页面数据失败:", error)
-      message.error("获取频点配置失败")
+      message.error(t("app.device.libiio.config.fetchFailed", "Failed to load frequency config"))
     } finally {
       setLoading(false)
     }
-  }, [deviceId, form, isValidDeviceId])
+  }, [deviceId, form, isValidDeviceId, t])
 
   useEffect(() => {
     loadPageData()
@@ -122,7 +128,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
 
   const handleSave = useCallback(async () => {
     if (!isValidDeviceId) {
-      message.error("设备参数异常")
+      message.error(t("app.device.libiio.config.invalidDevice", "Invalid device parameter"))
       return
     }
 
@@ -163,25 +169,27 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
         ),
       )
 
-      message.success("频点配置已保存")
+      message.success(t("app.device.libiio.config.saveSuccess", "Frequency config saved"))
       await loadPageData()
     } catch (error: any) {
       if (error?.errorFields) {
         return
       }
       console.error("保存频点配置失败:", error)
-      message.error("保存频点配置失败")
+      message.error(t("app.device.libiio.config.saveFailed", "Failed to save frequency config"))
     } finally {
       setSubmitLoading(false)
     }
-  }, [deviceId, form, initialIds, isValidDeviceId, loadPageData])
+  }, [deviceId, form, initialIds, isValidDeviceId, loadPageData, t])
 
   const pageTitle = useMemo(() => {
     if (!isValidDeviceId) {
-      return "频点配置"
+      return t("app.device.libiio.config.title", "Frequency Config")
     }
-    return `频点配置 · 设备 #${deviceId}`
-  }, [deviceId, isValidDeviceId])
+    return t("app.device.libiio.config.titleWithDevice", "Frequency Config · Device #{deviceId}", {
+      deviceId,
+    })
+  }, [deviceId, isValidDeviceId, t])
 
   return (
     <PageContainer className="libiio-config-page" title={pageTitle}>
@@ -189,7 +197,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
         <div className="libiio-config-toolbar">
           <Space>
             <Button icon={<ArrowLeftOutlined />} onClick={() => history.push("/device/libiio")}>
-              返回设备列表
+              {t("app.device.libiio.config.backToDevices", "Back to Device List")}
             </Button>
             <Button
               icon={<PlusOutlined />}
@@ -201,7 +209,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                 ])
               }
             >
-              新增频点
+              {t("app.device.libiio.config.addFrequency", "Add Frequency")}
             </Button>
           </Space>
           <Button
@@ -210,7 +218,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
             loading={submitLoading}
             onClick={handleSave}
           >
-            保存配置
+            {t("app.device.libiio.config.saveConfig", "Save Config")}
           </Button>
         </div>
 
@@ -219,15 +227,28 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
             <Alert
               type="error"
               showIcon
-              message="设备参数无效"
-              description="请返回设备列表后重新进入。"
+              message={t(
+                "app.device.libiio.config.invalidDeviceMessage",
+                "Invalid device parameter",
+              )}
+              description={t(
+                "app.device.libiio.config.invalidDeviceDescription",
+                "Please return to the device list and enter again.",
+              )}
             />
           ) : (
             <>
               <Card className="libiio-config-summary">
                 <Descriptions column={2} size="small">
-                  <Descriptions.Item label="设备 ID">{deviceId}</Descriptions.Item>
-                  <Descriptions.Item label="当前频点数">
+                  <Descriptions.Item label={t("app.device.libiio.deviceId", "Device ID")}>
+                    {deviceId}
+                  </Descriptions.Item>
+                  <Descriptions.Item
+                    label={t(
+                      "app.device.libiio.config.currentFrequencyCount",
+                      "Current Frequencies",
+                    )}
+                  >
                     {(form.getFieldValue("configs") || []).length}
                   </Descriptions.Item>
                 </Descriptions>
@@ -243,7 +264,13 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                             <Card
                               className="libiio-config-card"
                               key={field.key}
-                              title={`频点 ${index + 1}`}
+                              title={t(
+                                "app.device.libiio.config.frequencyWithIndex",
+                                "Frequency {index}",
+                                {
+                                  index: index + 1,
+                                },
+                              )}
                               extra={
                                 <Space size={4}>
                                   <Button
@@ -252,7 +279,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                     disabled={index === 0}
                                     onClick={() => move(field.name, field.name - 1)}
                                   >
-                                    上移
+                                    {t("app.common.moveUp", "Move Up")}
                                   </Button>
                                   <Button
                                     type="link"
@@ -260,7 +287,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                     disabled={index === fields.length - 1}
                                     onClick={() => move(field.name, field.name + 1)}
                                   >
-                                    下移
+                                    {t("app.common.moveDown", "Move Down")}
                                   </Button>
                                   <Button
                                     type="link"
@@ -268,7 +295,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                     icon={<DeleteOutlined />}
                                     onClick={() => remove(field.name)}
                                   >
-                                    删除
+                                    {t("app.common.delete", "Delete")}
                                   </Button>
                                 </Space>
                               }
@@ -284,8 +311,19 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                   <Form.Item
                                     {...field}
                                     name={[field.name, "target_freq_mhz"]}
-                                    label="监听频点 (MHz)"
-                                    rules={[{ required: true, message: "请输入监听频点" }]}
+                                    label={t(
+                                      "app.device.libiio.config.targetFrequency",
+                                      "Target Frequency (MHz)",
+                                    )}
+                                    rules={[
+                                      {
+                                        required: true,
+                                        message: t(
+                                          "app.device.libiio.config.targetFrequencyRequired",
+                                          "Please enter target frequency",
+                                        ),
+                                      },
+                                    ]}
                                   >
                                     <InputNumber style={{ width: "100%" }} min={0} />
                                   </Form.Item>
@@ -312,19 +350,31 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                   <Form.Item
                                     {...field}
                                     name={[field.name, "is_alarm"]}
-                                    label="是否告警"
-                                    rules={[{ required: true, message: "请选择是否告警" }]}
+                                    label={t("app.device.libiio.config.isAlarm", "Alarm Enabled")}
+                                    rules={[
+                                      {
+                                        required: true,
+                                        message: t(
+                                          "app.device.libiio.config.isAlarmRequired",
+                                          "Please select whether alarm is enabled",
+                                        ),
+                                      },
+                                    ]}
                                   >
                                     <Select
                                       options={[
-                                        { label: "是", value: 1 },
-                                        { label: "否", value: 0 },
+                                        { label: t("app.common.yes", "Yes"), value: 1 },
+                                        { label: t("app.common.no", "No"), value: 0 },
                                       ]}
                                     />
                                   </Form.Item>
                                 </Col>
                                 <Col xs={24} sm={12} lg={8}>
-                                  <Form.Item {...field} name={[field.name, "min"]} label="最小值">
+                                  <Form.Item
+                                    {...field}
+                                    name={[field.name, "min"]}
+                                    label={t("app.device.libiio.config.minValue", "Minimum")}
+                                  >
                                     <InputNumber style={{ width: "100%" }} />
                                   </Form.Item>
                                 </Col>
@@ -332,7 +382,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                   <Form.Item
                                     {...field}
                                     name={[field.name, "max"]}
-                                    label="最大值"
+                                    label={t("app.device.libiio.config.maxValue", "Maximum")}
                                     dependencies={[[field.name, "min"]]}
                                     rules={[
                                       ({ getFieldValue }) => ({
@@ -343,7 +393,14 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                             typeof value === "number" &&
                                             min > value
                                           ) {
-                                            return Promise.reject(new Error("最大值不能小于最小值"))
+                                            return Promise.reject(
+                                              new Error(
+                                                t(
+                                                  "app.device.libiio.config.maxLessThanMin",
+                                                  "Maximum value cannot be less than minimum value",
+                                                ),
+                                              ),
+                                            )
                                           }
                                           return Promise.resolve()
                                         },
@@ -360,8 +417,14 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                           <Alert
                             type="info"
                             showIcon
-                            message="当前没有频点配置"
-                            description="点击左上角“新增频点”开始配置。"
+                            message={t(
+                              "app.device.libiio.config.emptyMessage",
+                              "No frequency config yet",
+                            )}
+                            description={t(
+                              "app.device.libiio.config.emptyDescription",
+                              "Click Add Frequency in the upper left to start configuring.",
+                            )}
                           />
                         )}
                       </div>
@@ -372,7 +435,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                             icon={<PlusOutlined />}
                             onClick={() => add(createEmptyConfigItem())}
                           >
-                            新增第一个频点
+                            {t("app.device.libiio.config.addFirstFrequency", "Add First Frequency")}
                           </Button>
                         </div>
                       )}

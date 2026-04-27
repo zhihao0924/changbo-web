@@ -16,8 +16,8 @@ import {
   Spin,
 } from "antd"
 import { EditOutlined, EyeOutlined, PlusOutlined, RadarChartOutlined } from "@ant-design/icons"
-import React, { useCallback, useEffect, useState } from "react"
-import { history } from "umi"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { history, useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type {
   API_PostLibiioDeviceList,
@@ -29,10 +29,6 @@ type LibiioDevice = API_PostLibiioDeviceList.List
 
 const MAX_FETCH_SIZE = 1000
 const MAX_DEVICE_COUNT = 4
-const LIBIIO_DEVICE_TYPE_OPTIONS = [
-  { label: "TX发射功率", value: 1 },
-  { label: "RX接收RSSI", value: 2 },
-]
 const FFT_SIZE_OPTIONS = [12, 14, 16, 18, 20].map((power) => ({
   label: `${2 ** power} (2^${power})`,
   value: 2 ** power,
@@ -41,41 +37,8 @@ const FFT_SIZE_OPTIONS = [12, 14, 16, 18, 20].map((power) => ({
 const formatValue = (value?: number, unit?: string) =>
   typeof value === "number" ? `${value} ${unit || ""}`.trim() : "-"
 
-const formatDeviceType = (value?: number) => {
-  if (typeof value !== "number") {
-    return "-"
-  }
-
-  return (
-    LIBIIO_DEVICE_TYPE_OPTIONS.find((item) => item.value === value)?.label || `未知类型 (${value})`
-  )
-}
-
-const getMetricItems = (device: LibiioDevice) => [
-  {
-    key: "center_freq",
-    label: "中心频率",
-    value: formatValue(device.center_freq, "MHz"),
-  },
-  {
-    key: "sampling_rate",
-    label: "采样率",
-    value: formatValue(device.sampling_rate, "MHz"),
-  },
-  {
-    key: "fft_size",
-    label: "FFT 点数",
-    value: `${device.fft_size ?? "-"}`,
-  },
-  {
-    key: "output_frequency_count",
-    label: "输出指定频点数",
-    value: `${device.target_freq_count ?? device.output_frequency_count ?? 0}`,
-    clickable: true,
-  },
-]
-
 const DeviceLibiio: React.FC = () => {
+  const intl = useIntl()
   const [form] = Form.useForm<API_PostLibiioDeviceSave.Params>()
   const [detailDevice, setDetailDevice] = useState<LibiioDevice>()
   const [editingDevice, setEditingDevice] = useState<LibiioDevice>()
@@ -84,6 +47,60 @@ const DeviceLibiio: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [devices, setDevices] = useState<LibiioDevice[]>([])
   const canCreateDevice = devices.length < MAX_DEVICE_COUNT
+  const t = useCallback(
+    (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
+      intl.formatMessage({ id, defaultMessage }, values),
+    [intl],
+  )
+
+  const libiioDeviceTypeOptions = useMemo(
+    () => [
+      { label: t("app.device.libiio.type.txPower", "TX Transmit Power"), value: 1 },
+      { label: t("app.device.libiio.type.rxRssi", "RX Receive RSSI"), value: 2 },
+    ],
+    [t],
+  )
+
+  const formatDeviceType = useCallback(
+    (value?: number) => {
+      if (typeof value !== "number") {
+        return "-"
+      }
+
+      return (
+        libiioDeviceTypeOptions.find((item) => item.value === value)?.label ||
+        t("app.device.libiio.type.unknown", "Unknown Type ({value})", { value })
+      )
+    },
+    [libiioDeviceTypeOptions, t],
+  )
+
+  const getMetricItems = useCallback(
+    (device: LibiioDevice) => [
+      {
+        key: "center_freq",
+        label: t("app.device.libiio.centerFrequency", "Center Frequency"),
+        value: formatValue(device.center_freq, "MHz"),
+      },
+      {
+        key: "sampling_rate",
+        label: t("app.device.libiio.samplingRate", "Sampling Rate"),
+        value: formatValue(device.sampling_rate, "MHz"),
+      },
+      {
+        key: "fft_size",
+        label: t("app.device.libiio.fftSize", "FFT Size"),
+        value: `${device.fft_size ?? "-"}`,
+      },
+      {
+        key: "output_frequency_count",
+        label: t("app.device.libiio.outputFrequencyCount", "Output Target Frequencies"),
+        value: `${device.target_freq_count ?? device.output_frequency_count ?? 0}`,
+        clickable: true,
+      },
+    ],
+    [t],
+  )
 
   const loadDevices = useCallback(async () => {
     try {
@@ -98,11 +115,11 @@ const DeviceLibiio: React.FC = () => {
       setDevices(res?.res?.list || [])
     } catch (error) {
       console.error("获取 Libiio 设备失败:", error)
-      message.error("获取设备列表失败")
+      message.error(t("app.device.libiio.fetchListFailed", "Failed to load device list"))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     loadDevices()
@@ -139,7 +156,12 @@ const DeviceLibiio: React.FC = () => {
         showLoading: true,
         showToast: false,
       })
-      message.success(res?.msg || (editingDevice ? "Libiio 设备已更新" : "Libiio 设备已创建"))
+      message.success(
+        res?.msg ||
+          (editingDevice
+            ? t("app.device.libiio.updateSuccess", "Libiio device updated")
+            : t("app.device.libiio.createSuccess", "Libiio device created")),
+      )
       closeModal()
       await loadDevices()
     } catch (error: any) {
@@ -147,11 +169,11 @@ const DeviceLibiio: React.FC = () => {
         return
       }
       console.error("保存 Libiio 设备失败:", error)
-      message.error("保存失败，请稍后重试")
+      message.error(t("app.device.libiio.saveFailed", "Save failed. Please try again later."))
     } finally {
       setSubmitLoading(false)
     }
-  }, [closeModal, editingDevice, form, loadDevices])
+  }, [closeModal, editingDevice, form, loadDevices, t])
 
   const goToFrequencyConfig = useCallback((device: LibiioDevice) => {
     history.push(`/device/libiio/config/${device.id}`)
@@ -172,23 +194,27 @@ const DeviceLibiio: React.FC = () => {
                         icon={<EyeOutlined />}
                         onClick={() => setDetailDevice(device)}
                       >
-                        详情
+                        {t("app.common.detail", "Details")}
                       </Button>
                       <Button type="link" icon={<EditOutlined />} onClick={() => openModal(device)}>
-                        编辑
+                        {t("app.common.edit", "Edit")}
                       </Button>
                     </Space>
                   </div>
                   <div className="libiio-device-card__content">
                     <div className="libiio-device-card__hero">
                       <div className="libiio-device-card__hero-main">
-                        <span className="libiio-device-card__hero-label">IP 地址</span>
+                        <span className="libiio-device-card__hero-label">
+                          {t("app.device.libiio.ipAddress", "IP Address")}
+                        </span>
                         <div className="libiio-device-card__hero-value">
-                          {device.ip || "未配置"}
+                          {device.ip || t("app.device.libiio.notConfigured", "Not configured")}
                         </div>
                       </div>
                       <div className="libiio-device-card__hero-side">
-                        <span className="libiio-device-card__hero-label">类型</span>
+                        <span className="libiio-device-card__hero-label">
+                          {t("app.device.libiio.type", "Type")}
+                        </span>
                         <div className="libiio-device-card__hero-type">
                           {formatDeviceType(device.type)}
                         </div>
@@ -233,9 +259,13 @@ const DeviceLibiio: React.FC = () => {
                     <div className="libiio-create-card__icon">
                       <PlusOutlined />
                     </div>
-                    <div className="libiio-create-card__title">新增设备</div>
+                    <div className="libiio-create-card__title">
+                      {t("app.device.libiio.addDevice", "Add Device")}
+                    </div>
                     <div className="libiio-create-card__desc">
-                      还可以新增 {MAX_DEVICE_COUNT - devices.length} 台设备
+                      {t("app.device.libiio.remainingDevices", "You can add {count} more devices", {
+                        count: MAX_DEVICE_COUNT - devices.length,
+                      })}
                     </div>
                   </div>
                 </Card>
@@ -247,38 +277,56 @@ const DeviceLibiio: React.FC = () => {
 
       <Drawer
         width={520}
-        title={detailDevice ? `Libiio 设备详情 · #${detailDevice.id}` : "Libiio 设备详情"}
+        title={
+          detailDevice
+            ? t("app.device.libiio.detailTitleWithId", "Libiio Device Details · #{id}", {
+                id: detailDevice.id,
+              })
+            : t("app.device.libiio.detailTitle", "Libiio Device Details")
+        }
         open={!!detailDevice}
         onClose={() => setDetailDevice(undefined)}
       >
         {detailDevice && (
           <>
             <div className="libiio-detail-block">
-              <div className="libiio-detail-title">连接信息</div>
+              <div className="libiio-detail-title">
+                {t("app.device.libiio.connectionInfo", "Connection Information")}
+              </div>
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="设备 ID">{detailDevice.id}</Descriptions.Item>
-                <Descriptions.Item label="IP 地址">{detailDevice.ip || "-"}</Descriptions.Item>
-                <Descriptions.Item label="类型">
+                <Descriptions.Item label={t("app.device.libiio.deviceId", "Device ID")}>
+                  {detailDevice.id}
+                </Descriptions.Item>
+                <Descriptions.Item label={t("app.device.libiio.ipAddress", "IP Address")}>
+                  {detailDevice.ip || "-"}
+                </Descriptions.Item>
+                <Descriptions.Item label={t("app.device.libiio.type", "Type")}>
                   {formatDeviceType(detailDevice.type)}
                 </Descriptions.Item>
               </Descriptions>
             </div>
 
             <div className="libiio-detail-block">
-              <div className="libiio-detail-title">射频参数</div>
+              <div className="libiio-detail-title">
+                {t("app.device.libiio.rfParameters", "RF Parameters")}
+              </div>
               <Descriptions column={1} size="small">
-                <Descriptions.Item label="中心频率">
+                <Descriptions.Item
+                  label={t("app.device.libiio.centerFrequency", "Center Frequency")}
+                >
                   {detailDevice.center_freq} MHz
                 </Descriptions.Item>
-                <Descriptions.Item label="采样率">
+                <Descriptions.Item label={t("app.device.libiio.samplingRate", "Sampling Rate")}>
                   {typeof detailDevice.sampling_rate === "number"
                     ? `${detailDevice.sampling_rate} MHz`
                     : "-"}
                 </Descriptions.Item>
-                <Descriptions.Item label="FFT 点数">
+                <Descriptions.Item label={t("app.device.libiio.fftSize", "FFT Size")}>
                   {detailDevice.fft_size ?? "-"}
                 </Descriptions.Item>
-                <Descriptions.Item label="输出指定频点数">
+                <Descriptions.Item
+                  label={t("app.device.libiio.outputFrequencyCount", "Output Target Frequencies")}
+                >
                   {detailDevice.target_freq_count ?? detailDevice.output_frequency_count ?? 0}
                 </Descriptions.Item>
               </Descriptions>
@@ -288,7 +336,13 @@ const DeviceLibiio: React.FC = () => {
       </Drawer>
 
       <Modal
-        title={editingDevice ? `编辑 Libiio 设备 #${editingDevice.id}` : "新增 Libiio 设备"}
+        title={
+          editingDevice
+            ? t("app.device.libiio.editDeviceWithId", "Edit Libiio Device #{id}", {
+                id: editingDevice.id,
+              })
+            : t("app.device.libiio.addLibiioDevice", "Add Libiio Device")
+        }
         open={modalVisible}
         onCancel={closeModal}
         onOk={handleSubmit}
@@ -300,39 +354,78 @@ const DeviceLibiio: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="ip"
-            label="IP 地址"
+            label={t("app.device.libiio.ipAddress", "IP Address")}
             rules={[
               {
                 pattern: /^$|^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/,
-                message: "请输入有效的 IPv4 地址",
+                message: t("app.device.libiio.ipInvalid", "Please enter a valid IPv4 address"),
               },
             ]}
           >
-            <Input placeholder="例如 192.168.1.20" />
+            <Input placeholder={t("app.device.libiio.ipExample", "For example, 192.168.1.20")} />
           </Form.Item>
-          <Form.Item name="type" label="类型">
-            <Select allowClear options={LIBIIO_DEVICE_TYPE_OPTIONS} placeholder="请选择设备类型" />
+          <Form.Item name="type" label={t("app.device.libiio.type", "Type")}>
+            <Select
+              allowClear
+              options={libiioDeviceTypeOptions}
+              placeholder={t("app.device.libiio.selectDeviceType", "Please select device type")}
+            />
           </Form.Item>
           <Form.Item
             name="center_freq"
-            label="中心频率 (MHz)"
-            rules={[{ required: true, message: "请输入中心频率" }]}
+            label={t("app.device.libiio.centerFrequencyWithUnit", "Center Frequency (MHz)")}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  "app.device.libiio.centerFrequencyRequired",
+                  "Please enter center frequency",
+                ),
+              },
+            ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="请输入中心频率" />
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder={t(
+                "app.device.libiio.centerFrequencyPlaceholder",
+                "Please enter center frequency",
+              )}
+            />
           </Form.Item>
           <Form.Item
             name="sampling_rate"
-            label="采样率 (MHz)"
-            rules={[{ required: true, message: "请输入采样率" }]}
+            label={t("app.device.libiio.samplingRateWithUnit", "Sampling Rate (MHz)")}
+            rules={[
+              {
+                required: true,
+                message: t("app.device.libiio.samplingRateRequired", "Please enter sampling rate"),
+              },
+            ]}
           >
-            <InputNumber min={0} style={{ width: "100%" }} placeholder="请输入采样率" />
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              placeholder={t(
+                "app.device.libiio.samplingRatePlaceholder",
+                "Please enter sampling rate",
+              )}
+            />
           </Form.Item>
           <Form.Item
             name="fft_size"
-            label="FFT 点数"
-            rules={[{ required: true, message: "请输入 FFT 点数" }]}
+            label={t("app.device.libiio.fftSize", "FFT Size")}
+            rules={[
+              {
+                required: true,
+                message: t("app.device.libiio.fftSizeRequired", "Please select FFT size"),
+              },
+            ]}
           >
-            <Select options={FFT_SIZE_OPTIONS} placeholder="请选择 FFT 点数" />
+            <Select
+              options={FFT_SIZE_OPTIONS}
+              placeholder={t("app.device.libiio.fftSizePlaceholder", "Please select FFT size")}
+            />
           </Form.Item>
         </Form>
       </Modal>

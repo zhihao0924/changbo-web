@@ -1,6 +1,7 @@
 import { PageContainer } from "@ant-design/pro-components"
 import { Card, Empty, Spin } from "antd"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
+import { useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type {
   API_PostLibiioDeviceConfigList,
@@ -15,20 +16,12 @@ const MAX_FETCH_SIZE = 1000
 const CHANNELS_PER_ROW = 10
 const CHANNEL_COLUMNS = Array.from({ length: CHANNELS_PER_ROW }, (_, index) => index + 1)
 type FrequencyChunk<T> = { key: string; channelOffset: number; items: T[] }
-const DEVICE_TYPE_LABEL_MAP: Record<number, string> = {
-  1: "TX发射功率",
-  2: "RX接收RSSI",
-}
-
-const formatTypeLabel = (type?: number) =>
-  (typeof type === "number" && DEVICE_TYPE_LABEL_MAP[type]) || "未分类频点"
+type DisplayRow = { label: string; values: string[]; accent?: boolean }
 
 const formatFrequency = (value?: number) => (typeof value === "number" ? `${value} MHz` : "-")
 
 const formatMetricValue = (value?: number, suffix?: string) =>
   typeof value === "number" ? `${value}${suffix || ""}` : "-"
-
-const formatStatusText = (value?: number) => (value === 1 ? "异常" : "正常")
 
 const sortConfigs = <T extends { sort?: number; id?: number }>(items: T[]) =>
   [...items].sort((prev, next) => {
@@ -63,43 +56,67 @@ const chunkItems = <T extends { id?: number }>(items: T[], size: number) => {
       ]
 }
 
-const buildDisplayRows = (device: LibiioDevice, chunk: FrequencyConfig[]) => {
-  const rows = [
-    {
-      label: "频率",
-      values: chunk.map((item) => formatFrequency(item.target_freq_mhz)),
-    },
-  ]
-
-  if (device.type === 1) {
-    rows.push({
-      label: "功率",
-      values: chunk.map((item) => formatMetricValue(item.fs_dbm, " dBm")),
-    })
-    rows.push({
-      label: "状态",
-      values: chunk.map((item) => formatStatusText(item.is_alarm)),
-      accent: true,
-    })
-  } else {
-    rows.push({
-      label: "功率",
-      values: chunk.map((item) => formatMetricValue(item.rx_gain)),
-    })
-    rows.push({
-      label: "状态",
-      values: chunk.map((item) => formatStatusText(item.is_alarm)),
-      accent: true,
-    })
-  }
-
-  return rows
-}
-
 const FrequencyBoardPage: React.FC = () => {
+  const intl = useIntl()
   const [loading, setLoading] = useState(false)
   const [devices, setDevices] = useState<LibiioDevice[]>([])
   const [configMap, setConfigMap] = useState<Record<number, FrequencyConfig[]>>({})
+  const t = useCallback(
+    (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
+      intl.formatMessage({ id, defaultMessage }, values),
+    [intl],
+  )
+
+  const deviceTypeLabelMap = useMemo<Record<number, string>>(
+    () => ({
+      1: t("app.device.libiio.type.txPower", "TX Transmit Power"),
+      2: t("app.device.libiio.type.rxRssi", "RX Receive RSSI"),
+    }),
+    [t],
+  )
+
+  const formatTypeLabel = useCallback(
+    (type?: number) =>
+      (typeof type === "number" && deviceTypeLabelMap[type]) ||
+      t("app.device.libiio.board.uncategorized", "Uncategorized Frequencies"),
+    [deviceTypeLabelMap, t],
+  )
+
+  const formatStatusText = useCallback(
+    (value?: number) =>
+      value === 1
+        ? t("app.device.libiio.board.statusAbnormal", "Abnormal")
+        : t("app.device.libiio.board.statusNormal", "Normal"),
+    [t],
+  )
+
+  const buildDisplayRows = useCallback(
+    (device: LibiioDevice, chunk: FrequencyConfig[]) => {
+      const rows: DisplayRow[] = [
+        {
+          label: t("app.device.libiio.board.frequency", "Frequency"),
+          values: chunk.map((item) => formatFrequency(item.target_freq_mhz)),
+        },
+      ]
+
+      rows.push({
+        label: t("app.device.libiio.board.power", "Power"),
+        values: chunk.map((item) =>
+          device.type === 1
+            ? formatMetricValue(item.fs_dbm, " dBm")
+            : formatMetricValue(item.rx_gain),
+        ),
+      })
+      rows.push({
+        label: t("app.device.libiio.board.status", "Status"),
+        values: chunk.map((item) => formatStatusText(item.is_alarm)),
+        accent: true,
+      })
+
+      return rows
+    },
+    [formatStatusText, t],
+  )
 
   const loadBoardData = useCallback(async () => {
     try {
@@ -154,6 +171,7 @@ const FrequencyBoardPage: React.FC = () => {
     loadBoardData()
   }, [loadBoardData])
 
+  const normalText = t("app.device.libiio.board.statusNormal", "Normal")
   const boardSections = useMemo(
     () =>
       devices.map((device) => ({
@@ -173,7 +191,8 @@ const FrequencyBoardPage: React.FC = () => {
                 <section className="libiio-board-section" key={device.id}>
                   <div className="libiio-board-section__title">{formatTypeLabel(device.type)}</div>
                   <div className="libiio-board-section__meta">
-                    {device.ip || `设备 #${device.id}`}
+                    {device.ip ||
+                      t("app.device.libiio.board.deviceWithId", "Device #{id}", { id: device.id })}
                   </div>
 
                   <div className="libiio-board-table-wrap">
@@ -182,10 +201,16 @@ const FrequencyBoardPage: React.FC = () => {
                         {chunks.map((chunk) => (
                           <React.Fragment key={`${device.id}-${chunk.key}`}>
                             <tr className="libiio-board-table__channel-row">
-                              <th>信道</th>
+                              <th>{t("app.device.libiio.board.channel", "Channel")}</th>
                               {CHANNEL_COLUMNS.map((channelNumber) => (
                                 <th key={`${device.id}-${chunk.key}-channel-${channelNumber}`}>
-                                  信道{chunk.channelOffset + channelNumber}
+                                  {t(
+                                    "app.device.libiio.board.channelWithNumber",
+                                    "Channel {number}",
+                                    {
+                                      number: chunk.channelOffset + channelNumber,
+                                    },
+                                  )}
                                 </th>
                               ))}
                             </tr>
@@ -200,7 +225,7 @@ const FrequencyBoardPage: React.FC = () => {
                                     <span
                                       className={
                                         row.accent
-                                          ? row.values[channelNumber - 1] === "正常"
+                                          ? row.values[channelNumber - 1] === normalText
                                             ? "libiio-board-table__accent-open"
                                             : "libiio-board-table__accent-close"
                                           : ""
@@ -221,7 +246,7 @@ const FrequencyBoardPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <Empty description="暂无频点数据" />
+            <Empty description={t("app.device.libiio.board.empty", "No frequency data")} />
           )}
         </Spin>
       </Card>
