@@ -1,187 +1,153 @@
 .libiio-page {
   .libiio-table-card {
-    border-radius: 18px;
+    border-radius: 16px;
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
 
     .ant-card-body {
-      padding: 10px !important;
+      padding: 16px !important;
     }
   }
 
   .libiio-device-card {
     width: 100%;
     height: 100%;
-    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
-    border: 1px solid #eef3f9;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    background: #fff;
+    border: 1px solid #e6edf7;
+    border-radius: 20px;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
 
     .ant-card-body {
-      padding: 12px;
+      padding: 18px;
     }
   }
 
-  .libiio-device-card__actions {
+  .libiio-device-card__header {
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: 8px;
-
-    .ant-btn {
-      font-size: 12px;
-      padding-inline: 4px;
-    }
-  }
-
-  .libiio-device-card__content {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .libiio-device-card--create {
-    background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
-    border: 1px dashed #93c5fd;
-    cursor: pointer;
-
-    .ant-card-body {
-      justify-content: center;
-      height: 100%;
-    }
-  }
-
-  .libiio-create-card {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
+    gap: 16px;
     align-items: center;
-    justify-content: center;
-    min-height: 196px;
-    text-align: center;
+    justify-content: space-between;
+    min-height: 62px;
+    margin-bottom: 16px;
+    padding: 14px 16px;
+    background: #f6f9fd;
+    border: 1px solid #e6edf7;
+    border-radius: 14px;
   }
 
-  .libiio-create-card__icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    margin-bottom: 10px;
-    color: #2563eb;
-    font-size: 18px;
-    background: rgba(37, 99, 235, 0.1);
-    border-radius: 50%;
-  }
-
-  .libiio-create-card__title {
-    margin-bottom: 6px;
-    color: #0f172a;
-    font-weight: 700;
-    font-size: 15px;
-  }
-
-  .libiio-create-card__desc {
+  .libiio-device-card__eyebrow {
+    margin-bottom: 5px;
     color: #64748b;
-    font-size: 11px;
+    font-size: 13px;
+    line-height: 1.1;
   }
 
-  .libiio-device-card__hero {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    min-height: 78px;
-    padding: 0;
-    background: transparent;
-    border: 0;
-  }
-
-  .libiio-device-card__hero-main,
-  .libiio-device-card__hero-side {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 78px;
-    padding: 10px 12px;
-    background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
-    border: 1px solid #e6eef8;
-    border-radius: 10px;
-  }
-
-  .libiio-device-card__hero-side {
-    background: linear-gradient(135deg, #f8fbff 0%, #f1f5f9 100%);
-  }
-
-  .libiio-device-card__hero-label {
-    margin-bottom: 6px;
-    color: #64748b;
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .libiio-device-card__hero-value {
-    color: #0f172a;
-    font-weight: 700;
-    font-size: 16px;
-    line-height: 1.25;
-    word-break: break-all;
-  }
-
-  .libiio-device-card__hero-type {
+  .libiio-device-card__title {
     overflow: hidden;
     color: #0f172a;
     font-weight: 700;
-    font-size: 15px;
-    line-height: 1.25;
+    font-size: 24px;
+    line-height: 1.2;
     white-space: nowrap;
     text-overflow: ellipsis;
   }
 
-  .libiio-device-card__metrics {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
+  .libiio-shared-pill {
+    display: flex;
+    flex-shrink: 0;
+    gap: 10px;
+    align-items: center;
+    padding: 9px 12px;
+    background: #fff;
+    border: 1px solid #e1eaf5;
+    border-radius: 999px;
 
-  .libiio-metric-item {
-    padding: 9px 10px;
-    background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
-    border: 1px solid #edf2f7;
-    border-radius: 10px;
+    span {
+      color: #64748b;
+      font-size: 14px;
+    }
 
-    &.clickable {
-      background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
-      border-color: #bfdbfe;
-      cursor: pointer;
-      transition: all 0.2s ease;
-
-      &:hover {
-        border-color: #60a5fa;
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
-        transform: translateY(-1px);
-      }
+    strong {
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 16px;
     }
   }
 
-  .libiio-metric-item__label {
-    display: block;
-    margin-bottom: 4px;
-    color: #64748b;
-    font-size: 11px;
+  .libiio-module-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 16px;
   }
 
-  .libiio-metric-item__value {
+  .libiio-module-card {
+    min-height: 188px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #e6edf7;
+    border-radius: 14px;
+  }
+
+  .libiio-module-card__header {
     display: flex;
-    gap: 4px;
     align-items: center;
-    color: #0f172a;
-    font-weight: 600;
-    font-size: 14px;
-    line-height: 1.2;
-    word-break: break-word;
+    justify-content: space-between;
+    min-height: 32px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eef3f9;
   }
 
-  .libiio-metric-item__icon {
-    color: #2563eb;
-    font-size: 12px;
+  .libiio-module-card__title {
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .libiio-module-card__config {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding-inline: 0;
+  }
+
+  .libiio-module-card__content {
+    display: grid;
+    gap: 7px;
+  }
+
+  .libiio-module-field {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 26px;
+
+    span {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    strong {
+      max-width: 58%;
+      overflow: hidden;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .libiio-module-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 146px;
+    color: #94a3b8;
+    font-size: 14px;
+    background: #f8fafc;
+    border: 1px dashed #dbe4ef;
+    border-radius: 12px;
   }
 
   .libiio-frequency-config-list {
@@ -200,20 +166,6 @@
     border-radius: 12px;
   }
 
-  .libiio-detail-block {
-    margin-bottom: 20px;
-    padding: 16px 18px;
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 14px;
-  }
-
-  .libiio-detail-title {
-    margin-bottom: 12px;
-    color: #0f172a;
-    font-weight: 600;
-    font-size: 15px;
-  }
-
   .libiio-metric-list {
     max-height: 320px;
     overflow: auto;
@@ -222,12 +174,34 @@
 
 @media (max-width: 768px) {
   .libiio-page {
-    .libiio-device-card__hero {
+    .libiio-table-card {
+      .ant-card-body {
+        padding: 12px !important;
+      }
+    }
+
+    .libiio-device-card {
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+
+    .libiio-device-card__header {
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .libiio-device-card__title {
+      font-size: 20px;
+    }
+
+    .libiio-module-grid {
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .libiio-device-card__metrics {
-      grid-template-columns: minmax(0, 1fr);
+    .libiio-shared-pill {
+      flex-shrink: 1;
     }
   }
 }

@@ -13,7 +13,19 @@ import {
 } from "@ant-design/icons"
 import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
-import { Button, Dropdown, Form, Input, InputNumber, message, Modal, Select, Space, Switch } from "antd"
+import {
+  Button,
+  Dropdown,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Select,
+  Space,
+  Switch,
+  TreeSelect,
+} from "antd"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
@@ -57,6 +69,14 @@ type DeviceTypeOption = {
   group: string
 }
 
+type DeviceTypeTreeNode = {
+  title: string
+  value: string | number
+  selectable?: boolean
+  disabled?: boolean
+  children?: DeviceTypeTreeNode[]
+}
+
 // 设备类型组常量
 const DEVICE_GROUPS = [
   "发射合路器",
@@ -69,6 +89,7 @@ const DEVICE_GROUPS = [
   "模拟近端机",
   "模拟远端机",
   "干线放大器",
+  "功率采集网关",
 ] as const
 
 // 配置类型映射
@@ -126,16 +147,51 @@ const DeviceIndex: React.FC = () => {
             接收分路器: t("app.device.index.group.receiverSplitter", "Receiver Splitter"),
             带通双工器: t("app.device.index.group.bandpassDuplexer", "Bandpass Duplexer"),
             上行信号剥离器: t("app.device.index.group.uplinkStripper", "Uplink Signal Stripper"),
-            下行信号剥离器: t("app.device.index.group.downlinkStripper", "Downlink Signal Stripper"),
+            下行信号剥离器: t(
+              "app.device.index.group.downlinkStripper",
+              "Downlink Signal Stripper",
+            ),
             数字近端机: t("app.device.index.group.digitalNearEnd", "Digital Near-end Unit"),
             数字远端机: t("app.device.index.group.digitalRemote", "Digital Remote Unit"),
             模拟近端机: t("app.device.index.group.analogNearEnd", "Analog Near-end Unit"),
             模拟远端机: t("app.device.index.group.analogRemote", "Analog Remote Unit"),
             干线放大器: t("app.device.index.group.trunkAmplifier", "Trunk Amplifier"),
+            功率采集网关: t(
+              "app.device.index.group.powerCollectionGateway",
+              "Power Collection Gateway",
+            ),
           }[value] || value,
       })),
     [t],
   )
+  const translatedDeviceGroupMap = useMemo(
+    () =>
+      translatedDeviceGroups.reduce<Record<string, string>>((acc, item) => {
+        acc[item.value] = item.label
+        return acc
+      }, {}),
+    [translatedDeviceGroups],
+  )
+  const deviceTypeTreeData = useMemo<DeviceTypeTreeNode[]>(() => {
+    const groupedTypes = allDeviceTypes.reduce<Record<string, DeviceTypeOption[]>>((acc, item) => {
+      if (!acc[item.group]) {
+        acc[item.group] = []
+      }
+      acc[item.group].push(item)
+      return acc
+    }, {})
+
+    return Object.entries(groupedTypes).map(([group, types]) => ({
+      title: translatedDeviceGroupMap[group] || group,
+      value: `group-${group}`,
+      selectable: false,
+      disabled: true,
+      children: types.map((type) => ({
+        title: type.label,
+        value: type.value,
+      })),
+    }))
+  }, [allDeviceTypes, translatedDeviceGroupMap])
 
   const getDeviceTypes = useCallback(async () => {
     // 如果已经有数据，直接返回
@@ -276,16 +332,24 @@ const DeviceIndex: React.FC = () => {
             downlink_power: configRes.is_set_downlink_power ? configRes.downlink_power : "——",
             uplink_power: configRes.is_set_uplink_power ? configRes.uplink_power : "——",
             same_frequency_forward_switch: configRes.is_set_same_frequency_forward_switch
-              ? (configRes.same_frequency_forward_switch ? "1" : "0")
+              ? configRes.same_frequency_forward_switch
+                ? "1"
+                : "0"
               : null,
             downlink_switch: configRes.is_set_downlink_switch
-              ? (configRes.downlink_switch ? "1" : "0")
+              ? configRes.downlink_switch
+                ? "1"
+                : "0"
               : null,
             uplink_switch: configRes.is_set_uplink_switch
-              ? (configRes.uplink_switch ? "1" : "0")
+              ? configRes.uplink_switch
+                ? "1"
+                : "0"
               : null,
             pa4_alarm_switch: configRes.is_set_pa4_alarm_switch
-              ? (configRes.pa4_alarm_switch ? "1" : "0")
+              ? configRes.pa4_alarm_switch
+                ? "1"
+                : "0"
               : null,
           })
         })
@@ -295,7 +359,12 @@ const DeviceIndex: React.FC = () => {
         })
         .catch((error) => {
           console.error("获取设备配置失败:", error)
-          message.error(t("app.device.index.fetchConfigFailed", "Failed to load device configuration. Please try again later."))
+          message.error(
+            t(
+              "app.device.index.fetchConfigFailed",
+              "Failed to load device configuration. Please try again later.",
+            ),
+          )
         })
     },
     [rfConfigForm, t],
@@ -305,7 +374,10 @@ const DeviceIndex: React.FC = () => {
     try {
       return await Services.api.postDeviceSyncPanel({}).then((ret) => {
         message.success(
-          t("app.device.index.syncSummary", `Panel sync succeeded: ${ret.res.success_count}, failed: ${ret.res.fail_count}`)
+          t(
+            "app.device.index.syncSummary",
+            `Panel sync succeeded: ${ret.res.success_count}, failed: ${ret.res.fail_count}`,
+          )
             .replace("${success}", String(ret.res.success_count))
             .replace("${failed}", String(ret.res.fail_count)),
           2,
@@ -330,7 +402,12 @@ const DeviceIndex: React.FC = () => {
       const values = await form.validateFields()
       setSubmitLoading(true)
       const res = await Services.api.postDeviceSave(values)
-      message.success(res?.msg || (currentDevice ? t("app.device.index.updateSuccess", "Device updated successfully") : t("app.device.index.createSuccess", "Device created successfully")))
+      message.success(
+        res?.msg ||
+          (currentDevice
+            ? t("app.device.index.updateSuccess", "Device updated successfully")
+            : t("app.device.index.createSuccess", "Device created successfully")),
+      )
       setModalVisible(false)
       form.resetFields()
       actionRef.current?.reload()
@@ -344,73 +421,86 @@ const DeviceIndex: React.FC = () => {
     }
   }, [actionRef, currentDevice, form, t])
 
-  const handleToggleMaintaining = useCallback(async (record: Columns) => {
-    if (!record || !record.id) {
-      console.error("Invalid record provided for toggle maintaining")
-      return
-    }
-    try {
-      const data = {
-        id: record.id,
-        is_maintaining: !record?.is_maintaining,
-      }
-      const res = await Services.api.postToggleMaintaining(data)
-      message.success(res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"))
-      actionRef.current?.reload()
-    } catch (error: any) {
-      if (error?.errorFields) {
+  const handleToggleMaintaining = useCallback(
+    async (record: Columns) => {
+      if (!record || !record.id) {
+        console.error("Invalid record provided for toggle maintaining")
         return
       }
-      console.error(error)
-    }
-  }, [t])
-
-  const handleDelDevice = useCallback(async (record: Columns) => {
-    if (!record || !record.id) {
-      console.error("Invalid record provided for delete")
-      return
-    }
-    Modal.confirm({
-      title: t("app.device.index.deleteConfirm", "Confirm deleting ${group}(${name})?")
-        .replace("${group}", record.device_type_group)
-        .replace("${name}", record.name),
-      onOk: async () => {
-        try {
-          const data = {
-            device_id: record.id,
-          }
-          const res = await Services.api.postDeleteDevice(data)
-          message.success(res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"))
-          actionRef.current?.reload()
-        } catch (error: any) {
-          if (error?.errorFields) {
-            return
-          }
-          console.error(error)
+      try {
+        const data = {
+          id: record.id,
+          is_maintaining: !record?.is_maintaining,
         }
-      },
-    })
-  }, [t])
+        const res = await Services.api.postToggleMaintaining(data)
+        message.success(
+          res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"),
+        )
+        actionRef.current?.reload()
+      } catch (error: any) {
+        if (error?.errorFields) {
+          return
+        }
+        console.error(error)
+      }
+    },
+    [t],
+  )
 
-  const handleMoveDevice = useCallback(async (record: Columns, direction: "up" | "down") => {
-    if (!record || !record.id) {
-      console.error("Invalid record provided for move")
-      return
-    }
-    try {
-      const res = await Services.api.postDeviceMove({
-        device_id: record.id,
-        direction,
-      })
-      message.success(res?.msg || t("app.device.index.moveSuccess", "Device moved successfully"))
-      actionRef.current?.reload()
-    } catch (error: any) {
-      if (error?.errorFields) {
+  const handleDelDevice = useCallback(
+    async (record: Columns) => {
+      if (!record || !record.id) {
+        console.error("Invalid record provided for delete")
         return
       }
-      console.error(error)
-    }
-  }, [t])
+      Modal.confirm({
+        title: t("app.device.index.deleteConfirm", "Confirm deleting ${group}(${name})?")
+          .replace("${group}", record.device_type_group)
+          .replace("${name}", record.name),
+        onOk: async () => {
+          try {
+            const data = {
+              device_id: record.id,
+            }
+            const res = await Services.api.postDeleteDevice(data)
+            message.success(
+              res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"),
+            )
+            actionRef.current?.reload()
+          } catch (error: any) {
+            if (error?.errorFields) {
+              return
+            }
+            console.error(error)
+          }
+        },
+      })
+    },
+    [t],
+  )
+
+  const handleMoveDevice = useCallback(
+    async (record: Columns, direction: "up" | "down") => {
+      if (!record || !record.id) {
+        console.error("Invalid record provided for move")
+        return
+      }
+      try {
+        const res = await Services.api.postDeviceMove({
+          device_id: record.id,
+          direction,
+        })
+        message.success(res?.msg || t("app.device.index.moveSuccess", "Device moved successfully"))
+        actionRef.current?.reload()
+      } catch (error: any) {
+        if (error?.errorFields) {
+          return
+        }
+        console.error(error)
+      }
+    },
+    [t],
+  )
 
   // 配置类型对应的中文标签
   const getConfigLabel = useCallback((configType: string): string => {
@@ -421,13 +511,20 @@ const DeviceIndex: React.FC = () => {
   const saveRFConfig = useCallback(
     async (configType: string) => {
       if (!currentDevice?.id) {
-        message.error(t("app.device.index.invalidDevice", "Invalid device information, unable to save configuration"))
+        message.error(
+          t(
+            "app.device.index.invalidDevice",
+            "Invalid device information, unable to save configuration",
+          ),
+        )
         return
       }
 
       const fieldValue = rfConfigForm.getFieldValue(configType)
       if (fieldValue === undefined || fieldValue === null) {
-        message.error(`${t("app.common.pleaseEnter", "Please enter")} ${getConfigLabel(configType)}`)
+        message.error(
+          `${t("app.common.pleaseEnter", "Please enter")} ${getConfigLabel(configType)}`,
+        )
         return
       }
 
@@ -436,7 +533,9 @@ const DeviceIndex: React.FC = () => {
       if (configRange) {
         if (fieldValue < configRange.min || fieldValue > configRange.max) {
           message.error(
-            `${getConfigLabel(configType)} ${t("app.device.index.rangeLimit", "must be within")} ${configRange.min}~${configRange.max}${configRange.unit}`,
+            `${getConfigLabel(configType)} ${t("app.device.index.rangeLimit", "must be within")} ${
+              configRange.min
+            }~${configRange.max}${configRange.unit}`,
           )
           return
         }
@@ -448,10 +547,21 @@ const DeviceIndex: React.FC = () => {
           current_val: Number(fieldValue),
           rf_config_type: configType,
         })
-        message.success(res?.msg || `${getConfigLabel(configType)} ${t("app.device.index.configSaved", "saved successfully")}`)
+        message.success(
+          res?.msg ||
+            `${getConfigLabel(configType)} ${t(
+              "app.device.index.configSaved",
+              "saved successfully",
+            )}`,
+        )
       } catch (error) {
         console.error(`${configType}保存失败:`, error)
-        message.error(`${getConfigLabel(configType)} ${t("app.device.index.configSaveFailed", "failed to save")}`)
+        message.error(
+          `${getConfigLabel(configType)} ${t(
+            "app.device.index.configSaveFailed",
+            "failed to save",
+          )}`,
+        )
       }
     },
     [currentDevice, getConfigLabel, rfConfigForm, configRangeMap, t],
@@ -501,9 +611,20 @@ const DeviceIndex: React.FC = () => {
         key: "device_type_id",
         valueType: "select",
         request: getDeviceTypes,
-        fieldProps: {
-          showSearch: true,
-        },
+        renderFormItem: () => (
+          <TreeSelect
+            allowClear
+            showSearch
+            treeDefaultExpandAll
+            treeData={deviceTypeTreeData}
+            placeholder={t("app.device.index.deviceType.required", "Please select a device type")}
+            filterTreeNode={(input, treeNode) =>
+              String(treeNode.title || "")
+                .toLowerCase()
+                .includes(input.toLowerCase())
+            }
+          />
+        ),
         width: 200,
       },
       {
@@ -524,7 +645,10 @@ const DeviceIndex: React.FC = () => {
           1: { text: t("app.device.index.maintaining", "Maintaining"), status: "Processing" },
         },
         fieldProps: {
-          placeholder: t("app.device.index.selectMaintainingStatus", "Please select a maintenance status"),
+          placeholder: t(
+            "app.device.index.selectMaintainingStatus",
+            "Please select a maintenance status",
+          ),
           allowClear: true,
         },
       },
@@ -762,23 +886,27 @@ const DeviceIndex: React.FC = () => {
           )
 
           const actionItems = [
-            ...(showSettingButton ? [{
-              key: 'setting',
-              label: t("app.common.settings", "Settings"),
-              icon: <SettingOutlined />,
-              onClick: () => openSettingModal(record),
-            }] : []),
+            ...(showSettingButton
+              ? [
+                  {
+                    key: "setting",
+                    label: t("app.common.settings", "Settings"),
+                    icon: <SettingOutlined />,
+                    onClick: () => openSettingModal(record),
+                  },
+                ]
+              : []),
             {
-              key: 'moveUp',
+              key: "moveUp",
               label: t("app.common.moveUp", "Move Up"),
               icon: <ArrowUpOutlined />,
-              onClick: () => handleMoveDevice(record, 'up'),
+              onClick: () => handleMoveDevice(record, "up"),
             },
             {
-              key: 'moveDown',
+              key: "moveDown",
               label: t("app.common.moveDown", "Move Down"),
               icon: <ArrowDownOutlined />,
-              onClick: () => handleMoveDevice(record, 'down'),
+              onClick: () => handleMoveDevice(record, "down"),
             },
           ]
 
@@ -810,11 +938,7 @@ const DeviceIndex: React.FC = () => {
                   ? t("app.device.index.endMaintenance", "End Maintenance")
                   : t("app.device.index.startMaintenance", "Start Maintenance")}
               </Button>
-              <Dropdown
-                key="dropdown"
-                menu={{ items: actionItems }}
-                trigger={['click']}
-              >
+              <Dropdown key="dropdown" menu={{ items: actionItems }} trigger={["click"]}>
                 <Button type="link" icon={<MoreOutlined />}>
                   {t("app.common.more", "More")}
                 </Button>
@@ -824,7 +948,16 @@ const DeviceIndex: React.FC = () => {
         },
       },
     ]
-  }, [getDeviceTypes, handleDelDevice, handleMoveDevice, handleToggleMaintaining, openModal, openSettingModal, t])
+  }, [
+    deviceTypeTreeData,
+    getDeviceTypes,
+    handleDelDevice,
+    handleMoveDevice,
+    handleToggleMaintaining,
+    openModal,
+    openSettingModal,
+    t,
+  ])
 
   // 根据设备状态返回行样式对象
   const getRowClassName = useCallback((record: Columns) => {
@@ -908,7 +1041,11 @@ const DeviceIndex: React.FC = () => {
       />
 
       <Modal
-        title={currentDevice ? t("app.device.index.editDevice", "Edit Device") : t("app.device.index.addDevice", "Add Device")}
+        title={
+          currentDevice
+            ? t("app.device.index.editDevice", "Edit Device")
+            : t("app.device.index.addDevice", "Add Device")
+        }
         open={modalVisible}
         onOk={handleSubmit}
         confirmLoading={submitLoading}
@@ -921,7 +1058,12 @@ const DeviceIndex: React.FC = () => {
           <Form.Item
             name="name"
             label={t("app.device.index.deviceId", "Device ID")}
-            rules={[{ required: true, message: t("app.device.index.deviceId.required", "Please enter the device ID") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.device.index.deviceId.required", "Please enter the device ID"),
+              },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -929,7 +1071,10 @@ const DeviceIndex: React.FC = () => {
             name="ip"
             label={t("app.device.index.ip", "IP Address")}
             rules={[
-              { required: true, message: t("app.device.index.ip.required", "Please enter the IP address") },
+              {
+                required: true,
+                message: t("app.device.index.ip.required", "Please enter the IP address"),
+              },
               {
                 pattern: /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/,
                 message: t("app.device.index.ip.invalid", "Please enter a valid IP address"),
@@ -951,14 +1096,27 @@ const DeviceIndex: React.FC = () => {
           <Form.Item
             name="position"
             label={t("app.device.index.position", "Installation Position")}
-            rules={[{ required: true, message: t("app.device.index.position.required", "Please enter the installation position") }]}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  "app.device.index.position.required",
+                  "Please enter the installation position",
+                ),
+              },
+            ]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="device_type_group"
             label={t("app.device.index.deviceGroup", "Device Group")}
-            rules={[{ required: true, message: t("app.device.index.deviceGroup.required", "Please select a device group") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.device.index.deviceGroup.required", "Please select a device group"),
+              },
+            ]}
           >
             <Select
               options={translatedDeviceGroups}
@@ -971,14 +1129,27 @@ const DeviceIndex: React.FC = () => {
           <Form.Item
             name="device_type_id"
             label={t("app.device.index.deviceType", "Device Type")}
-            rules={[{ required: true, message: t("app.device.index.deviceType.required", "Please select a device type") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.device.index.deviceType.required", "Please select a device type"),
+              },
+            ]}
           >
             <Select options={deviceTypes} />
           </Form.Item>
-          <Form.Item name="is_maintaining" label={t("app.device.index.maintainingStatus", "Maintenance Status")} valuePropName="checked">
+          <Form.Item
+            name="is_maintaining"
+            label={t("app.device.index.maintainingStatus", "Maintenance Status")}
+            valuePropName="checked"
+          >
             <Switch />
           </Form.Item>
-          <Form.Item name="is_online" label={t("app.device.index.onlineStatus", "Online Status")} valuePropName="checked">
+          <Form.Item
+            name="is_online"
+            label={t("app.device.index.onlineStatus", "Online Status")}
+            valuePropName="checked"
+          >
             <Switch />
           </Form.Item>
         </Form>
@@ -1006,12 +1177,19 @@ const DeviceIndex: React.FC = () => {
             currentDevice?.device_type_group.includes("近端") ||
             currentDevice?.device_type_group.includes("分路")
           ) && (
-            <Form.Item label={t("app.device.index.uplinkPowerShort", "Uplink Power")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+            <Form.Item
+              label={t("app.device.index.uplinkPowerShort", "Uplink Power")}
+              labelCol={{ span: 6 }}
+              wrapperCol={{ span: 18 }}
+            >
               <Space align="center">
                 <Form.Item name="uplink_power" noStyle>
                   <InputNumber
                     style={{ width: 200 }}
-                    placeholder={t("app.device.index.uplinkPower.placeholder", "Please enter uplink power")}
+                    placeholder={t(
+                      "app.device.index.uplinkPower.placeholder",
+                      "Please enter uplink power",
+                    )}
                     addonAfter={`(${configRangeMap.uplink_power?.min}~${configRangeMap.uplink_power?.max})dBm`}
                   />
                 </Form.Item>
@@ -1021,12 +1199,19 @@ const DeviceIndex: React.FC = () => {
               </Space>
             </Form.Item>
           )}
-          <Form.Item label={t("app.device.index.uplinkGainShort", "Uplink Gain")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+          <Form.Item
+            label={t("app.device.index.uplinkGainShort", "Uplink Gain")}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 18 }}
+          >
             <Space align="center">
               <Form.Item name="uplink_gain" noStyle>
                 <InputNumber
                   style={{ width: 200 }}
-                  placeholder={t("app.device.index.uplinkGain.placeholder", "Please enter uplink gain")}
+                  placeholder={t(
+                    "app.device.index.uplinkGain.placeholder",
+                    "Please enter uplink gain",
+                  )}
                   addonAfter={`(${configRangeMap.uplink_gain?.min}~${configRangeMap.uplink_gain?.max})dB`}
                 />
               </Form.Item>
@@ -1036,12 +1221,19 @@ const DeviceIndex: React.FC = () => {
             </Space>
           </Form.Item>
           {!currentDevice?.device_type_group.includes("近端") && (
-            <Form.Item label={t("app.device.index.downlinkPowerShort", "Downlink Power")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+            <Form.Item
+              label={t("app.device.index.downlinkPowerShort", "Downlink Power")}
+              labelCol={{ span: 6 }}
+              wrapperCol={{ span: 18 }}
+            >
               <Space align="center">
                 <Form.Item name="downlink_power" noStyle>
                   <InputNumber
                     style={{ width: 200 }}
-                    placeholder={t("app.device.index.downlinkPower.placeholder", "Please enter downlink power")}
+                    placeholder={t(
+                      "app.device.index.downlinkPower.placeholder",
+                      "Please enter downlink power",
+                    )}
                     addonAfter={`(${configRangeMap.downlink_power?.min}~${configRangeMap.downlink_power?.max})dBm`}
                   />
                 </Form.Item>
@@ -1051,12 +1243,19 @@ const DeviceIndex: React.FC = () => {
               </Space>
             </Form.Item>
           )}
-          <Form.Item label={t("app.device.index.downlinkGainShort", "Downlink Gain")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+          <Form.Item
+            label={t("app.device.index.downlinkGainShort", "Downlink Gain")}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 18 }}
+          >
             <Space align="center">
               <Form.Item name="downlink_gain" noStyle>
                 <InputNumber
                   style={{ width: 200 }}
-                  placeholder={t("app.device.index.downlinkGain.placeholder", "Please enter downlink gain")}
+                  placeholder={t(
+                    "app.device.index.downlinkGain.placeholder",
+                    "Please enter downlink gain",
+                  )}
                   addonAfter={`(${configRangeMap.downlink_gain?.min}~${configRangeMap.downlink_gain?.max})dB`}
                 />
               </Form.Item>
@@ -1068,14 +1267,32 @@ const DeviceIndex: React.FC = () => {
           {(currentDevice?.device_type_group.includes("远端") ||
             currentDevice?.device_type_group.includes("放大")) && (
             <>
-              <Form.Item label={t("app.device.index.sameFrequencyForward", "Same Frequency Forward")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item
+                label={t("app.device.index.sameFrequencyForward", "Same Frequency Forward")}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
+              >
                 <Space align="center">
                   <Form.Item name="same_frequency_forward_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
+                        {
+                          label: (
+                            <span style={{ color: "#52c41a" }}>
+                              {t("app.common.enable", "Enable")}
+                            </span>
+                          ),
+                          value: "1",
+                        },
+                        {
+                          label: (
+                            <span style={{ color: "#ff4d4f" }}>
+                              {t("app.common.disable", "Disable")}
+                            </span>
+                          ),
+                          value: "0",
+                        },
                       ]}
                     />
                   </Form.Item>
@@ -1084,14 +1301,32 @@ const DeviceIndex: React.FC = () => {
                   </Button>
                 </Space>
               </Form.Item>
-              <Form.Item label={t("app.device.index.downlinkSwitch", "Downlink Switch")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item
+                label={t("app.device.index.downlinkSwitch", "Downlink Switch")}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
+              >
                 <Space align="center">
                   <Form.Item name="downlink_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
+                        {
+                          label: (
+                            <span style={{ color: "#52c41a" }}>
+                              {t("app.common.enable", "Enable")}
+                            </span>
+                          ),
+                          value: "1",
+                        },
+                        {
+                          label: (
+                            <span style={{ color: "#ff4d4f" }}>
+                              {t("app.common.disable", "Disable")}
+                            </span>
+                          ),
+                          value: "0",
+                        },
                       ]}
                     />
                   </Form.Item>
@@ -1100,14 +1335,32 @@ const DeviceIndex: React.FC = () => {
                   </Button>
                 </Space>
               </Form.Item>
-              <Form.Item label={t("app.device.index.uplinkSwitch", "Uplink Switch")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item
+                label={t("app.device.index.uplinkSwitch", "Uplink Switch")}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
+              >
                 <Space align="center">
                   <Form.Item name="uplink_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
+                        {
+                          label: (
+                            <span style={{ color: "#52c41a" }}>
+                              {t("app.common.enable", "Enable")}
+                            </span>
+                          ),
+                          value: "1",
+                        },
+                        {
+                          label: (
+                            <span style={{ color: "#ff4d4f" }}>
+                              {t("app.common.disable", "Disable")}
+                            </span>
+                          ),
+                          value: "0",
+                        },
                       ]}
                     />
                   </Form.Item>
@@ -1116,14 +1369,32 @@ const DeviceIndex: React.FC = () => {
                   </Button>
                 </Space>
               </Form.Item>
-              <Form.Item label={t("app.device.index.pa4AlarmSwitch", "PA4 Alarm Switch")} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }}>
+              <Form.Item
+                label={t("app.device.index.pa4AlarmSwitch", "PA4 Alarm Switch")}
+                labelCol={{ span: 6 }}
+                wrapperCol={{ span: 18 }}
+              >
                 <Space align="center">
                   <Form.Item name="pa4_alarm_switch" noStyle>
                     <Select
                       style={{ width: 200 }}
                       options={[
-                        { label: <span style={{ color: "#52c41a" }}>{t("app.common.enable", "Enable")}</span>, value: "1" },
-                        { label: <span style={{ color: "#ff4d4f" }}>{t("app.common.disable", "Disable")}</span>, value: "0" },
+                        {
+                          label: (
+                            <span style={{ color: "#52c41a" }}>
+                              {t("app.common.enable", "Enable")}
+                            </span>
+                          ),
+                          value: "1",
+                        },
+                        {
+                          label: (
+                            <span style={{ color: "#ff4d4f" }}>
+                              {t("app.common.disable", "Disable")}
+                            </span>
+                          ),
+                          value: "0",
+                        },
                       ]}
                     />
                   </Form.Item>

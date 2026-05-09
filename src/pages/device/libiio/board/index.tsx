@@ -11,6 +11,14 @@ import "./index.less"
 
 type LibiioDevice = API_PostLibiioDeviceList.List
 type FrequencyConfig = API_PostLibiioDeviceConfigList.ConfigItem
+type ModuleDirection = "rx" | "tx"
+type BoardSection = {
+  key: string
+  device: LibiioDevice
+  direction: ModuleDirection
+  directionLabel: string
+  chunks: FrequencyChunk<FrequencyConfig>[]
+}
 
 const MAX_FETCH_SIZE = 1000
 const CHANNELS_PER_ROW = 10
@@ -60,26 +68,19 @@ const FrequencyBoardPage: React.FC = () => {
   const intl = useIntl()
   const [loading, setLoading] = useState(false)
   const [devices, setDevices] = useState<LibiioDevice[]>([])
-  const [configMap, setConfigMap] = useState<Record<number, FrequencyConfig[]>>({})
+  const [configMap, setConfigMap] = useState<Record<string, FrequencyConfig[]>>({})
   const t = useCallback(
     (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
       intl.formatMessage({ id, defaultMessage }, values),
     [intl],
   )
 
-  const deviceTypeLabelMap = useMemo<Record<number, string>>(
+  const directionLabelMap = useMemo<Record<ModuleDirection, string>>(
     () => ({
-      1: t("app.device.libiio.type.txPower", "TX Transmit Power"),
-      2: t("app.device.libiio.type.rxRssi", "RX Receive RSSI"),
+      rx: t("app.device.libiio.module.rx", "RX Module"),
+      tx: t("app.device.libiio.module.tx", "TX Module"),
     }),
     [t],
-  )
-
-  const formatTypeLabel = useCallback(
-    (type?: number) =>
-      (typeof type === "number" && deviceTypeLabelMap[type]) ||
-      t("app.device.libiio.board.uncategorized", "Uncategorized Frequencies"),
-    [deviceTypeLabelMap, t],
   )
 
   const formatStatusText = useCallback(
@@ -91,7 +92,7 @@ const FrequencyBoardPage: React.FC = () => {
   )
 
   const buildDisplayRows = useCallback(
-    (device: LibiioDevice, chunk: FrequencyConfig[]) => {
+    (direction: ModuleDirection, chunk: FrequencyConfig[]) => {
       const rows: DisplayRow[] = [
         {
           label: t("app.device.libiio.board.frequency", "Frequency"),
@@ -100,11 +101,12 @@ const FrequencyBoardPage: React.FC = () => {
       ]
 
       rows.push({
-        label: t("app.device.libiio.board.power", "Power"),
+        label:
+          direction === "tx"
+            ? t("app.device.libiio.fsDbm", "FS (dBm)")
+            : t("app.device.libiio.rxGain", "RX Gain"),
         values: chunk.map((item) =>
-          device.type === 1
-            ? formatMetricValue(item.fs_dbm, " dBm")
-            : formatMetricValue(item.rx_gain),
+          formatMetricValue(item.fix_val, direction === "tx" ? " dBm" : ""),
         ),
       })
       rows.push({
@@ -142,21 +144,24 @@ const FrequencyBoardPage: React.FC = () => {
       setDevices(deviceList)
 
       const configEntries = await Promise.all(
-        deviceList.map(async (device) => {
-          const configRes = await Services.api.postLibiioDeviceConfigList(
-            {
-              page: 1,
-              limit: 200,
-              device_id: device.id,
-            },
-            {
-              showLoading: false,
-              showToast: false,
-            },
-          )
+        deviceList.flatMap((device) =>
+          (["rx", "tx"] as ModuleDirection[]).map(async (direction) => {
+            const configRes = await Services.api.postLibiioDeviceConfigList(
+              {
+                page: 1,
+                limit: 200,
+                device_id: device.id,
+                direction,
+              },
+              {
+                showLoading: false,
+                showToast: false,
+              },
+            )
 
-          return [device.id, sortConfigs(configRes?.res?.list || [])] as const
-        }),
+            return [`${device.id}-${direction}`, sortConfigs(configRes?.res?.list || [])] as const
+          }),
+        ),
       )
 
       setConfigMap(Object.fromEntries(configEntries))
@@ -172,13 +177,18 @@ const FrequencyBoardPage: React.FC = () => {
   }, [loadBoardData])
 
   const normalText = t("app.device.libiio.board.statusNormal", "Normal")
-  const boardSections = useMemo(
+  const boardSections = useMemo<BoardSection[]>(
     () =>
-      devices.map((device) => ({
-        device,
-        chunks: chunkItems(configMap[device.id] || [], CHANNELS_PER_ROW),
-      })),
-    [configMap, devices],
+      devices.flatMap((device) =>
+        (["rx", "tx"] as ModuleDirection[]).map((direction) => ({
+          key: `${device.id}-${direction}`,
+          device,
+          direction,
+          directionLabel: directionLabelMap[direction],
+          chunks: chunkItems(configMap[`${device.id}-${direction}`] || [], CHANNELS_PER_ROW),
+        })),
+      ),
+    [configMap, devices, directionLabelMap],
   )
 
   return (
@@ -187,9 +197,9 @@ const FrequencyBoardPage: React.FC = () => {
         <Spin spinning={loading}>
           {boardSections.length ? (
             <div className="libiio-board-list">
-              {boardSections.map(({ device, chunks }) => (
-                <section className="libiio-board-section" key={device.id}>
-                  <div className="libiio-board-section__title">{formatTypeLabel(device.type)}</div>
+              {boardSections.map(({ key, device, direction, directionLabel, chunks }) => (
+                <section className="libiio-board-section" key={key}>
+                  <div className="libiio-board-section__title">{directionLabel}</div>
                   <div className="libiio-board-section__meta">
                     {device.ip ||
                       t("app.device.libiio.board.deviceWithId", "Device #{id}", { id: device.id })}
@@ -215,12 +225,12 @@ const FrequencyBoardPage: React.FC = () => {
                               ))}
                             </tr>
 
-                            {buildDisplayRows(device, chunk.items).map((row) => (
-                              <tr key={`${device.id}-${chunk.key}-${row.label}`}>
+                            {buildDisplayRows(direction, chunk.items).map((row) => (
+                              <tr key={`${device.id}-${direction}-${chunk.key}-${row.label}`}>
                                 <td className="libiio-board-table__row-label">{row.label}</td>
                                 {CHANNEL_COLUMNS.map((channelNumber) => (
                                   <td
-                                    key={`${device.id}-${chunk.key}-${row.label}-${channelNumber}`}
+                                    key={`${device.id}-${direction}-${chunk.key}-${row.label}-${channelNumber}`}
                                   >
                                     <span
                                       className={

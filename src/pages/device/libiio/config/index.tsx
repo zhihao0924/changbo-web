@@ -32,6 +32,11 @@ import type {
 import "./index.less"
 
 type FrequencyConfigPageProps = {
+  location?: {
+    query?: {
+      direction?: string
+    }
+  }
   match?: {
     params?: {
       deviceId?: string
@@ -39,12 +44,15 @@ type FrequencyConfigPageProps = {
   }
 }
 
-const createEmptyConfigItem = (): API_PostLibiioDeviceConfigSave.Params => ({
+type FrequencyFormItem = API_PostLibiioDeviceConfigSave.ConfigItem
+
+const createEmptyConfigItem = (direction: "rx" | "tx" = "rx"): FrequencyFormItem => ({
   device_id: 0,
+  type: direction,
+  direction,
   sort: undefined,
   target_freq_mhz: 0,
-  fs_dbm: undefined,
-  rx_gain: undefined,
+  fix_val: undefined,
   is_alarm: 1,
   min: undefined,
   max: undefined,
@@ -62,22 +70,39 @@ const sortConfigs = <T extends { sort?: number; id?: number }>(configs: T[]) =>
     return (prev.id || 0) - (next.id || 0)
   })
 
-const buildConfigList = (configs?: API_PostLibiioDeviceConfigList.ConfigItem[]) =>
+const buildConfigList = (
+  configs: API_PostLibiioDeviceConfigList.ConfigItem[] | undefined,
+  direction: "rx" | "tx",
+) =>
   sortConfigs(configs || []).map((config) => ({
     id: config.id,
     device_id: config.device_id,
+    type: config.type || direction,
+    direction: config.direction || direction,
     sort: config.sort,
     target_freq_mhz: config.target_freq_mhz,
-    fs_dbm: config.fs_dbm,
-    rx_gain: config.rx_gain,
+    fix_val: config.fix_val ?? (direction === "tx" ? config.fs_dbm : config.rx_gain),
     is_alarm: config.is_alarm,
     min: config.min,
     max: config.max,
   }))
 
+const normalizeConfigByDirection = (config: FrequencyFormItem, direction: "rx" | "tx") => ({
+  id: config.id,
+  device_id: config.device_id,
+  type: direction,
+  direction,
+  sort: config.sort,
+  target_freq_mhz: config.target_freq_mhz,
+  fix_val: config.fix_val,
+  is_alarm: config.is_alarm,
+  min: config.min,
+  max: config.max,
+})
+
 const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
   const intl = useIntl()
-  const [form] = Form.useForm<{ configs: API_PostLibiioDeviceConfigSave.Params[] }>()
+  const [form] = Form.useForm<{ configs: FrequencyFormItem[] }>()
   const [loading, setLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [initialIds, setInitialIds] = useState<number[]>([])
@@ -89,6 +114,11 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
 
   const deviceId = Number(props.match?.params?.deviceId)
   const isValidDeviceId = Number.isFinite(deviceId) && deviceId > 0
+  const direction = props.location?.query?.direction === "tx" ? "tx" : "rx"
+  const directionLabel =
+    direction === "tx"
+      ? t("app.device.libiio.module.tx", "TX Module")
+      : t("app.device.libiio.module.rx", "RX Module")
 
   const loadPageData = useCallback(async () => {
     if (!isValidDeviceId) {
@@ -102,6 +132,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
           page: 1,
           limit: 200,
           device_id: deviceId,
+          direction,
         },
         {
           showLoading: false,
@@ -112,7 +143,9 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
       const configs = sortConfigs(configRes?.res?.list || [])
       setInitialIds(configs.map((item) => item.id).filter(Boolean) as number[])
       form.setFieldsValue({
-        configs: configs.length ? buildConfigList(configs) : [createEmptyConfigItem()],
+        configs: configs.length
+          ? buildConfigList(configs, direction)
+          : [createEmptyConfigItem(direction)],
       })
     } catch (error) {
       console.error("获取频点配置页面数据失败:", error)
@@ -120,7 +153,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
     } finally {
       setLoading(false)
     }
-  }, [deviceId, form, isValidDeviceId, t])
+  }, [deviceId, direction, form, isValidDeviceId, t])
 
   useEffect(() => {
     loadPageData()
@@ -147,7 +180,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
       await Services.api.postLibiioDeviceConfigSave(
         {
           list: configs.map((item) => ({
-            ...item,
+            ...normalizeConfigByDirection(item, direction),
             device_id: deviceId,
           })),
         },
@@ -176,20 +209,22 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
         return
       }
       console.error("保存频点配置失败:", error)
-      message.error(t("app.device.libiio.config.saveFailed", "Failed to save frequency config"))
+      message.error(
+        error?.msg || t("app.device.libiio.config.saveFailed", "Failed to save frequency config"),
+      )
     } finally {
       setSubmitLoading(false)
     }
-  }, [deviceId, form, initialIds, isValidDeviceId, loadPageData, t])
+  }, [deviceId, direction, form, initialIds, isValidDeviceId, loadPageData, t])
 
   const pageTitle = useMemo(() => {
     if (!isValidDeviceId) {
       return t("app.device.libiio.config.title", "Frequency Config")
     }
     return t("app.device.libiio.config.titleWithDevice", "Frequency Config · Device #{deviceId}", {
-      deviceId,
+      deviceId: `${deviceId} · ${directionLabel}`,
     })
-  }, [deviceId, isValidDeviceId, t])
+  }, [deviceId, directionLabel, isValidDeviceId, t])
 
   return (
     <PageContainer className="libiio-config-page" title={pageTitle}>
@@ -205,7 +240,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
               onClick={() =>
                 form.setFieldValue("configs", [
                   ...(form.getFieldValue("configs") || []),
-                  createEmptyConfigItem(),
+                  createEmptyConfigItem(direction),
                 ])
               }
             >
@@ -242,6 +277,9 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                 <Descriptions column={2} size="small">
                   <Descriptions.Item label={t("app.device.libiio.deviceId", "Device ID")}>
                     {deviceId}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t("app.device.libiio.moduleDirection", "Module")}>
+                    {directionLabel}
                   </Descriptions.Item>
                   <Descriptions.Item
                     label={t(
@@ -328,24 +366,27 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                     <InputNumber style={{ width: "100%" }} min={0} />
                                   </Form.Item>
                                 </Col>
-                                <Col xs={24} sm={12} lg={8}>
-                                  <Form.Item
-                                    {...field}
-                                    name={[field.name, "rx_gain"]}
-                                    label="RX Gain"
-                                  >
-                                    <InputNumber style={{ width: "100%" }} />
-                                  </Form.Item>
-                                </Col>
-                                <Col xs={24} sm={12} lg={8}>
-                                  <Form.Item
-                                    {...field}
-                                    name={[field.name, "fs_dbm"]}
-                                    label="FS (dBm)"
-                                  >
-                                    <InputNumber style={{ width: "100%" }} />
-                                  </Form.Item>
-                                </Col>
+                                {direction === "rx" ? (
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      {...field}
+                                      name={[field.name, "fix_val"]}
+                                      label={t("app.device.libiio.rxGain", "RX Gain")}
+                                    >
+                                      <InputNumber style={{ width: "100%" }} />
+                                    </Form.Item>
+                                  </Col>
+                                ) : (
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      {...field}
+                                      name={[field.name, "fix_val"]}
+                                      label={t("app.device.libiio.fsDbm", "FS (dBm)")}
+                                    >
+                                      <InputNumber style={{ width: "100%" }} />
+                                    </Form.Item>
+                                  </Col>
+                                )}
                                 <Col xs={24} sm={12} lg={8}>
                                   <Form.Item
                                     {...field}
@@ -433,7 +474,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                           <Button
                             type="dashed"
                             icon={<PlusOutlined />}
-                            onClick={() => add(createEmptyConfigItem())}
+                            onClick={() => add(createEmptyConfigItem(direction))}
                           >
                             {t("app.device.libiio.config.addFirstFrequency", "Add First Frequency")}
                           </Button>

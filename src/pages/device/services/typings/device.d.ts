@@ -95,10 +95,13 @@ declare namespace API_PostLibiioDeviceConfigList {
   export interface ConfigItem {
     id?: number
     device_id: number
+    type?: "rx" | "tx"
     sort?: number
     target_freq_mhz: number
+    fix_val?: number
     fs_dbm?: number
     rx_gain?: number
+    direction?: "rx" | "tx"
     is_alarm: number
     min?: number
     max?: number
@@ -110,6 +113,7 @@ declare namespace API_PostLibiioDeviceConfigList {
     page: number
     limit: number
     device_id: number
+    direction?: "rx" | "tx"
     is_alarm?: number
   }
 
@@ -131,16 +135,20 @@ declare namespace API_PostLibiioDeviceConfigSave {
   export interface ConfigItem {
     id?: number
     device_id: number
+    type?: "rx" | "tx"
     sort?: number
     target_freq_mhz: number
+    fix_val?: number
     fs_dbm?: number
     rx_gain?: number
+    direction?: "rx" | "tx"
     is_alarm: number
     min?: number
     max?: number
   }
 
   export interface BatchParams {
+    direction?: "rx" | "tx"
     list: ConfigItem[]
   }
 

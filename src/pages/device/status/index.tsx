@@ -1,5 +1,5 @@
 import { PageContainer } from "@ant-design/pro-components"
-import { Card, Col, Row, Tag, Progress, Form, Select, Modal, Checkbox } from "antd"
+import { Card, Col, Row, Tag, Progress, Form, Modal, Checkbox, TreeSelect } from "antd"
 import React, { useCallback, useEffect, useState, useMemo } from "react"
 import Services from "@/pages/device/services"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
@@ -16,6 +16,14 @@ import { useIntl } from "umi"
 
 // 常量配置
 const PAGE_SIZE = 300
+
+type DeviceTypeTreeNode = {
+  title: string
+  value: string | number
+  disabled?: boolean
+  selectable?: boolean
+  children?: DeviceTypeTreeNode[]
+}
 
 // 工具函数
 const getRefreshInterval = (): number => {
@@ -64,10 +72,18 @@ const getStatusIcon = (
     }
   }
 
-  if (typeof show_min_val === "number" && typeof current_val === "number" && current_val < show_min_val) {
+  if (
+    typeof show_min_val === "number" &&
+    typeof current_val === "number" &&
+    current_val < show_min_val
+  ) {
     return <></>
   }
-  if (typeof show_max_val === "number" && typeof current_val === "number" && current_val > show_max_val) {
+  if (
+    typeof show_max_val === "number" &&
+    typeof current_val === "number" &&
+    current_val > show_max_val
+  ) {
     return <></>
   }
 
@@ -98,15 +114,19 @@ interface DeviceCardProps {
 const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) => {
   // 判断是否显示值
   const shouldShowValue = useMemo(() => {
-    const { show_max_val, show_min_val, current_val, is_set_current_val ,is_alarm} = metricItem
+    const { show_max_val, show_min_val, current_val, is_set_current_val, is_alarm } = metricItem
     if (is_alarm) {
       return true
     }
-    if (!is_set_current_val ) {
+    if (!is_set_current_val) {
       return false
     }
-    const withinMaxBounds = typeof show_max_val !== "number" || (typeof current_val === "number" && current_val <= show_max_val)
-    const withinMinBounds = typeof show_min_val !== "number" || (typeof current_val === "number" && current_val > show_min_val)
+    const withinMaxBounds =
+      typeof show_max_val !== "number" ||
+      (typeof current_val === "number" && current_val <= show_max_val)
+    const withinMinBounds =
+      typeof show_min_val !== "number" ||
+      (typeof current_val === "number" && current_val > show_min_val)
     return withinMaxBounds && withinMinBounds
   }, [metricItem])
 
@@ -117,8 +137,12 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) =>
 
     return (
       alarmItems?.findIndex((item) => item.config_type == config_type) != -1 &&
-      ((typeof alarm_min === "number" && typeof current_val === "number" && current_val < alarm_min) ||
-        (typeof alarm_max === "number" && typeof current_val === "number" && current_val > alarm_max))
+      ((typeof alarm_min === "number" &&
+        typeof current_val === "number" &&
+        current_val < alarm_min) ||
+        (typeof alarm_max === "number" &&
+          typeof current_val === "number" &&
+          current_val > alarm_max))
     )
   }, [metricItem, alarmItems])
 
@@ -126,10 +150,18 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) =>
   const formatValue = useCallback(() => {
     const { show_max_val, show_min_val, current_val, unit } = metricItem
 
-    if (typeof show_max_val === "number" && typeof current_val === "number" && current_val > show_max_val) {
+    if (
+      typeof show_max_val === "number" &&
+      typeof current_val === "number" &&
+      current_val > show_max_val
+    ) {
       return "∞"
     }
-    if (typeof show_min_val === "number" && typeof current_val === "number" && current_val < show_min_val) {
+    if (
+      typeof show_min_val === "number" &&
+      typeof current_val === "number" &&
+      current_val < show_min_val
+    ) {
       return "-∞"
     }
     return `${Number(current_val ?? 0).toFixed(2)} ${unit}`
@@ -138,12 +170,23 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) =>
   // 计算进度百分比
   const getProgressPercent = useCallback(() => {
     const { alarm_min, alarm_max, current_val } = metricItem
-    if (typeof alarm_min !== "number" || typeof alarm_max !== "number" || typeof current_val !== "number") return 0
+    if (
+      typeof alarm_min !== "number" ||
+      typeof alarm_max !== "number" ||
+      typeof current_val !== "number"
+    )
+      return 0
     return ((current_val - alarm_min) * 100) / (alarm_max - alarm_min)
   }, [metricItem])
 
   if (metricItem.is_module) {
-    return <span>{metricItem.current_val ? t("app.device.status.online", "Online") : t("app.device.status.offline", "Offline")}</span>
+    return (
+      <span>
+        {metricItem.current_val
+          ? t("app.device.status.online", "Online")
+          : t("app.device.status.offline", "Offline")}
+      </span>
+    )
   }
   if (metricItem.is_alarm) {
     if (metricItem.is_set_current_val) {
@@ -152,8 +195,8 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) =>
       ) : (
         <XFilled style={{ color: "red" }} />
       )
-    }else{
-      return  <XFilled style={{ color: "grey" }} />
+    } else {
+      return <XFilled style={{ color: "grey" }} />
     }
   }
 
@@ -234,12 +277,12 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
             <React.Fragment key={`fragment_Key_${metricItem.config_type}`}>
               <Col span={8}>{metricItem.config_type_name}</Col>
               <Col span={12}>
-                  <MetricItem
-                    metricItem={metricItem}
-                    alarmItems={device?.alarm_items}
-                    t={t}
-                    key={`MetricItem_${metricItem.config_type}`}
-                  />
+                <MetricItem
+                  metricItem={metricItem}
+                  alarmItems={device?.alarm_items}
+                  t={t}
+                  key={`MetricItem_${metricItem.config_type}`}
+                />
               </Col>
               <Col
                 span={4}
@@ -279,7 +322,13 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
   if (!selectedDevice) return null
 
   return (
-    <Modal title={t("app.device.status.detail", "Device Details")} open={visible} onCancel={onCancel} footer={null} width={600}>
+    <Modal
+      title={t("app.device.status.detail", "Device Details")}
+      open={visible}
+      onCancel={onCancel}
+      footer={null}
+      width={600}
+    >
       <Card bordered={false}>
         <Row>
           <Col span={8} style={{ backgroundColor: "#ffffff" }}>
@@ -319,7 +368,11 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                     backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
-                  <MetricItem metricItem={metricItem} alarmItems={selectedDevice?.alarm_items} t={t} />
+                  <MetricItem
+                    metricItem={metricItem}
+                    alarmItems={selectedDevice?.alarm_items}
+                    t={t}
+                  />
                 </Col>
                 <Col
                   span={4}
@@ -407,14 +460,28 @@ const DeviceStatus: React.FC = () => {
     [],
   )
 
-  // 设备类型选项
-  const deviceTypeOptions = useMemo(() => {
-    return deviceTypes
+  // 设备类型树
+  const deviceTypeTreeData = useMemo<DeviceTypeTreeNode[]>(() => {
+    const groupedTypes = deviceTypes
       .filter((type) => type != null && type.id != null)
-      .map((type) => ({
-        label: type.device_type_alias || type.device_type,
+      .reduce<Record<string, API_PostDeviceTypes.List[]>>((acc, type) => {
+        if (!acc[type.device_type_group]) {
+          acc[type.device_type_group] = []
+        }
+        acc[type.device_type_group].push(type)
+        return acc
+      }, {})
+
+    return Object.entries(groupedTypes).map(([group, types]) => ({
+      title: group,
+      value: `group-${group}`,
+      disabled: true,
+      selectable: false,
+      children: types.map((type) => ({
+        title: type.device_type_alias || type.device_type,
         value: type.id,
-      }))
+      })),
+    }))
   }, [deviceTypes])
 
   // 初始化数据
@@ -439,13 +506,21 @@ const DeviceStatus: React.FC = () => {
       <Form form={form}>
         <Row gutter={[24, 24]}>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="device_type_id" label={t("app.device.status.deviceType", "Device Type")}>
-              <Select
+            <Form.Item
+              name="device_type_id"
+              label={t("app.device.status.deviceType", "Device Type")}
+            >
+              <TreeSelect
                 placeholder={t("app.device.status.selectType", "Please select a type")}
                 allowClear
-                options={deviceTypeOptions}
-                filterOption={(input, option) => (option?.label ?? "").includes(input.trim())}
                 showSearch
+                treeDefaultExpandAll
+                treeData={deviceTypeTreeData}
+                filterTreeNode={(input, treeNode) =>
+                  String(treeNode.title || "")
+                    .toLowerCase()
+                    .includes(input.trim().toLowerCase())
+                }
               />
             </Form.Item>
           </Col>
@@ -455,26 +530,34 @@ const DeviceStatus: React.FC = () => {
             </Form.Item>
           </Col>
           <Col xs={24} sm={12} md={8} lg={6}>
-            <Form.Item name="is_alarm_or_module_offline" label={t("app.device.status.inAlarm", "In Alarm")} valuePropName="checked">
+            <Form.Item
+              name="is_alarm_or_module_offline"
+              label={t("app.device.status.inAlarm", "In Alarm")}
+              valuePropName="checked"
+            >
               <Checkbox />
             </Form.Item>
           </Col>
         </Row>
       </Form>
       <Row gutter={[24, 24]}>
-        {deviceList?.filter((device): device is API_PostDeviceList.List => device != null && device.id != null).map((device, index) => (
-          <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
-            <DeviceCard
-              device={device}
-              onDoubleClick={() => {
-                setDeviceId(device.id)
-                setShowModalVisible(true)
-              }}
-              isEvenRow={index % 2 === 0}
-              t={t}
-            />
-          </Col>
-        ))}
+        {deviceList
+          ?.filter(
+            (device): device is API_PostDeviceList.List => device != null && device.id != null,
+          )
+          .map((device, index) => (
+            <Col key={device.id} xs={24} sm={12} md={8} lg={6}>
+              <DeviceCard
+                device={device}
+                onDoubleClick={() => {
+                  setDeviceId(device.id)
+                  setShowModalVisible(true)
+                }}
+                isEvenRow={index % 2 === 0}
+                t={t}
+              />
+            </Col>
+          ))}
       </Row>
 
       <DeviceDetailModal
