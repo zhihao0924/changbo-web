@@ -1,6 +1,18 @@
 import { PageContainer } from "@ant-design/pro-components"
-import { Button, Card, Col, message, Row, Spin } from "antd"
-import { RadarChartOutlined } from "@ant-design/icons"
+import {
+  Button,
+  Card,
+  Empty,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Modal,
+  Select,
+  Spin,
+  Tooltip,
+} from "antd"
+import { EditOutlined, RadarChartOutlined } from "@ant-design/icons"
 import React, { useCallback, useEffect, useState } from "react"
 import { history, useIntl } from "umi"
 import Services from "@/pages/device/services"
@@ -24,8 +36,33 @@ type LibiioModuleField = {
   value: string | number | boolean
 }
 
+type EditFormValues = {
+  ip: string
+  fs_dbm?: number
+  rx_ip?: string
+  rx_center_freq?: number
+  rx_sampling_rate?: number
+  rx_fft_size?: number
+  rx_gain?: number
+  tx_ip?: string
+  tx_center_freq?: number
+  tx_sampling_rate?: number
+  tx_fft_size?: number
+  tx_gain?: number
+}
+
 const MAX_FETCH_SIZE = 1000
 const LIBIIO_DEVICE_TYPE = "E0"
+const IPV4_REGEXP = /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/
+const FFT_SIZE_OPTIONS = [12, 14, 16, 18, 20].map((power) => ({
+  label: `${2 ** power}(2^${power})`,
+  value: 2 ** power,
+}))
+
+const formatFftSize = (value: number) => {
+  const power = Math.log2(value)
+  return Number.isInteger(power) ? `${value}(2^${power})` : value
+}
 
 const COMMON_MODULE_FIELDS = new Set([
   "id",
@@ -41,9 +78,12 @@ const COMMON_MODULE_FIELDS = new Set([
   "updated_at",
 ])
 
-const formatModuleFieldValue = (value: any) => {
+const formatModuleFieldValue = (value: any, key?: string) => {
   if (value === undefined || value === null || value === "") {
     return "-"
+  }
+  if (key?.toLowerCase().endsWith("fft_size") && typeof value === "number") {
+    return formatFftSize(value)
   }
   if (Array.isArray(value)) {
     return value.length
@@ -54,11 +94,24 @@ const formatModuleFieldValue = (value: any) => {
   return value
 }
 
+const formatFieldName = (key: string) =>
+  key
+    .replace(/^(rx|tx)_/i, "")
+    .split("_")
+    .filter(Boolean)
+    .map((item) => item.toUpperCase())
+    .join(" ")
+
 const DeviceLibiio: React.FC = () => {
   const intl = useIntl()
   const [loading, setLoading] = useState(false)
+  const [submitLoading, setSubmitLoading] = useState(false)
+  const [editModalVisible, setEditModalVisible] = useState(false)
   const [devices, setDevices] = useState<LibiioDevice[]>([])
   const [modules, setModules] = useState<LibiioModule[]>([])
+  const [editingDevice, setEditingDevice] = useState<LibiioDevice | null>(null)
+  const [editingModule, setEditingModule] = useState<LibiioModule | undefined>()
+  const [editForm] = Form.useForm<EditFormValues>()
   const t = useCallback(
     (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
       intl.formatMessage({ id, defaultMessage }, values),
@@ -118,16 +171,118 @@ const DeviceLibiio: React.FC = () => {
     history.push(`/device/libiio/config/${module.id}?direction=${direction}`)
   }, [])
 
-  const getModuleFields = useCallback((module: LibiioModule, prefix: "rx" | "tx") => {
-    return Object.entries(module)
-      .filter(([key]) => key.toLowerCase().startsWith(prefix))
-      .filter(([key]) => !COMMON_MODULE_FIELDS.has(key))
-      .map(([key, value]) => ({
-        key,
-        label: key,
-        value: formatModuleFieldValue(value),
-      }))
-  }, [])
+  const openEditModal = useCallback(
+    (device: LibiioDevice, module?: LibiioModule) => {
+      setEditingDevice(device)
+      setEditingModule(module)
+      editForm.setFieldsValue({
+        ip: device.ip || module?.ip || "",
+        fs_dbm: typeof module?.fs_dbm === "number" ? module.fs_dbm : undefined,
+        rx_ip: module?.rx_ip || "",
+        rx_center_freq: module?.rx_center_freq ?? module?.center_freq,
+        rx_sampling_rate: module?.rx_sampling_rate ?? module?.sampling_rate,
+        rx_fft_size: module?.rx_fft_size ?? module?.fft_size,
+        rx_gain: module?.rx_gain,
+        tx_ip: module?.tx_ip || "",
+        tx_center_freq: module?.tx_center_freq ?? module?.center_freq,
+        tx_sampling_rate: module?.tx_sampling_rate ?? module?.sampling_rate,
+        tx_fft_size: module?.tx_fft_size ?? module?.fft_size,
+        tx_gain: module?.tx_gain,
+      })
+      setEditModalVisible(true)
+    },
+    [editForm],
+  )
+
+  const closeEditModal = useCallback(() => {
+    setEditModalVisible(false)
+    setEditingDevice(null)
+    setEditingModule(undefined)
+    editForm.resetFields()
+  }, [editForm])
+
+  const handleEditSubmit = useCallback(async () => {
+    if (!editingDevice) {
+      return
+    }
+
+    try {
+      const values = await editForm.validateFields()
+      const rxCenterFreq = values.rx_center_freq as number
+      const rxSamplingRate = values.rx_sampling_rate as number
+      const rxFftSize = values.rx_fft_size as number
+      setSubmitLoading(true)
+
+      await Services.api.postLibiioDeviceSave(
+        {
+          id: editingModule?.id,
+          ip: values.ip,
+          type: editingModule?.type,
+          center_freq: editingModule?.center_freq ?? rxCenterFreq,
+          sampling_rate: editingModule?.sampling_rate ?? rxSamplingRate,
+          fft_size: editingModule?.fft_size ?? rxFftSize,
+          fs_dbm: values.fs_dbm,
+          rx_ip: values.rx_ip,
+          rx_center_freq: values.rx_center_freq,
+          rx_sampling_rate: values.rx_sampling_rate,
+          rx_fft_size: values.rx_fft_size,
+          rx_gain: values.rx_gain,
+          tx_ip: values.tx_ip,
+          tx_center_freq: values.tx_center_freq,
+          tx_sampling_rate: values.tx_sampling_rate,
+          tx_fft_size: values.tx_fft_size,
+          tx_gain: values.tx_gain,
+        },
+        { showLoading: false },
+      )
+
+      message.success(t("app.device.libiio.updateSuccess", "Libiio device updated"))
+      closeEditModal()
+      loadDevices()
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return
+      }
+      console.error(error)
+      message.error(t("app.device.libiio.saveFailed", "Save failed. Please try again later."))
+    } finally {
+      setSubmitLoading(false)
+    }
+  }, [closeEditModal, editForm, editingDevice, editingModule, loadDevices, t])
+
+  const getModuleFieldLabel = useCallback(
+    (key: string) => {
+      const labelMap: Record<string, string> = {
+        rx_center_freq: t("app.device.libiio.centerFrequency", "Center Frequency"),
+        tx_center_freq: t("app.device.libiio.centerFrequency", "Center Frequency"),
+        rx_sampling_rate: t("app.device.libiio.samplingRate", "Bandwidth"),
+        tx_sampling_rate: t("app.device.libiio.samplingRate", "Bandwidth"),
+        rx_fft_size: t("app.device.libiio.fftSize", "FFT Size"),
+        tx_fft_size: t("app.device.libiio.fftSize", "FFT Size"),
+        rx_gain: t("app.device.libiio.rxGain", "RX Gain"),
+        tx_gain: t("app.device.libiio.txGain", "TX Gain"),
+        tx_power: t("app.device.libiio.txPower", "TX Power"),
+        rx_rssi: t("app.device.libiio.rxRssi", "RX RSSI"),
+      }
+
+      return labelMap[key] || formatFieldName(key)
+    },
+    [t],
+  )
+
+  const getModuleFields = useCallback(
+    (module: LibiioModule, prefix: "rx" | "tx") => {
+      return Object.entries(module)
+        .filter(([key]) => key.toLowerCase().startsWith(prefix))
+        .filter(([key]) => !COMMON_MODULE_FIELDS.has(key))
+        .map(([key, value]) => ({
+          key,
+          label: getModuleFieldLabel(key),
+          value: formatModuleFieldValue(value, key),
+        }))
+    },
+    [getModuleFieldLabel],
+  )
 
   const renderModuleInfo = useCallback(
     (
@@ -138,8 +293,10 @@ const DeviceLibiio: React.FC = () => {
     ) => (
       <div className="libiio-module-card">
         <div className="libiio-module-card__header">
-          <span className="libiio-module-card__title">{title}</span>
-          {module && fields.length ? (
+          <div>
+            <span className="libiio-module-card__title">{title}</span>
+          </div>
+          {module ? (
             <Button
               type="link"
               className="libiio-module-card__config"
@@ -150,14 +307,20 @@ const DeviceLibiio: React.FC = () => {
             </Button>
           ) : null}
         </div>
-        {module && fields.length ? (
+        {module ? (
           <div className="libiio-module-card__content">
-            {fields.map((field) => (
-              <div className="libiio-module-field" key={field.key}>
-                <span>{field.label}</span>
-                <strong>{String(field.value)}</strong>
+            {fields.length ? (
+              fields.map((field) => (
+                <div className="libiio-module-field" key={field.key}>
+                  <span>{field.label}</span>
+                  <strong title={String(field.value)}>{String(field.value)}</strong>
+                </div>
+              ))
+            ) : (
+              <div className="libiio-module-empty libiio-module-empty--compact">
+                {t("app.device.libiio.moduleNoParameter", "No module parameters")}
               </div>
-            ))}
+            )}
           </div>
         ) : (
           <div className="libiio-module-empty">
@@ -170,56 +333,229 @@ const DeviceLibiio: React.FC = () => {
   )
 
   return (
-    <PageContainer className="libiio-page">
-      <Card className="libiio-table-card" bodyStyle={{ padding: 8 }}>
+    <PageContainer className="libiio-page" title={false}>
+      <div className="libiio-page-shell">
         <Spin spinning={loading}>
-          <Row gutter={[4, 8]}>
-            {devices.map((device) => (
-              <Col key={device.id} xs={24} xl={12}>
-                <Card className="libiio-device-card">
-                  {(() => {
-                    const module = getGatewayModules(device)
-                    const rxFields = module ? getModuleFields(module, "rx") : []
-                    const txFields = module ? getModuleFields(module, "tx") : []
+          {devices.length ? (
+            <div className="libiio-device-list">
+              {devices.map((device) => {
+                const module = getGatewayModules(device)
+                const rxFields = module ? getModuleFields(module, "rx") : []
+                const txFields = module ? getModuleFields(module, "tx") : []
 
-                    return (
-                      <>
-                        <div className="libiio-device-card__header">
-                          <div>
-                            <div className="libiio-device-card__eyebrow">
-                              {t("app.device.libiio.gatewayName", "Gateway Device Name")}
-                            </div>
-                            <div className="libiio-device-card__title">{device.ip || "-"}</div>
-                          </div>
-                          <div className="libiio-shared-pill">
-                            <span>{t("app.device.libiio.fsDbm", "FS (dBm)")}</span>
-                            <strong>{formatModuleFieldValue(module?.fs_dbm)}</strong>
-                          </div>
-                        </div>
+                return (
+                  <Card className="libiio-device-card" key={device.id} bordered={false}>
+                    <div className="libiio-device-header">
+                      <div className="libiio-device-action-row">
+                        <Tooltip title={t("app.common.edit", "Edit")}>
+                          <Button
+                            className="libiio-device-edit"
+                            icon={<EditOutlined />}
+                            type="text"
+                            onClick={() => openEditModal(device, module)}
+                          >
+                            {t("app.common.edit", "Edit")}
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
 
-                        <div className="libiio-module-grid">
-                          {renderModuleInfo(
-                            t("app.device.libiio.module.rx", "RX Module"),
-                            module,
-                            rxFields,
-                            "rx",
-                          )}
-                          {renderModuleInfo(
-                            t("app.device.libiio.module.tx", "TX Module"),
-                            module,
-                            txFields,
-                            "tx",
-                          )}
-                        </div>
-                      </>
-                    )
-                  })()}
-                </Card>
-              </Col>
-            ))}
-          </Row>
+                    <div className="libiio-device-meta-row">
+                      <div className="libiio-device-meta-item">
+                        <span>{t("app.device.libiio.ipAddress", "IP Address")}</span>
+                        <strong title={device.ip || "-"}>{device.ip || "-"}</strong>
+                      </div>
+                      <div className="libiio-device-meta-item">
+                        <span>
+                          {t("app.device.libiio.fullScalePower", "0 dBFS Full-scale Power")}
+                        </span>
+                        <strong title={String(formatModuleFieldValue(module?.fs_dbm))}>
+                          {formatModuleFieldValue(module?.fs_dbm)}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="libiio-module-grid">
+                      {renderModuleInfo(
+                        t("app.device.libiio.module.tx", "TX Module"),
+                        module,
+                        txFields,
+                        "tx",
+                      )}
+                      {renderModuleInfo(
+                        t("app.device.libiio.module.rx", "RX Module"),
+                        module,
+                        rxFields,
+                        "rx",
+                      )}
+                    </div>
+                  </Card>
+                )
+              })}
+            </div>
+          ) : (
+            <Empty description={t("app.device.libiio.empty", "No Libiio devices")} />
+          )}
         </Spin>
-      </Card>
+      </div>
+
+      <Modal
+        title={t("app.device.libiio.editInfo", "Edit Libiio Device")}
+        open={editModalVisible}
+        confirmLoading={submitLoading}
+        onOk={handleEditSubmit}
+        onCancel={closeEditModal}
+        width={760}
+      >
+        <Form className="libiio-edit-form" form={editForm} layout="vertical">
+          <div className="libiio-edit-section">
+            <div className="libiio-edit-section__title">
+              {t("app.device.libiio.deviceParameters", "Device Parameters")}
+            </div>
+            <div className="libiio-edit-grid libiio-edit-grid--device">
+              <Form.Item
+                name="ip"
+                label={t("app.device.libiio.ipAddress", "IP Address")}
+                rules={[
+                  {
+                    required: true,
+                    message: t("app.device.index.ip.required", "Please enter the IP address"),
+                  },
+                  {
+                    pattern: IPV4_REGEXP,
+                    message: t("app.device.libiio.ipInvalid", "Please enter a valid IPv4 address"),
+                  },
+                ]}
+              >
+                <Input
+                  disabled
+                  placeholder={t("app.device.libiio.ipExample", "For example, 192.168.1.20")}
+                />
+              </Form.Item>
+              <Form.Item
+                name="fs_dbm"
+                label={t("app.device.libiio.fullScalePower", "0 dBFS Full-scale Power")}
+              >
+                <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dBm" />
+              </Form.Item>
+            </div>
+          </div>
+
+          {(["tx", "rx"] as const).map((direction) => (
+            <div className="libiio-edit-section" key={direction}>
+              <div className="libiio-edit-section__title">
+                {direction === "rx"
+                  ? t("app.device.libiio.module.rx", "RX Module")
+                  : t("app.device.libiio.module.tx", "TX Module")}
+              </div>
+              <div className="libiio-edit-grid">
+                <Form.Item
+                  name={`${direction}_ip`}
+                  label="IP"
+                  rules={[
+                    {
+                      pattern: IPV4_REGEXP,
+                      message: t(
+                        "app.device.libiio.ipInvalid",
+                        "Please enter a valid IPv4 address",
+                      ),
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder={t("app.device.libiio.ipExample", "For example, 192.168.1.20")}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name={`${direction}_center_freq`}
+                  label={t("app.device.libiio.centerFrequency", "Center Frequency")}
+                  dependencies={direction === "tx" ? ["tx_ip"] : undefined}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const isRequired = direction === "rx" || Boolean(getFieldValue("tx_ip"))
+                        if (isRequired && (value === undefined || value === null || value === "")) {
+                          return Promise.reject(
+                            new Error(
+                              t(
+                                "app.device.libiio.centerFrequencyRequired",
+                                "Please enter center frequency",
+                              ),
+                            ),
+                          )
+                        }
+                        return Promise.resolve()
+                      },
+                    }),
+                  ]}
+                >
+                  <InputNumber style={{ width: "100%" }} precision={2} addonAfter="MHz" />
+                </Form.Item>
+                <Form.Item
+                  name={`${direction}_sampling_rate`}
+                  label={t("app.device.libiio.samplingRate", "Bandwidth")}
+                  dependencies={direction === "tx" ? ["tx_ip"] : undefined}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const isRequired = direction === "rx" || Boolean(getFieldValue("tx_ip"))
+                        if (isRequired && (value === undefined || value === null || value === "")) {
+                          return Promise.reject(
+                            new Error(
+                              t("app.device.libiio.samplingRateRequired", "Please enter bandwidth"),
+                            ),
+                          )
+                        }
+                        return Promise.resolve()
+                      },
+                    }),
+                  ]}
+                >
+                  <InputNumber style={{ width: "100%" }} precision={2} addonAfter="MHz" />
+                </Form.Item>
+                <Form.Item
+                  name={`${direction}_fft_size`}
+                  label={t("app.device.libiio.fftSize", "FFT Size")}
+                  dependencies={direction === "tx" ? ["tx_ip"] : undefined}
+                  rules={[
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const isRequired = direction === "rx" || Boolean(getFieldValue("tx_ip"))
+                        if (isRequired && (value === undefined || value === null || value === "")) {
+                          return Promise.reject(
+                            new Error(
+                              t("app.device.libiio.fftSizeRequired", "Please select FFT size"),
+                            ),
+                          )
+                        }
+                        return Promise.resolve()
+                      },
+                    }),
+                  ]}
+                >
+                  <Select
+                    options={FFT_SIZE_OPTIONS}
+                    placeholder={t(
+                      "app.device.libiio.fftSizePlaceholder",
+                      "Please select FFT size",
+                    )}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name={`${direction}_gain`}
+                  label={
+                    direction === "rx"
+                      ? t("app.device.libiio.rxGain", "RX Gain")
+                      : t("app.device.libiio.txGain", "TX Gain")
+                  }
+                >
+                  <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dB" />
+                </Form.Item>
+              </div>
+            </div>
+          ))}
+        </Form>
+      </Modal>
     </PageContainer>
   )
 }

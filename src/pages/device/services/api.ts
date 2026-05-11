@@ -17,6 +17,7 @@ import type {
   API_PostRFConfigSave,
   API_PostRFConfig,
   API_PostDeviceMove,
+  API_PostLibiioBoardList,
   API_PostLibiioDeviceConfigDelete,
   API_PostLibiioDeviceConfigList,
   API_PostLibiioDeviceConfigSave,
@@ -128,6 +129,22 @@ export async function postLibiioDeviceConfigDelete(
 ) {
   const res: API_PostLibiioDeviceConfigDelete.Result = await postApi(
     "libiio/deviceConfig/delete",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    console.error(err)
+    throw err
+  })
+
+  return res
+}
+
+export async function postLibiioBoardList(
+  obj: API_PostLibiioBoardList.Params,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLibiioBoardList.Result = await postApi(
+    "libiio/board/list",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {

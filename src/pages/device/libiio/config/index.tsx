@@ -25,7 +25,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { history, useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type {
-  API_PostLibiioDeviceConfigDelete,
   API_PostLibiioDeviceConfigList,
   API_PostLibiioDeviceConfigSave,
 } from "@/pages/device/services/typings/device"
@@ -44,16 +43,19 @@ type FrequencyConfigPageProps = {
   }
 }
 
-type FrequencyFormItem = API_PostLibiioDeviceConfigSave.ConfigItem
+type FrequencyFormItem = Omit<API_PostLibiioDeviceConfigSave.ConfigItem, "target_freq_mhz"> & {
+  target_freq_mhz?: number
+}
+const MAX_FREQUENCY_CONFIG_COUNT = 20
 
 const createEmptyConfigItem = (direction: "rx" | "tx" = "rx"): FrequencyFormItem => ({
   device_id: 0,
   type: direction,
   direction,
   sort: undefined,
-  target_freq_mhz: 0,
+  target_freq_mhz: undefined,
   fix_val: undefined,
-  is_alarm: 1,
+  is_alarm: 0,
   min: undefined,
   max: undefined,
 })
@@ -70,6 +72,19 @@ const sortConfigs = <T extends { sort?: number; id?: number }>(configs: T[]) =>
     return (prev.id || 0) - (next.id || 0)
   })
 
+const normalizeNumber = (value?: number | string | null) => {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : undefined
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const numberValue = Number(value)
+    return Number.isFinite(numberValue) ? numberValue : undefined
+  }
+
+  return undefined
+}
+
 const buildConfigList = (
   configs: API_PostLibiioDeviceConfigList.ConfigItem[] | undefined,
   direction: "rx" | "tx",
@@ -82,9 +97,9 @@ const buildConfigList = (
     sort: config.sort,
     target_freq_mhz: config.target_freq_mhz,
     fix_val: config.fix_val ?? (direction === "tx" ? config.fs_dbm : config.rx_gain),
-    is_alarm: config.is_alarm,
-    min: config.min,
-    max: config.max,
+    is_alarm: config.is_alarm ?? 0,
+    min: normalizeNumber(config.min),
+    max: normalizeNumber(config.max),
   }))
 
 const normalizeConfigByDirection = (config: FrequencyFormItem, direction: "rx" | "tx") => ({
@@ -93,19 +108,23 @@ const normalizeConfigByDirection = (config: FrequencyFormItem, direction: "rx" |
   type: direction,
   direction,
   sort: config.sort,
-  target_freq_mhz: config.target_freq_mhz,
+  target_freq_mhz: config.target_freq_mhz as number,
   fix_val: config.fix_val,
   is_alarm: config.is_alarm,
   min: config.min,
   max: config.max,
 })
 
+const isEmptyFieldValue = (value: unknown) => value === undefined || value === null || value === ""
+
 const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
   const intl = useIntl()
   const [form] = Form.useForm<{ configs: FrequencyFormItem[] }>()
   const [loading, setLoading] = useState(false)
   const [submitLoading, setSubmitLoading] = useState(false)
-  const [initialIds, setInitialIds] = useState<number[]>([])
+  const currentConfigs = Form.useWatch("configs", form) || []
+  const currentConfigCount = currentConfigs.length
+  const isFrequencyLimitReached = currentConfigCount >= MAX_FREQUENCY_CONFIG_COUNT
   const t = useCallback(
     (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
       intl.formatMessage({ id, defaultMessage }, values),
@@ -119,6 +138,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
     direction === "tx"
       ? t("app.device.libiio.module.tx", "TX Module")
       : t("app.device.libiio.module.rx", "RX Module")
+  const metricUnit = direction === "tx" ? "W" : "dBm"
 
   const loadPageData = useCallback(async () => {
     if (!isValidDeviceId) {
@@ -141,7 +161,6 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
       )
 
       const configs = sortConfigs(configRes?.res?.list || [])
-      setInitialIds(configs.map((item) => item.id).filter(Boolean) as number[])
       form.setFieldsValue({
         configs: configs.length
           ? buildConfigList(configs, direction)
@@ -167,15 +186,18 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
 
     try {
       const values = await form.validateFields()
+      if ((values.configs || []).length > MAX_FREQUENCY_CONFIG_COUNT) {
+        message.error(
+          t("app.device.libiio.config.maxFrequencyCount", "You can add up to 20 frequencies"),
+        )
+        return
+      }
+
       setSubmitLoading(true)
-      const configs = (values.configs || [])
-        .filter((item) => typeof item.target_freq_mhz === "number")
-        .map((item, index) => ({
-          ...item,
-          sort: index + 1,
-        }))
-      const currentIds = configs.map((item) => item.id).filter(Boolean) as number[]
-      const removedIds = initialIds.filter((id) => !currentIds.includes(id))
+      const configs = (values.configs || []).map((item, index) => ({
+        ...item,
+        sort: index + 1,
+      }))
 
       await Services.api.postLibiioDeviceConfigSave(
         {
@@ -188,18 +210,6 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
           showLoading: false,
           showToast: false,
         },
-      )
-
-      await Promise.all(
-        removedIds.map((id) =>
-          Services.api.postLibiioDeviceConfigDelete(
-            { id } as API_PostLibiioDeviceConfigDelete.Params,
-            {
-              showLoading: false,
-              showToast: false,
-            },
-          ),
-        ),
       )
 
       message.success(t("app.device.libiio.config.saveSuccess", "Frequency config saved"))
@@ -215,7 +225,19 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
     } finally {
       setSubmitLoading(false)
     }
-  }, [deviceId, direction, form, initialIds, isValidDeviceId, loadPageData, t])
+  }, [deviceId, direction, form, isValidDeviceId, loadPageData, t])
+
+  const handleAddFrequency = useCallback(() => {
+    const configs = form.getFieldValue("configs") || []
+    if (configs.length >= MAX_FREQUENCY_CONFIG_COUNT) {
+      message.warning(
+        t("app.device.libiio.config.maxFrequencyCount", "You can add up to 20 frequencies"),
+      )
+      return
+    }
+
+    form.setFieldValue("configs", [...configs, createEmptyConfigItem(direction)])
+  }, [direction, form, t])
 
   const pageTitle = useMemo(() => {
     if (!isValidDeviceId) {
@@ -237,24 +259,12 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
             <Button
               icon={<PlusOutlined />}
               type="dashed"
-              onClick={() =>
-                form.setFieldValue("configs", [
-                  ...(form.getFieldValue("configs") || []),
-                  createEmptyConfigItem(direction),
-                ])
-              }
+              disabled={isFrequencyLimitReached}
+              onClick={handleAddFrequency}
             >
               {t("app.device.libiio.config.addFrequency", "Add Frequency")}
             </Button>
           </Space>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            loading={submitLoading}
-            onClick={handleSave}
-          >
-            {t("app.device.libiio.config.saveConfig", "Save Config")}
-          </Button>
         </div>
 
         <Spin spinning={loading}>
@@ -287,7 +297,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                       "Current Frequencies",
                     )}
                   >
-                    {(form.getFieldValue("configs") || []).length}
+                    {currentConfigCount}/{MAX_FREQUENCY_CONFIG_COUNT}
                   </Descriptions.Item>
                 </Descriptions>
               </Card>
@@ -298,162 +308,209 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                     <>
                       <div className="libiio-config-grid">
                         {fields.length ? (
-                          fields.map((field, index) => (
-                            <Card
-                              className="libiio-config-card"
-                              key={field.key}
-                              title={t(
-                                "app.device.libiio.config.frequencyWithIndex",
-                                "Frequency {index}",
-                                {
-                                  index: index + 1,
-                                },
-                              )}
-                              extra={
-                                <Space size={4}>
-                                  <Button
-                                    type="link"
-                                    icon={<ArrowUpOutlined />}
-                                    disabled={index === 0}
-                                    onClick={() => move(field.name, field.name - 1)}
-                                  >
-                                    {t("app.common.moveUp", "Move Up")}
-                                  </Button>
-                                  <Button
-                                    type="link"
-                                    icon={<ArrowDownOutlined />}
-                                    disabled={index === fields.length - 1}
-                                    onClick={() => move(field.name, field.name + 1)}
-                                  >
-                                    {t("app.common.moveDown", "Move Down")}
-                                  </Button>
-                                  <Button
-                                    type="link"
-                                    danger
-                                    icon={<DeleteOutlined />}
-                                    onClick={() => remove(field.name)}
-                                  >
-                                    {t("app.common.delete", "Delete")}
-                                  </Button>
-                                </Space>
-                              }
-                            >
-                              <Form.Item {...field} name={[field.name, "id"]} hidden>
-                                <InputNumber />
-                              </Form.Item>
-                              <Form.Item {...field} name={[field.name, "sort"]} hidden>
-                                <InputNumber />
-                              </Form.Item>
-                              <Row gutter={[12, 0]}>
-                                <Col xs={24} sm={12} lg={8}>
-                                  <Form.Item
-                                    {...field}
-                                    name={[field.name, "target_freq_mhz"]}
-                                    label={t(
-                                      "app.device.libiio.config.targetFrequency",
-                                      "Target Frequency (MHz)",
-                                    )}
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: t(
-                                          "app.device.libiio.config.targetFrequencyRequired",
-                                          "Please enter target frequency",
-                                        ),
-                                      },
-                                    ]}
-                                  >
-                                    <InputNumber style={{ width: "100%" }} min={0} />
-                                  </Form.Item>
-                                </Col>
-                                {direction === "rx" ? (
-                                  <Col xs={24} sm={12} lg={8}>
-                                    <Form.Item
-                                      {...field}
-                                      name={[field.name, "fix_val"]}
-                                      label={t("app.device.libiio.rxGain", "RX Gain")}
-                                    >
-                                      <InputNumber style={{ width: "100%" }} />
-                                    </Form.Item>
-                                  </Col>
-                                ) : (
-                                  <Col xs={24} sm={12} lg={8}>
-                                    <Form.Item
-                                      {...field}
-                                      name={[field.name, "fix_val"]}
-                                      label={t("app.device.libiio.fsDbm", "FS (dBm)")}
-                                    >
-                                      <InputNumber style={{ width: "100%" }} />
-                                    </Form.Item>
-                                  </Col>
+                          fields.map((field, index) => {
+                            const { key: fieldKey, ...restField } = field
+
+                            return (
+                              <Card
+                                className="libiio-config-card"
+                                key={fieldKey}
+                                title={t(
+                                  "app.device.libiio.config.frequencyWithIndex",
+                                  "Frequency {index}",
+                                  {
+                                    index: index + 1,
+                                  },
                                 )}
-                                <Col xs={24} sm={12} lg={8}>
-                                  <Form.Item
-                                    {...field}
-                                    name={[field.name, "is_alarm"]}
-                                    label={t("app.device.libiio.config.isAlarm", "Alarm Enabled")}
-                                    rules={[
-                                      {
-                                        required: true,
-                                        message: t(
-                                          "app.device.libiio.config.isAlarmRequired",
-                                          "Please select whether alarm is enabled",
-                                        ),
-                                      },
-                                    ]}
-                                  >
-                                    <Select
-                                      options={[
-                                        { label: t("app.common.yes", "Yes"), value: 1 },
-                                        { label: t("app.common.no", "No"), value: 0 },
-                                      ]}
-                                    />
-                                  </Form.Item>
-                                </Col>
-                                <Col xs={24} sm={12} lg={8}>
-                                  <Form.Item
-                                    {...field}
-                                    name={[field.name, "min"]}
-                                    label={t("app.device.libiio.config.minValue", "Minimum")}
-                                  >
-                                    <InputNumber style={{ width: "100%" }} />
-                                  </Form.Item>
-                                </Col>
-                                <Col xs={24} sm={12} lg={8}>
-                                  <Form.Item
-                                    {...field}
-                                    name={[field.name, "max"]}
-                                    label={t("app.device.libiio.config.maxValue", "Maximum")}
-                                    dependencies={[[field.name, "min"]]}
-                                    rules={[
-                                      ({ getFieldValue }) => ({
-                                        validator(_, value) {
-                                          const min = getFieldValue(["configs", field.name, "min"])
-                                          if (
-                                            typeof min === "number" &&
-                                            typeof value === "number" &&
-                                            min > value
-                                          ) {
-                                            return Promise.reject(
-                                              new Error(
-                                                t(
-                                                  "app.device.libiio.config.maxLessThanMin",
-                                                  "Maximum value cannot be less than minimum value",
-                                                ),
-                                              ),
-                                            )
-                                          }
-                                          return Promise.resolve()
+                                extra={
+                                  <Space size={4}>
+                                    <Button
+                                      type="link"
+                                      icon={<ArrowUpOutlined />}
+                                      disabled={index === 0}
+                                      onClick={() => move(field.name, field.name - 1)}
+                                    >
+                                      {t("app.common.moveUp", "Move Up")}
+                                    </Button>
+                                    <Button
+                                      type="link"
+                                      icon={<ArrowDownOutlined />}
+                                      disabled={index === fields.length - 1}
+                                      onClick={() => move(field.name, field.name + 1)}
+                                    >
+                                      {t("app.common.moveDown", "Move Down")}
+                                    </Button>
+                                    <Button
+                                      type="link"
+                                      danger
+                                      icon={<DeleteOutlined />}
+                                      onClick={() => remove(field.name)}
+                                    >
+                                      {t("app.common.delete", "Delete")}
+                                    </Button>
+                                  </Space>
+                                }
+                              >
+                                <Form.Item {...restField} name={[field.name, "id"]} hidden>
+                                  <InputNumber />
+                                </Form.Item>
+                                <Form.Item {...restField} name={[field.name, "sort"]} hidden>
+                                  <InputNumber />
+                                </Form.Item>
+                                <Row gutter={[12, 0]}>
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      {...restField}
+                                      name={[field.name, "target_freq_mhz"]}
+                                      label={t(
+                                        "app.device.libiio.config.targetFrequency",
+                                        "Target Frequency (MHz)",
+                                      )}
+                                      rules={[
+                                        {
+                                          required: true,
+                                          message: t(
+                                            "app.device.libiio.config.targetFrequencyRequired",
+                                            "Please enter target frequency",
+                                          ),
                                         },
-                                      }),
-                                    ]}
-                                  >
-                                    <InputNumber style={{ width: "100%" }} />
-                                  </Form.Item>
-                                </Col>
-                              </Row>
-                            </Card>
-                          ))
+                                      ]}
+                                    >
+                                      <InputNumber style={{ width: "100%" }} min={0} />
+                                    </Form.Item>
+                                  </Col>
+                                  {direction === "rx" ? (
+                                    <Col xs={24} sm={12} lg={8}>
+                                      <Form.Item
+                                        {...restField}
+                                        name={[field.name, "fix_val"]}
+                                        label={t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)")}
+                                      >
+                                        <InputNumber style={{ width: "100%" }} addonAfter="dBm" />
+                                      </Form.Item>
+                                    </Col>
+                                  ) : (
+                                    <Col xs={24} sm={12} lg={8}>
+                                      <Form.Item
+                                        {...restField}
+                                        name={[field.name, "fix_val"]}
+                                        label={t(
+                                          "app.device.libiio.txMonitorPowerWithUnit",
+                                          "Power (W)",
+                                        )}
+                                      >
+                                        <InputNumber style={{ width: "100%" }} addonAfter="W" />
+                                      </Form.Item>
+                                    </Col>
+                                  )}
+                                </Row>
+                                <Row gutter={[12, 0]}>
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      {...restField}
+                                      name={[field.name, "is_alarm"]}
+                                      label={t("app.device.libiio.config.isAlarm", "Alarm Enabled")}
+                                      rules={[
+                                        {
+                                          required: true,
+                                          message: t(
+                                            "app.device.libiio.config.isAlarmRequired",
+                                            "Please select whether alarm is enabled",
+                                          ),
+                                        },
+                                      ]}
+                                    >
+                                      <Select
+                                        options={[
+                                          { label: t("app.common.yes", "Yes"), value: 1 },
+                                          { label: t("app.common.no", "No"), value: 0 },
+                                        ]}
+                                      />
+                                    </Form.Item>
+                                  </Col>
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      {...restField}
+                                      name={[field.name, "min"]}
+                                      label={t(
+                                        "app.device.libiio.config.minValueWithUnit",
+                                        "Minimum ({unit})",
+                                        { unit: metricUnit },
+                                      )}
+                                    >
+                                      <InputNumber
+                                        style={{ width: "100%" }}
+                                        addonAfter={metricUnit}
+                                      />
+                                    </Form.Item>
+                                  </Col>
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      {...restField}
+                                      name={[field.name, "max"]}
+                                      label={t(
+                                        "app.device.libiio.config.maxValueWithUnit",
+                                        "Maximum ({unit})",
+                                        { unit: metricUnit },
+                                      )}
+                                      dependencies={[
+                                        ["configs", field.name, "is_alarm"],
+                                        ["configs", field.name, "min"],
+                                      ]}
+                                      rules={[
+                                        ({ getFieldValue }) => ({
+                                          validator(_, value) {
+                                            const isAlarm =
+                                              getFieldValue(["configs", field.name, "is_alarm"]) ===
+                                              1
+                                            const min = getFieldValue([
+                                              "configs",
+                                              field.name,
+                                              "min",
+                                            ])
+                                            if (
+                                              isAlarm &&
+                                              isEmptyFieldValue(min) &&
+                                              isEmptyFieldValue(value)
+                                            ) {
+                                              return Promise.reject(
+                                                new Error(
+                                                  t(
+                                                    "app.device.libiio.config.alarmRangeRequired",
+                                                    "Please enter minimum or maximum when alarm is enabled",
+                                                  ),
+                                                ),
+                                              )
+                                            }
+                                            if (
+                                              typeof min === "number" &&
+                                              typeof value === "number" &&
+                                              min > value
+                                            ) {
+                                              return Promise.reject(
+                                                new Error(
+                                                  t(
+                                                    "app.device.libiio.config.maxLessThanMin",
+                                                    "Maximum value cannot be less than minimum value",
+                                                  ),
+                                                ),
+                                              )
+                                            }
+                                            return Promise.resolve()
+                                          },
+                                        }),
+                                      ]}
+                                    >
+                                      <InputNumber
+                                        style={{ width: "100%" }}
+                                        addonAfter={metricUnit}
+                                      />
+                                    </Form.Item>
+                                  </Col>
+                                </Row>
+                              </Card>
+                            )
+                          })
                         ) : (
                           <Alert
                             type="info"
@@ -474,7 +531,19 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                           <Button
                             type="dashed"
                             icon={<PlusOutlined />}
-                            onClick={() => add(createEmptyConfigItem(direction))}
+                            disabled={isFrequencyLimitReached}
+                            onClick={() => {
+                              if (fields.length >= MAX_FREQUENCY_CONFIG_COUNT) {
+                                message.warning(
+                                  t(
+                                    "app.device.libiio.config.maxFrequencyCount",
+                                    "You can add up to 20 frequencies",
+                                  ),
+                                )
+                                return
+                              }
+                              add(createEmptyConfigItem(direction))
+                            }}
                           >
                             {t("app.device.libiio.config.addFirstFrequency", "Add First Frequency")}
                           </Button>
@@ -484,6 +553,16 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                   )}
                 </Form.List>
               </Form>
+              <div className="libiio-config-footer">
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  loading={submitLoading}
+                  onClick={handleSave}
+                >
+                  {t("app.device.libiio.config.saveConfig", "Save Config")}
+                </Button>
+              </div>
             </>
           )}
         </Spin>

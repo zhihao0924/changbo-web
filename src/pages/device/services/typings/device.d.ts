@@ -83,6 +83,9 @@ declare namespace API_PostLibiioDeviceList {
     center_freq: number
     sampling_rate: number
     fft_size: number
+    fs_dbm?: number
+    rx_ip?: string
+    tx_ip?: string
     target_freq_count?: number
     output_frequency_count?: number
     output_frequency_configs?: OutputFrequencyConfig[]
@@ -100,11 +103,14 @@ declare namespace API_PostLibiioDeviceConfigList {
     target_freq_mhz: number
     fix_val?: number
     fs_dbm?: number
+    power_w?: number
+    rssi_dbm?: number
+    metric_value?: number | string
     rx_gain?: number
     direction?: "rx" | "tx"
     is_alarm: number
-    min?: number
-    max?: number
+    min?: number | string
+    max?: number | string
     created_at?: string
     updated_at?: string
   }
@@ -140,9 +146,11 @@ declare namespace API_PostLibiioDeviceConfigSave {
     target_freq_mhz: number
     fix_val?: number
     fs_dbm?: number
+    power_w?: number | string
+    rssi_dbm?: number | string
     rx_gain?: number
     direction?: "rx" | "tx"
-    is_alarm: number
+    is_alarm: number | string
     min?: number
     max?: number
   }
@@ -173,6 +181,60 @@ declare namespace API_PostLibiioDeviceConfigDelete {
   }
 }
 
+declare namespace API_PostLibiioBoardList {
+  export type ModuleDirection = "rx" | "tx"
+
+  export interface Params {
+    page?: number
+    limit?: number
+    device_id?: number
+    ip?: string
+    directions?: ModuleDirection[]
+  }
+
+  export interface Channel {
+    channel_no: number
+    configured: boolean
+    target_freq_mhz?: number | null
+    metric_value?: number | null
+    alarm_enabled?: number | string
+    alarm_status?: number | null
+    status_text?: string
+    is_alarm?: number | string
+    min?: number | string
+    max?: number | string
+    power_w?: number | string
+    rssi_dbm?: number | string
+  }
+
+  export interface Module {
+    direction: ModuleDirection
+    ip?: string
+    title?: string
+    metric_key?: string
+    metric_label?: string
+    metric_unit?: string
+    channels: Channel[]
+  }
+
+  export interface List {
+    device_id: number
+    ip?: string
+    modules: Module[]
+  }
+
+  export interface Result {
+    err: number
+    msg: string
+    res: {
+      has_more?: number
+      next_page?: number
+      total?: number
+      list: List[]
+    }
+  }
+}
+
 declare namespace API_PostLibiioDeviceSave {
   export interface OutputFrequencyConfig {
     name?: string
@@ -186,6 +248,17 @@ declare namespace API_PostLibiioDeviceSave {
     center_freq: number
     sampling_rate: number
     fft_size: number
+    fs_dbm?: number
+    rx_ip?: string
+    rx_center_freq?: number
+    rx_sampling_rate?: number
+    rx_fft_size?: number
+    rx_gain?: number
+    tx_ip?: string
+    tx_center_freq?: number
+    tx_sampling_rate?: number
+    tx_fft_size?: number
+    tx_gain?: number
   }
 
   export interface Result {

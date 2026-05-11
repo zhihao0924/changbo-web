@@ -41,6 +41,14 @@
     justify-content: center;
     margin-top: 16px;
   }
+
+  .libiio-config-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #edf2f8;
+  }
 }
 
 @media (max-width: 768px) {
@@ -48,6 +56,12 @@
     .libiio-config-toolbar {
       flex-direction: column;
       align-items: stretch;
+    }
+
+    .libiio-config-footer {
+      .ant-btn {
+        width: 100%;
+      }
     }
   }
 }
