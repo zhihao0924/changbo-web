@@ -196,7 +196,7 @@ declare namespace API_PostLibiioBoardList {
     channel_no: number
     configured: boolean
     target_freq_mhz?: number | null
-    metric_value?: number | null
+    metric_value?: number | string | null
     alarm_enabled?: number | string
     alarm_status?: number | null
     status_text?: string

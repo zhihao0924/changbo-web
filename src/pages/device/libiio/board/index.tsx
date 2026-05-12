@@ -1,6 +1,6 @@
 import { PageContainer } from "@ant-design/pro-components"
 import { Card, Empty, Spin } from "antd"
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type {
@@ -31,6 +31,7 @@ const MAX_FETCH_SIZE = 1000
 const CHANNELS_PER_ROW = 10
 const CHANNEL_COLUMNS = Array.from({ length: CHANNELS_PER_ROW }, (_, index) => index + 1)
 const MAX_CHANNEL_COUNT = 20
+const BOARD_POLLING_INTERVAL = 3000
 const MODULE_DIRECTIONS: ModuleDirection[] = ["rx", "tx"]
 const BOARD_MODULE_ORDER: ModuleDirection[] = ["tx", "rx"]
 type FrequencyChunk<T> = { key: string; channelOffset: number; items: T[] }
@@ -126,6 +127,11 @@ const getMetricValue = (
           config?.fix_val ??
           config?.rx_gain,
       )
+
+const getChannelMetricValue = (channel: BoardChannel, direction: ModuleDirection) =>
+  direction === "tx"
+    ? normalizeNumber(channel.power_w)
+    : normalizeNumber(channel.rssi_dbm ?? channel.metric_value)
 
 const getConfigByChannel = (
   channel: BoardChannel,
@@ -293,6 +299,8 @@ const FrequencyBoardPage: React.FC = () => {
   const intl = useIntl()
   const [loading, setLoading] = useState(false)
   const [devices, setDevices] = useState<BoardDevice[]>([])
+  const loadingRef = useRef(false)
+  const configMapRef = useRef<Record<string, LegacyFrequencyConfig[]>>({})
   const t = useCallback(
     (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
       intl.formatMessage({ id, defaultMessage }, values),
@@ -331,12 +339,12 @@ const FrequencyBoardPage: React.FC = () => {
   )
 
   const getChannelStatus = useCallback(
-    (channel: BoardChannel) => {
+    (channel: BoardChannel, direction: ModuleDirection) => {
       if (!channel.configured || !isAlarmEnabled(channel.alarm_enabled ?? channel.is_alarm)) {
         return { text: "-", tone: "none" as StatusTone }
       }
 
-      const metricValue = normalizeNumber(channel.metric_value)
+      const metricValue = getChannelMetricValue(channel, direction)
       if (metricValue === null) {
         return { text: "-", tone: "none" as StatusTone }
       }
@@ -360,7 +368,12 @@ const FrequencyBoardPage: React.FC = () => {
   )
 
   const buildDisplayRows = useCallback(
-    (chunk: BoardChannel[], metricLabel: string, metricUnit: string) => {
+    (
+      direction: ModuleDirection,
+      chunk: BoardChannel[],
+      metricLabel: string,
+      metricUnit: string,
+    ) => {
       const rows: DisplayRow[] = [
         {
           label: t("app.device.libiio.board.frequency", "Frequency"),
@@ -370,10 +383,12 @@ const FrequencyBoardPage: React.FC = () => {
 
       rows.push({
         label: metricLabel,
-        values: chunk.map((item) => formatMetricValue(item.metric_value, ` ${metricUnit}`)),
+        values: chunk.map((item) =>
+          formatMetricValue(getChannelMetricValue(item, direction), ` ${metricUnit}`),
+        ),
       })
 
-      const statuses = chunk.map((item) => getChannelStatus(item))
+      const statuses = chunk.map((item) => getChannelStatus(item, direction))
       rows.push({
         label: t("app.device.libiio.board.status", "Status"),
         values: statuses.map((item) => item.text),
@@ -385,9 +400,18 @@ const FrequencyBoardPage: React.FC = () => {
     [getChannelStatus, t],
   )
 
-  const loadBoardData = useCallback(async () => {
+  const loadBoardData = useCallback(async (silent = false, refreshConfig = false) => {
+    if (loadingRef.current) {
+      return
+    }
+
+    loadingRef.current = true
+
     try {
-      setLoading(true)
+      if (!silent) {
+        setLoading(true)
+      }
+
       try {
         const boardRes = await Services.api.postLibiioBoardList(
           {
@@ -403,7 +427,11 @@ const FrequencyBoardPage: React.FC = () => {
         const boardList = boardRes?.res?.list || []
         const hasBoardData = boardList.some((device) => (device.modules || []).length)
         if (hasBoardData) {
-          const configMap = await fetchDeviceConfigMap(boardList.map((device) => device.device_id))
+          let configMap = configMapRef.current
+          if (refreshConfig || !Object.keys(configMap).length) {
+            configMap = await fetchDeviceConfigMap(boardList.map((device) => device.device_id))
+            configMapRef.current = configMap
+          }
           setDevices(mergeBoardDevicesWithConfigs(boardList, configMap))
           return
         }
@@ -415,12 +443,22 @@ const FrequencyBoardPage: React.FC = () => {
     } catch (error) {
       console.error("获取频点数据页失败:", error)
     } finally {
-      setLoading(false)
+      loadingRef.current = false
+      if (!silent) {
+        setLoading(false)
+      }
     }
   }, [])
 
   useEffect(() => {
-    loadBoardData()
+    loadBoardData(false, true)
+    const timer = window.setInterval(() => {
+      loadBoardData(true)
+    }, BOARD_POLLING_INTERVAL)
+
+    return () => {
+      window.clearInterval(timer)
+    }
   }, [loadBoardData])
 
   const boardSections = useMemo<BoardSection[]>(
@@ -494,7 +532,12 @@ const FrequencyBoardPage: React.FC = () => {
                                 ))}
                               </tr>
 
-                              {buildDisplayRows(chunk.items, metricLabel, metricUnit).map((row) => (
+                              {buildDisplayRows(
+                                direction,
+                                chunk.items,
+                                metricLabel,
+                                metricUnit,
+                              ).map((row) => (
                                 <tr
                                   key={`${device.device_id}-${direction}-${chunk.key}-${row.label}`}
                                 >
