@@ -118,7 +118,7 @@ const getMetricValue = (
   config?: LegacyFrequencyConfig,
 ) =>
   direction === "tx"
-    ? normalizeNumber(channel.power_w ?? config?.power_w)
+    ? normalizeNumber(channel.power_w)
     : normalizeNumber(
         channel.rssi_dbm ??
           channel.metric_value ??
@@ -213,7 +213,7 @@ const mergeBoardDevicesWithConfigs = (
           status_text: undefined,
           min: config?.min,
           max: config?.max,
-          power_w: module.direction === "tx" ? channel.power_w ?? config?.power_w : undefined,
+          power_w: module.direction === "tx" ? channel.power_w : undefined,
           rssi_dbm: module.direction === "rx" ? channel.rssi_dbm ?? config?.rssi_dbm : undefined,
         }
       }),
@@ -429,19 +429,20 @@ const FrequencyBoardPage: React.FC = () => {
         if (hasBoardData) {
           let configMap = configMapRef.current
           if (refreshConfig || !Object.keys(configMap).length) {
-            configMap = await fetchDeviceConfigMap(boardList.map((device) => device.device_id))
-            configMapRef.current = configMap
+            try {
+              configMap = await fetchDeviceConfigMap(boardList.map((device) => device.device_id))
+              configMapRef.current = configMap
+            } catch (error) {
+              configMap = {}
+            }
           }
           setDevices(mergeBoardDevicesWithConfigs(boardList, configMap))
           return
         }
-      } catch (error) {
-        console.warn("获取聚合频点数据失败，回退到旧接口拼接:", error)
-      }
+      } catch (error) {}
 
       setDevices(await fetchLegacyBoardDevices())
     } catch (error) {
-      console.error("获取频点数据页失败:", error)
     } finally {
       loadingRef.current = false
       if (!silent) {

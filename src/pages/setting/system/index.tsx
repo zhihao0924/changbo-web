@@ -55,8 +55,7 @@ const SystemSetting: React.FC = () => {
       .then((res) => {
         localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
       })
-      .then((res) => {
-        console.log(res)
+      .then(() => {
         window.location.reload()
       })
   }
@@ -91,16 +90,28 @@ const SystemSetting: React.FC = () => {
             labelCol={{ span: 6 }}
             label={t("app.setting.system.name", "System Name")}
             name="system_name"
-            rules={[{ required: true, message: t("app.setting.system.name.required", "Please enter the system name") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.setting.system.name.required", "Please enter the system name"),
+              },
+            ]}
             style={{ maxWidth: 600 }}
           >
-            <Input placeholder={t("app.setting.system.name.placeholder", "Please enter the system name")} />
+            <Input
+              placeholder={t("app.setting.system.name.placeholder", "Please enter the system name")}
+            />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
             label={t("app.setting.system.logo", "System Logo")}
             name="system_logo"
-            rules={[{ required: true, message: t("app.setting.system.logo.required", "Please upload a logo") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.setting.system.logo.required", "Please upload a logo"),
+              },
+            ]}
             style={{ maxWidth: 600 }}
           >
             <Upload
@@ -122,7 +133,15 @@ const SystemSetting: React.FC = () => {
             labelCol={{ span: 6 }}
             label={t("app.setting.system.dps", "Data Collection Frequency")}
             name="dots_per_second"
-            rules={[{ required: true, message: t("app.setting.system.dps.required", "Please select a data collection frequency") }]}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  "app.setting.system.dps.required",
+                  "Please select a data collection frequency",
+                ),
+              },
+            ]}
             style={{ maxWidth: 600 }}
           >
             <Select
@@ -138,7 +157,15 @@ const SystemSetting: React.FC = () => {
             labelCol={{ span: 6 }}
             label={t("app.setting.system.refresh", "Page Refresh Frequency")}
             name="refresh_interval"
-            rules={[{ required: true, message: t("app.setting.system.refresh.required", "Please select a refresh frequency") }]}
+            rules={[
+              {
+                required: true,
+                message: t(
+                  "app.setting.system.refresh.required",
+                  "Please select a refresh frequency",
+                ),
+              },
+            ]}
             style={{ maxWidth: 600 }}
           >
             <Select
@@ -162,14 +189,26 @@ const SystemSetting: React.FC = () => {
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error(t("app.setting.system.email.host.requiredWhenEnabled", "Mail server is required when email sending is enabled")))
+                    return Promise.reject(
+                      new Error(
+                        t(
+                          "app.setting.system.email.host.requiredWhenEnabled",
+                          "Mail server is required when email sending is enabled",
+                        ),
+                      ),
+                    )
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder={t("app.setting.system.email.host.placeholder", "For example: smtp.qq.com")} />
+            <Input
+              placeholder={t(
+                "app.setting.system.email.host.placeholder",
+                "For example: smtp.qq.com",
+              )}
+            />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
@@ -180,14 +219,26 @@ const SystemSetting: React.FC = () => {
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error(t("app.setting.system.email.port.requiredWhenEnabled", "Port is required when email sending is enabled")))
+                    return Promise.reject(
+                      new Error(
+                        t(
+                          "app.setting.system.email.port.requiredWhenEnabled",
+                          "Port is required when email sending is enabled",
+                        ),
+                      ),
+                    )
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder={t("app.setting.system.email.port.placeholder", "For example: 465 or 587")} />
+            <Input
+              placeholder={t(
+                "app.setting.system.email.port.placeholder",
+                "For example: 465 or 587",
+              )}
+            />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
@@ -198,14 +249,23 @@ const SystemSetting: React.FC = () => {
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error(t("app.setting.system.email.username.requiredWhenEnabled", "Username is required when email sending is enabled")))
+                    return Promise.reject(
+                      new Error(
+                        t(
+                          "app.setting.system.email.username.requiredWhenEnabled",
+                          "Username is required when email sending is enabled",
+                        ),
+                      ),
+                    )
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder={t("app.setting.system.email.username.placeholder", "Email address")} />
+            <Input
+              placeholder={t("app.setting.system.email.username.placeholder", "Email address")}
+            />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
@@ -216,14 +276,26 @@ const SystemSetting: React.FC = () => {
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (getFieldValue(["email_config", "is_send"]) && !value) {
-                    return Promise.reject(new Error(t("app.setting.system.email.authCode.requiredWhenEnabled", "Authorization code is required when email sending is enabled")))
+                    return Promise.reject(
+                      new Error(
+                        t(
+                          "app.setting.system.email.authCode.requiredWhenEnabled",
+                          "Authorization code is required when email sending is enabled",
+                        ),
+                      ),
+                    )
                   }
                   return Promise.resolve()
                 },
               }),
             ]}
           >
-            <Input placeholder={t("app.setting.system.email.authCode.placeholder", "Email authorization code, not the login password")} />
+            <Input
+              placeholder={t(
+                "app.setting.system.email.authCode.placeholder",
+                "Email authorization code, not the login password",
+              )}
+            />
           </Form.Item>
           <Form.Item
             labelCol={{ span: 6 }}
@@ -242,7 +314,14 @@ const SystemSetting: React.FC = () => {
                       !emailConfig?.username ||
                       !emailConfig?.authorization_code
                     ) {
-                      return Promise.reject(new Error(t("app.setting.system.email.completeBeforeEnable", "Please complete the email configuration before enabling email sending")))
+                      return Promise.reject(
+                        new Error(
+                          t(
+                            "app.setting.system.email.completeBeforeEnable",
+                            "Please complete the email configuration before enabling email sending",
+                          ),
+                        ),
+                      )
                     }
                   }
                   return Promise.resolve()

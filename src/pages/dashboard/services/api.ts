@@ -9,7 +9,6 @@ export async function postDashboardData(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res

@@ -43,7 +43,6 @@ const UserIndex: React.FC = () => {
   // 统一错误处理
   const handleApiError = useCallback(
     (error: any, operation: string) => {
-      console.error(`${operation} failed:`, error)
       message.error(
         t("app.admin.operationFailed", "Operation failed. Please try again later.").replace(
           "${operation}",

@@ -35,7 +35,6 @@ export async function postDeviceList(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -51,7 +50,6 @@ export async function postLibiioDeviceList(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -67,7 +65,6 @@ export async function postLibiioDeviceConfigList(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -84,7 +81,6 @@ export async function postDeviceSave(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -100,7 +96,6 @@ export async function postLibiioDeviceSave(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -116,7 +111,6 @@ export async function postLibiioDeviceConfigSave(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -132,7 +126,6 @@ export async function postLibiioDeviceConfigDelete(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -148,7 +141,6 @@ export async function postLibiioBoardList(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -164,7 +156,6 @@ export async function postToggleMaintaining(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -181,7 +172,6 @@ export async function postDeviceTypes(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -197,7 +187,6 @@ export async function postDeviceTypeSave(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -212,7 +201,6 @@ export async function postTopologyData(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -227,7 +215,6 @@ export async function postSaveTopologyData(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -242,7 +229,6 @@ export async function postDeviceTypeConfigSave(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -257,7 +243,6 @@ export async function postDeviceTypeAlarmSave(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -272,7 +257,6 @@ export async function postDeviceTypeShowSave(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -287,7 +271,6 @@ export async function postDeviceLogList(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -302,7 +285,6 @@ export async function postDeviceDailyXlsxList(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -317,7 +299,6 @@ export async function postDeleterDailyXlsx(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -333,7 +314,6 @@ export async function postDeviceDailyXlsxDownload(
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -348,7 +328,6 @@ export async function postDeviceSyncPanel(
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -363,7 +342,6 @@ export async function postRFConfig(
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -378,7 +356,6 @@ export async function postRFConfigSave(
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -393,7 +370,6 @@ export async function postDeleteDevice(
     { ...obj },
     { showLoading: false, showToast: false, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -408,7 +384,6 @@ export async function postDeviceMove(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res

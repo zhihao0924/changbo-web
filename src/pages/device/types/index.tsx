@@ -1,5 +1,17 @@
 import React, { useCallback, useRef, useState } from "react"
-import { Button, Modal, Form, Input, message, Space, InputNumber, Checkbox, Row, Col, Tooltip } from "antd"
+import {
+  Button,
+  Modal,
+  Form,
+  Input,
+  message,
+  Space,
+  InputNumber,
+  Checkbox,
+  Row,
+  Col,
+  Tooltip,
+} from "antd"
 import Services from "@/pages/device/services"
 import { type ActionType, PageContainer, ProTable } from "@ant-design/pro-components"
 import { forEach } from "lodash"
@@ -51,7 +63,6 @@ const DeviceTypes: React.FC = () => {
 
   const getDeviceTypes = useCallback(async () => {
     const res = await Services.api.postDeviceTypes({})
-    console.log("API Response:", res) // 调试日志
 
     if (res) {
       return Promise.resolve({
@@ -73,7 +84,10 @@ const DeviceTypes: React.FC = () => {
       })
 
       message.success(
-        res?.msg || (currentRecord ? t("app.device.types.updateSuccess", "Device type updated successfully") : t("app.device.types.createSuccess", "Device type created successfully")),
+        res?.msg ||
+          (currentRecord
+            ? t("app.device.types.updateSuccess", "Device type updated successfully")
+            : t("app.device.types.createSuccess", "Device type created successfully")),
         1,
         () => {
           setNameModalVisible(false)
@@ -81,9 +95,7 @@ const DeviceTypes: React.FC = () => {
           actionRef.current?.reload()
         },
       )
-    } catch (error) {
-      console.error("操作失败:", error)
-    }
+    } catch (error) {}
   }
 
   const handleConfigSubmit = async () => {
@@ -110,9 +122,7 @@ const DeviceTypes: React.FC = () => {
             actionRef.current?.reload()
           })
         })
-    } catch (error) {
-      console.error("操作失败:", error)
-    }
+    } catch (error) {}
   }
 
   const handleAlarmSubmit = async () => {
@@ -123,15 +133,20 @@ const DeviceTypes: React.FC = () => {
           alarms: alarmCheckedList,
         })
         .then(() => {
-          message.success(`${currentRecord?.device_type} ${t("app.device.types.alarmSaveSuccess", "alarm configuration saved successfully")}`, 1, () => {
-            setAlarmModalVisible(false)
-            actionRef.current?.reload()
-          })
+          message.success(
+            `${currentRecord?.device_type} ${t(
+              "app.device.types.alarmSaveSuccess",
+              "alarm configuration saved successfully",
+            )}`,
+            1,
+            () => {
+              setAlarmModalVisible(false)
+              actionRef.current?.reload()
+            },
+          )
           return {}
         })
-    } catch (error) {
-      console.error("操作失败:", error)
-    }
+    } catch (error) {}
   }
   const handleShowSubmit = async () => {
     try {
@@ -142,15 +157,20 @@ const DeviceTypes: React.FC = () => {
           show_in_detail: detailCheckedList,
         })
         .then(() => {
-          message.success(`${currentRecord?.device_type} ${t("app.device.types.displaySaveSuccess", "display configuration saved successfully")}`, 1, () => {
-            setShowModalVisible(false)
-            actionRef.current?.reload()
-          })
+          message.success(
+            `${currentRecord?.device_type} ${t(
+              "app.device.types.displaySaveSuccess",
+              "display configuration saved successfully",
+            )}`,
+            1,
+            () => {
+              setShowModalVisible(false)
+              actionRef.current?.reload()
+            },
+          )
           return {}
         })
-    } catch (error) {
-      console.error("操作失败:", error)
-    }
+    } catch (error) {}
   }
 
   const onDetailSelectChange = (list: CheckboxValueType[]) => {
@@ -162,7 +182,7 @@ const DeviceTypes: React.FC = () => {
 
     const checkedList: number[] = []
     list.forEach((val) => {
-      if (typeof val === 'number') {
+      if (typeof val === "number") {
         checkedList.push(val)
       }
     })
@@ -231,9 +251,7 @@ const DeviceTypes: React.FC = () => {
               })
               setAlarmCheckedList(alarms)
               const recordShowsLength = record?.shows?.length ?? 0
-              setAlarmIndeterminate(
-                alarms.length > 0 && alarms.length < recordShowsLength,
-              )
+              setAlarmIndeterminate(alarms.length > 0 && alarms.length < recordShowsLength)
               setAlarmCheckAll(alarms.length === recordShowsLength)
               setAlarmModalVisible(true)
             }}
@@ -298,7 +316,11 @@ const DeviceTypes: React.FC = () => {
       </PageContainer>
 
       <Modal
-        title={currentRecord ? t("app.device.types.edit", "Edit Device Type") : t("app.device.types.add", "Add Device Type")}
+        title={
+          currentRecord
+            ? t("app.device.types.edit", "Edit Device Type")
+            : t("app.device.types.add", "Add Device Type")
+        }
         open={nameModalVisible}
         onOk={handleNameSubmit}
         onCancel={() => setNameModalVisible(false)}
@@ -308,18 +330,30 @@ const DeviceTypes: React.FC = () => {
             name="device_type"
             label={t("app.device.types.type", "Device Type")}
             hidden={true}
-            rules={[{ required: true, message: t("app.device.types.type.required", "Please enter the device type name") }]}
+            rules={[
+              {
+                required: true,
+                message: t("app.device.types.type.required", "Please enter the device type name"),
+              },
+            ]}
           >
             <Input readOnly={true} />
           </Form.Item>
-          <Form.Item name="device_type_alias" label={t("app.device.types.alias", "Type Alias")} key={"device_type_alias"}>
+          <Form.Item
+            name="device_type_alias"
+            label={t("app.device.types.alias", "Type Alias")}
+            key={"device_type_alias"}
+          >
             <Input />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t("app.common.settings", "Settings")}`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t(
+          "app.common.settings",
+          "Settings",
+        )}`}
         open={configModalVisible}
         onOk={handleConfigSubmit}
         onCancel={() => setConfigModalVisible(false)}
@@ -327,162 +361,207 @@ const DeviceTypes: React.FC = () => {
       >
         <Form form={configForm}>
           <Row>
-            {currentRecord?.configs?.filter((val)=>{
-              return !(val.is_alarm || val.is_module)
-            }).map((item) => {
-              return (
-                <>
-                  <Col span={12} key={`${item.config_type}_alarm`}>
-                    <Form.Item
-                      {...thresholdItemLayout}
-                      label={
-                        <Tooltip title={item.config_type_name}>
-                          <span style={thresholdLabelStyle}>{item.config_type_name}</span>
-                        </Tooltip>
-                      }
-                      style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
-                    >
-                      <Space
-                        align="center"
-                        style={{ display: "flex", alignItems: "center", width: "100%" }}
+            {currentRecord?.configs
+              ?.filter((val) => {
+                return !(val.is_alarm || val.is_module)
+              })
+              .map((item) => {
+                return (
+                  <>
+                    <Col span={12} key={`${item.config_type}_alarm`}>
+                      <Form.Item
+                        {...thresholdItemLayout}
+                        label={
+                          <Tooltip title={item.config_type_name}>
+                            <span style={thresholdLabelStyle}>{item.config_type_name}</span>
+                          </Tooltip>
+                        }
+                        style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
                       >
-                        <Form.Item
-                          name={["configs", `${item.config_type}`, "alarm_min"]}
-                          style={{ flex: 1, marginBottom: 0 }}
-                          rules={[
-                            ({ getFieldValue }) => ({
-                              validator(_, value) {
-                                const max = getFieldValue([
-                                  "configs",
-                                  item.config_type,
-                                  "alarm_max",
-                                ])
-                                if (typeof value !== "number" || typeof max !== "number") {
-                                  return Promise.resolve()
-                                }
-                                if (value < max) {
-                                  return Promise.resolve()
-                                }
-                                return Promise.reject(new Error(t("app.common.minLessThanMax", "Minimum value must be less than maximum value")))
-                              },
-                            }),
-                          ]}
+                        <Space
+                          align="center"
+                          style={{ display: "flex", alignItems: "center", width: "100%" }}
                         >
-                          <InputNumber
-                            step={0.1}
-                            addonAfter={item.unit}
-                            style={{ width: "100%" }}
-                          />
-                        </Form.Item>
-                        <Form.Item style={{ marginBottom: 0 }}>{t("app.common.to", "to")}</Form.Item>
-                        <Form.Item
-                          name={["configs", `${item.config_type}`, "alarm_max"]}
-                          style={{ flex: 1, marginBottom: 0 }}
-                          rules={[
-                            ({ getFieldValue }) => ({
-                              validator(_, value) {
-                                const min = getFieldValue([
-                                  "configs",
-                                  item.config_type,
-                                  "alarm_min",
-                                ])
-                                if (typeof value !== "number" || typeof min !== "number") {
-                                  return Promise.resolve()
-                                }
-                                if (value > min) {
-                                  return Promise.resolve()
-                                }
-                                return Promise.reject(new Error(t("app.common.maxGreaterThanMin", "Maximum value must be greater than minimum value")))
-                              },
-                            }),
-                          ]}
-                        >
-                          <InputNumber
-                            step={0.1}
-                            addonAfter={item.unit}
-                            style={{ width: "100%" }}
-                          />
-                        </Form.Item>
-                      </Space>{" "}
-                    </Form.Item>
-                  </Col>
-                  <Col span={12} key={`${item.config_type}_range`}>
-                    <Form.Item
-                      {...thresholdItemLayout}
-                      label={
-                        <Tooltip title={t("app.device.types.displayRange", "Display Range")}>
-                          <span style={thresholdLabelStyle}>
-                            {t("app.device.types.displayRange", "Display Range")}
-                          </span>
-                        </Tooltip>
-                      }
-                      style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
-                    >
-                      <Space
-                        align="center"
-                        style={{ display: "flex", alignItems: "center", width: "100%" }}
+                          <Form.Item
+                            name={["configs", `${item.config_type}`, "alarm_min"]}
+                            style={{ flex: 1, marginBottom: 0 }}
+                            rules={[
+                              ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  const max = getFieldValue([
+                                    "configs",
+                                    item.config_type,
+                                    "alarm_max",
+                                  ])
+                                  if (typeof value !== "number" || typeof max !== "number") {
+                                    return Promise.resolve()
+                                  }
+                                  if (value < max) {
+                                    return Promise.resolve()
+                                  }
+                                  return Promise.reject(
+                                    new Error(
+                                      t(
+                                        "app.common.minLessThanMax",
+                                        "Minimum value must be less than maximum value",
+                                      ),
+                                    ),
+                                  )
+                                },
+                              }),
+                            ]}
+                          >
+                            <InputNumber
+                              step={0.1}
+                              addonAfter={item.unit}
+                              style={{ width: "100%" }}
+                            />
+                          </Form.Item>
+                          <Form.Item style={{ marginBottom: 0 }}>
+                            {t("app.common.to", "to")}
+                          </Form.Item>
+                          <Form.Item
+                            name={["configs", `${item.config_type}`, "alarm_max"]}
+                            style={{ flex: 1, marginBottom: 0 }}
+                            rules={[
+                              ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  const min = getFieldValue([
+                                    "configs",
+                                    item.config_type,
+                                    "alarm_min",
+                                  ])
+                                  if (typeof value !== "number" || typeof min !== "number") {
+                                    return Promise.resolve()
+                                  }
+                                  if (value > min) {
+                                    return Promise.resolve()
+                                  }
+                                  return Promise.reject(
+                                    new Error(
+                                      t(
+                                        "app.common.maxGreaterThanMin",
+                                        "Maximum value must be greater than minimum value",
+                                      ),
+                                    ),
+                                  )
+                                },
+                              }),
+                            ]}
+                          >
+                            <InputNumber
+                              step={0.1}
+                              addonAfter={item.unit}
+                              style={{ width: "100%" }}
+                            />
+                          </Form.Item>
+                        </Space>{" "}
+                      </Form.Item>
+                    </Col>
+                    <Col span={12} key={`${item.config_type}_range`}>
+                      <Form.Item
+                        {...thresholdItemLayout}
+                        label={
+                          <Tooltip title={t("app.device.types.displayRange", "Display Range")}>
+                            <span style={thresholdLabelStyle}>
+                              {t("app.device.types.displayRange", "Display Range")}
+                            </span>
+                          </Tooltip>
+                        }
+                        style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
                       >
-                        <Form.Item
-                          name={["configs", `${item.config_type}`, "show_min"]}
-                          style={{ flex: 1, marginBottom: 0 }}
-                          rules={[
-                            ({ getFieldValue }) => ({
-                              validator(_, value) {
-                                const max = getFieldValue(["configs", item.config_type, "show_max"])
-                                if (typeof value !== "number" || typeof max !== "number") {
-                                  return Promise.resolve()
-                                }
-                                if (value < max) {
-                                  return Promise.resolve()
-                                }
-                                return Promise.reject(new Error(t("app.common.minLessThanMax", "Minimum value must be less than maximum value")))
-                              },
-                            }),
-                          ]}
+                        <Space
+                          align="center"
+                          style={{ display: "flex", alignItems: "center", width: "100%" }}
                         >
-                          <InputNumber
-                            step={0.1}
-                            addonAfter={item.unit}
-                            style={{ width: "100%" }}
-                          />
-                        </Form.Item>
-                        <Form.Item style={{ marginBottom: 0 }}>{t("app.common.to", "to")}</Form.Item>
-                        <Form.Item
-                          name={["configs", `${item.config_type}`, "show_max"]}
-                          style={{ flex: 1, marginBottom: 0 }}
-                          rules={[
-                            ({ getFieldValue }) => ({
-                              validator(_, value) {
-                                const min = getFieldValue(["configs", item.config_type, "show_min"])
-                                if (typeof value !== "number" || typeof min !== "number") {
-                                  return Promise.resolve()
-                                }
-                                if (value > min) {
-                                  return Promise.resolve()
-                                }
-                                return Promise.reject(new Error(t("app.common.maxGreaterThanMin", "Maximum value must be greater than minimum value")))
-                              },
-                            }),
-                          ]}
-                        >
-                          <InputNumber
-                            step={0.1}
-                            addonAfter={item.unit}
-                            style={{ width: "100%" }}
-                          />
-                        </Form.Item>
-                      </Space>
-                    </Form.Item>
-                  </Col>
-                </>
-              )
-            })}
+                          <Form.Item
+                            name={["configs", `${item.config_type}`, "show_min"]}
+                            style={{ flex: 1, marginBottom: 0 }}
+                            rules={[
+                              ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  const max = getFieldValue([
+                                    "configs",
+                                    item.config_type,
+                                    "show_max",
+                                  ])
+                                  if (typeof value !== "number" || typeof max !== "number") {
+                                    return Promise.resolve()
+                                  }
+                                  if (value < max) {
+                                    return Promise.resolve()
+                                  }
+                                  return Promise.reject(
+                                    new Error(
+                                      t(
+                                        "app.common.minLessThanMax",
+                                        "Minimum value must be less than maximum value",
+                                      ),
+                                    ),
+                                  )
+                                },
+                              }),
+                            ]}
+                          >
+                            <InputNumber
+                              step={0.1}
+                              addonAfter={item.unit}
+                              style={{ width: "100%" }}
+                            />
+                          </Form.Item>
+                          <Form.Item style={{ marginBottom: 0 }}>
+                            {t("app.common.to", "to")}
+                          </Form.Item>
+                          <Form.Item
+                            name={["configs", `${item.config_type}`, "show_max"]}
+                            style={{ flex: 1, marginBottom: 0 }}
+                            rules={[
+                              ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  const min = getFieldValue([
+                                    "configs",
+                                    item.config_type,
+                                    "show_min",
+                                  ])
+                                  if (typeof value !== "number" || typeof min !== "number") {
+                                    return Promise.resolve()
+                                  }
+                                  if (value > min) {
+                                    return Promise.resolve()
+                                  }
+                                  return Promise.reject(
+                                    new Error(
+                                      t(
+                                        "app.common.maxGreaterThanMin",
+                                        "Maximum value must be greater than minimum value",
+                                      ),
+                                    ),
+                                  )
+                                },
+                              }),
+                            ]}
+                          >
+                            <InputNumber
+                              step={0.1}
+                              addonAfter={item.unit}
+                              style={{ width: "100%" }}
+                            />
+                          </Form.Item>
+                        </Space>
+                      </Form.Item>
+                    </Col>
+                  </>
+                )
+              })}
           </Row>
         </Form>
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t("app.common.settings", "Settings")}`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t(
+          "app.common.settings",
+          "Settings",
+        )}`}
         open={alarmModalVisible}
         onOk={handleAlarmSubmit}
         onCancel={() => setAlarmModalVisible(false)}
@@ -541,20 +620,31 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t("app.common.settings", "Settings")}`}
+        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t(
+          "app.common.settings",
+          "Settings",
+        )}`}
         open={showModalVisible}
         onOk={handleShowSubmit}
         onCancel={() => setShowModalVisible(false)}
       >
         <Form layout={"vertical"}>
-          <Form.Item labelCol={{ span: 6 }} label={t("app.device.types.showInList", "Show in List")}>
+          <Form.Item
+            labelCol={{ span: 6 }}
+            label={t("app.device.types.showInList", "Show in List")}
+          >
             <Checkbox.Group
               key={"show_in_list"}
               value={listCheckedList}
               onChange={(checkedValues) => {
                 const maxSelected = 3
                 if (checkedValues.length > maxSelected) {
-                  message.warning(t("app.device.types.maxDisplayItems", `You can select up to ${maxSelected} display items`).replace("${maxSelected}", String(maxSelected)))
+                  message.warning(
+                    t(
+                      "app.device.types.maxDisplayItems",
+                      `You can select up to ${maxSelected} display items`,
+                    ).replace("${maxSelected}", String(maxSelected)),
+                  )
                   return // 直接返回，不更新状态
                 }
                 setListCheckedList(checkedValues)
@@ -573,7 +663,10 @@ const DeviceTypes: React.FC = () => {
               </Row>
             </Checkbox.Group>
           </Form.Item>
-          <Form.Item labelCol={{ span: 6 }} label={t("app.device.types.showInDetail", "Show in Detail")}>
+          <Form.Item
+            labelCol={{ span: 6 }}
+            label={t("app.device.types.showInDetail", "Show in Detail")}
+          >
             <Space direction="vertical" style={{ width: "100%" }}>
               <Checkbox
                 indeterminate={detailIndeterminate}

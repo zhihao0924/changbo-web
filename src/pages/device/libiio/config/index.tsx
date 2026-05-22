@@ -167,7 +167,6 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
           : [createEmptyConfigItem(direction)],
       })
     } catch (error) {
-      console.error("获取频点配置页面数据失败:", error)
       message.error(t("app.device.libiio.config.fetchFailed", "Failed to load frequency config"))
     } finally {
       setLoading(false)
@@ -218,7 +217,6 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
       if (error?.errorFields) {
         return
       }
-      console.error("保存频点配置失败:", error)
       message.error(
         error?.msg || t("app.device.libiio.config.saveFailed", "Failed to save frequency config"),
       )

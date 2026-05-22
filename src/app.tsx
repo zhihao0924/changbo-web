@@ -20,8 +20,9 @@ import defaultSettings from "../config/defaultSettings"
 import { postSystemConfig } from "@/pages/setting/services/api"
 
 const excludePath = [LOGINPATH, CALLBACKPATH, SYSTEMCONFIGPATH]
-const DEFAULT_LOCALE = "zh-CN"
+const DEFAULT_LOCALE = "en-US"
 const LOCALE_STORAGE_KEY = "umi_locale"
+const DEFAULT_LOGO = "/logo.png"
 
 const getDefaultSystemName = () => {
   if (typeof window === "undefined") {
@@ -39,6 +40,12 @@ const resolveSystemName = (systemName?: string) => {
   const normalized = systemName?.trim()
 
   return normalized || getDefaultSystemName()
+}
+
+const resolveSystemLogo = (systemLogo?: string | null) => {
+  const normalized = systemLogo?.trim()
+
+  return normalized || DEFAULT_LOGO
 }
 
 /** 获取用户信息比较慢的时候会展示一个 loading */
@@ -96,7 +103,6 @@ export async function getInitialState(): Promise<{
       }
       return undefined
     } catch (error) {
-      console.error("获取系统配置失败:", error)
       return undefined
     }
   }
@@ -107,7 +113,7 @@ export async function getInitialState(): Promise<{
 
     const systemConfig = await fetchSystemConfig()
     defaultSettings.title = resolveSystemName(systemConfig?.system_name)
-    defaultSettings.logo = systemConfig?.system_logo
+    defaultSettings.logo = resolveSystemLogo(systemConfig?.system_logo)
     const data = {
       fetchUserInfo,
       fetchSystemConfig,
@@ -119,6 +125,7 @@ export async function getInitialState(): Promise<{
   }
 
   defaultSettings.title = getDefaultSystemName()
+  defaultSettings.logo = DEFAULT_LOGO
 
   return {
     fetchUserInfo,
@@ -198,7 +205,6 @@ export function onRouteChange({ location }: any) {
 }
 
 export function patchRoutes({ routes }: any) {
-  // console.log(routes, "routes")
   routes[0].routes.push({
     path: "*",
     component: require("@/pages/404").default,

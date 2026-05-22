@@ -77,20 +77,74 @@ type DeviceTypeTreeNode = {
   children?: DeviceTypeTreeNode[]
 }
 
-// 设备类型组常量
-const DEVICE_GROUPS = [
-  "发射合路器",
-  "接收分路器",
-  "带通双工器",
-  "上行信号剥离器",
-  "下行信号剥离器",
-  "数字近端机",
-  "数字远端机",
-  "模拟近端机",
-  "模拟远端机",
-  "干线放大器",
-  "功率采集网关",
+// 设备类型组常量。接口可能按当前语言返回中文或英文分组，value 必须使用接口原值。
+const DEVICE_GROUP_DEFINITIONS = [
+  {
+    values: ["发射合路器", "Transmitter Mixer"],
+    messageId: "app.device.index.group.transmitterMixer",
+    defaultMessage: "Transmitter Mixer",
+  },
+  {
+    values: ["接收分路器", "Receiver Splitter"],
+    messageId: "app.device.index.group.receiverSplitter",
+    defaultMessage: "Receiver Splitter",
+  },
+  {
+    values: ["带通双工器", "Bandpass Duplexer"],
+    messageId: "app.device.index.group.bandpassDuplexer",
+    defaultMessage: "Bandpass Duplexer",
+  },
+  {
+    values: ["上行信号剥离器", "Uplink Signal Stripper"],
+    messageId: "app.device.index.group.uplinkStripper",
+    defaultMessage: "Uplink Signal Stripper",
+  },
+  {
+    values: ["下行信号剥离器", "Downlink Signal Stripper"],
+    messageId: "app.device.index.group.downlinkStripper",
+    defaultMessage: "Downlink Signal Stripper",
+  },
+  {
+    values: ["数字近端机", "Digital Near-end Unit"],
+    messageId: "app.device.index.group.digitalNearEnd",
+    defaultMessage: "Digital Near-end Unit",
+  },
+  {
+    values: ["数字远端机", "Digital Remote Unit"],
+    messageId: "app.device.index.group.digitalRemote",
+    defaultMessage: "Digital Remote Unit",
+  },
+  {
+    values: ["模拟近端机", "Analog Near-end Unit"],
+    messageId: "app.device.index.group.analogNearEnd",
+    defaultMessage: "Analog Near-end Unit",
+  },
+  {
+    values: ["模拟远端机", "Analog Remote Unit"],
+    messageId: "app.device.index.group.analogRemote",
+    defaultMessage: "Analog Remote Unit",
+  },
+  {
+    values: ["干线放大器", "Trunk Amplifier"],
+    messageId: "app.device.index.group.trunkAmplifier",
+    defaultMessage: "Trunk Amplifier",
+  },
+  {
+    values: ["功率采集网关", "Power Collection Gateway"],
+    messageId: "app.device.index.group.powerCollectionGateway",
+    defaultMessage: "Power Collection Gateway",
+  },
 ] as const
+
+const DEVICE_GROUP_ORDER = DEVICE_GROUP_DEFINITIONS.reduce<Record<string, number>>(
+  (acc, group, index) => {
+    group.values.forEach((value) => {
+      acc[value] = index
+    })
+    return acc
+  },
+  {},
+)
 
 // 配置类型映射
 const CONFIG_TYPE_MAP = {
@@ -132,46 +186,45 @@ const DeviceIndex: React.FC = () => {
   >({})
 
   // 初始化设备类型数据
-  const [, setDeviceTypesLoading] = useState(false)
+  const [deviceTypesLoading, setDeviceTypesLoading] = useState(false)
   const t = useCallback(
     (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
     [intl],
   )
-  const translatedDeviceGroups = useMemo(
+  const deviceGroupLabelMap = useMemo(
     () =>
-      DEVICE_GROUPS.map((value) => ({
-        value,
-        label:
-          {
-            发射合路器: t("app.device.index.group.transmitterMixer", "Transmitter Mixer"),
-            接收分路器: t("app.device.index.group.receiverSplitter", "Receiver Splitter"),
-            带通双工器: t("app.device.index.group.bandpassDuplexer", "Bandpass Duplexer"),
-            上行信号剥离器: t("app.device.index.group.uplinkStripper", "Uplink Signal Stripper"),
-            下行信号剥离器: t(
-              "app.device.index.group.downlinkStripper",
-              "Downlink Signal Stripper",
-            ),
-            数字近端机: t("app.device.index.group.digitalNearEnd", "Digital Near-end Unit"),
-            数字远端机: t("app.device.index.group.digitalRemote", "Digital Remote Unit"),
-            模拟近端机: t("app.device.index.group.analogNearEnd", "Analog Near-end Unit"),
-            模拟远端机: t("app.device.index.group.analogRemote", "Analog Remote Unit"),
-            干线放大器: t("app.device.index.group.trunkAmplifier", "Trunk Amplifier"),
-            功率采集网关: t(
-              "app.device.index.group.powerCollectionGateway",
-              "Power Collection Gateway",
-            ),
-          }[value] || value,
-      })),
-    [t],
-  )
-  const translatedDeviceGroupMap = useMemo(
-    () =>
-      translatedDeviceGroups.reduce<Record<string, string>>((acc, item) => {
-        acc[item.value] = item.label
+      DEVICE_GROUP_DEFINITIONS.reduce<Record<string, string>>((acc, item) => {
+        const label = t(item.messageId, item.defaultMessage)
+        item.values.forEach((value) => {
+          acc[value] = label
+        })
         return acc
       }, {}),
-    [translatedDeviceGroups],
+    [t],
   )
+  const deviceGroupOptions = useMemo(() => {
+    const groups =
+      allDeviceTypes.length > 0
+        ? allDeviceTypes
+            .map((item) => item.group)
+            .filter((group): group is string => Boolean(group))
+        : DEVICE_GROUP_DEFINITIONS.map((group) => group.values[0])
+
+    return Array.from(new Set(groups))
+      .sort((prev, next) => {
+        const prevOrder = DEVICE_GROUP_ORDER[prev] ?? Number.MAX_SAFE_INTEGER
+        const nextOrder = DEVICE_GROUP_ORDER[next] ?? Number.MAX_SAFE_INTEGER
+
+        if (prevOrder !== nextOrder) {
+          return prevOrder - nextOrder
+        }
+        return prev.localeCompare(next)
+      })
+      .map((value) => ({
+        value,
+        label: deviceGroupLabelMap[value] || value,
+      }))
+  }, [allDeviceTypes, deviceGroupLabelMap])
   const deviceTypeTreeData = useMemo<DeviceTypeTreeNode[]>(() => {
     const groupedTypes = allDeviceTypes.reduce<Record<string, DeviceTypeOption[]>>((acc, item) => {
       if (!acc[item.group]) {
@@ -182,7 +235,7 @@ const DeviceIndex: React.FC = () => {
     }, {})
 
     return Object.entries(groupedTypes).map(([group, types]) => ({
-      title: translatedDeviceGroupMap[group] || group,
+      title: deviceGroupLabelMap[group] || group,
       value: `group-${group}`,
       selectable: false,
       disabled: true,
@@ -191,7 +244,7 @@ const DeviceIndex: React.FC = () => {
         value: type.value,
       })),
     }))
-  }, [allDeviceTypes, translatedDeviceGroupMap])
+  }, [allDeviceTypes, deviceGroupLabelMap])
 
   const getDeviceTypes = useCallback(async () => {
     // 如果已经有数据，直接返回
@@ -215,7 +268,6 @@ const DeviceIndex: React.FC = () => {
         return formattedTypes
       }
     } catch (error) {
-      console.error("获取设备类型失败:", error)
       return []
     } finally {
       setDeviceTypesLoading(false)
@@ -238,9 +290,7 @@ const DeviceIndex: React.FC = () => {
             }))
           setAllDeviceTypes(formattedTypes)
         }
-      } catch (error) {
-        console.error("获取设备类型失败:", error)
-      }
+      } catch (error) {}
     }
     initDeviceTypes()
   }, [])
@@ -280,6 +330,7 @@ const DeviceIndex: React.FC = () => {
         })
       } else {
         form.resetFields()
+        setDeviceTypes([])
       }
       setModalVisible(true)
     },
@@ -288,7 +339,6 @@ const DeviceIndex: React.FC = () => {
 
   const openSettingModal = useCallback(
     (record: Columns | null = null) => {
-      console.log("打开设置模态框，设备ID:", record?.id)
       setCurrentDevice(record)
 
       // 然后获取数据并设置表单值
@@ -297,8 +347,6 @@ const DeviceIndex: React.FC = () => {
           device_id: record?.id,
         })
         .then((res) => {
-          console.log("API返回数据:", res)
-
           // 从API响应中提取范围配置
           const newConfigRangeMap = {
             uplink_power: {
@@ -357,8 +405,7 @@ const DeviceIndex: React.FC = () => {
           // 先打开模态框，确保表单已经挂载
           setSettingModalVisible(true)
         })
-        .catch((error) => {
-          console.error("获取设备配置失败:", error)
+        .catch(() => {
           message.error(
             t(
               "app.device.index.fetchConfigFailed",
@@ -385,7 +432,6 @@ const DeviceIndex: React.FC = () => {
         )
       })
     } catch (error) {
-      console.error("同步面板失败:", error)
       message.error(t("app.device.index.syncFailed", "Panel sync failed"))
       throw error
     } finally {
@@ -415,7 +461,6 @@ const DeviceIndex: React.FC = () => {
       if (error?.errorFields) {
         return
       }
-      console.error(error)
     } finally {
       setSubmitLoading(false)
     }
@@ -424,7 +469,6 @@ const DeviceIndex: React.FC = () => {
   const handleToggleMaintaining = useCallback(
     async (record: Columns) => {
       if (!record || !record.id) {
-        console.error("Invalid record provided for toggle maintaining")
         return
       }
       try {
@@ -441,7 +485,6 @@ const DeviceIndex: React.FC = () => {
         if (error?.errorFields) {
           return
         }
-        console.error(error)
       }
     },
     [t],
@@ -450,7 +493,6 @@ const DeviceIndex: React.FC = () => {
   const handleDelDevice = useCallback(
     async (record: Columns) => {
       if (!record || !record.id) {
-        console.error("Invalid record provided for delete")
         return
       }
       Modal.confirm({
@@ -471,7 +513,6 @@ const DeviceIndex: React.FC = () => {
             if (error?.errorFields) {
               return
             }
-            console.error(error)
           }
         },
       })
@@ -482,7 +523,6 @@ const DeviceIndex: React.FC = () => {
   const handleMoveDevice = useCallback(
     async (record: Columns, direction: "up" | "down") => {
       if (!record || !record.id) {
-        console.error("Invalid record provided for move")
         return
       }
       try {
@@ -496,7 +536,6 @@ const DeviceIndex: React.FC = () => {
         if (error?.errorFields) {
           return
         }
-        console.error(error)
       }
     },
     [t],
@@ -555,7 +594,6 @@ const DeviceIndex: React.FC = () => {
             )}`,
         )
       } catch (error) {
-        console.error(`${configType}保存失败:`, error)
         message.error(
           `${getConfigLabel(configType)} ${t(
             "app.device.index.configSaveFailed",
@@ -1119,7 +1157,9 @@ const DeviceIndex: React.FC = () => {
             ]}
           >
             <Select
-              options={translatedDeviceGroups}
+              loading={deviceTypesLoading}
+              disabled={deviceTypesLoading || allDeviceTypes.length === 0}
+              options={deviceGroupOptions}
               onChange={(item) => {
                 form.setFieldValue("device_type_id", undefined)
                 setDeviceTypes(allDeviceTypes.filter((types) => types.group == item))

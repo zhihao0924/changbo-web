@@ -13,7 +13,6 @@ export async function postSystemConfig(
       ...extParams,
     },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -33,7 +32,6 @@ export async function postSystemConfigSave(
       ...extParams,
     },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 

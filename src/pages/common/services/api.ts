@@ -1,6 +1,5 @@
 import { postApi } from "@/utils/request"
 
-
 export async function postDeviceSelectOptions(
   obj: Record<string, any>,
   extParams?: PassExtParamsDescriptorMore,
@@ -14,10 +13,8 @@ export async function postDeviceSelectOptions(
       ...extParams,
     },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
   return res
 }
-

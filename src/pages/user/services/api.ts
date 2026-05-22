@@ -7,7 +7,6 @@ export async function logIn(obj: Record<string, any>, extParams?: PassExtParamsD
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -27,7 +26,6 @@ export async function changePassword(
       ...extParams,
     },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
 
@@ -36,12 +34,12 @@ export async function changePassword(
 
 export async function refreshToken(extParams?: PassExtParamsDescriptorMore) {
   const accessToken = localStorage.getItem(ACCESS_TOKEN)
-  
+
   try {
     const res: API_RefreshToken.Result = await postApi(
       "admin/refreshToken",
       {
-        token: accessToken
+        token: accessToken,
       },
       {
         showLoading: false,
@@ -51,7 +49,6 @@ export async function refreshToken(extParams?: PassExtParamsDescriptorMore) {
     )
     return res
   } catch (error) {
-    console.error('Refresh token API error:', error)
     throw error
   }
 }

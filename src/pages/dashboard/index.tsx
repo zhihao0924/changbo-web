@@ -16,6 +16,20 @@ import { SYSTEM_CONFIG } from "@/constants"
 import { useIntl } from "umi"
 
 const { Title } = Typography
+const DEFAULT_REFRESH_INTERVAL = 3000
+const MIN_REFRESH_INTERVAL = 500
+
+const normalizeRefreshInterval = (value: unknown) => {
+  const numericValue = Number(value)
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return DEFAULT_REFRESH_INTERVAL
+  }
+
+  const intervalMs = numericValue < 100 ? numericValue * 1000 : numericValue
+
+  return Math.max(MIN_REFRESH_INTERVAL, Math.round(intervalMs))
+}
 
 // 常量配置
 const DASHBOARD_CONFIG = {
@@ -24,12 +38,10 @@ const DASHBOARD_CONFIG = {
       const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
       if (systemConfig) {
         const config = JSON.parse(systemConfig)
-        return config.refresh_interval || 3000 // 默认3秒
+        return normalizeRefreshInterval(config.refresh_interval)
       }
-    } catch (error) {
-      console.error("获取系统配置失败:", error)
-    }
-    return 3000 // 默认3秒
+    } catch {}
+    return DEFAULT_REFRESH_INTERVAL
   },
   beepInterval: 1000, // 1秒播放一次滴滴声
   chartColors: ["#376DF7", "#00B5FF", "#FFB600", "#FF5900", "#999999"],
@@ -46,7 +58,6 @@ const useBeep = (alarmDeviceCount: number = 0) => {
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
-      console.log("音频上下文已创建")
     }
     return audioContextRef.current
   }, [])
@@ -55,30 +66,22 @@ const useBeep = (alarmDeviceCount: number = 0) => {
   const playBeep = useCallback(() => {
     // 只有在有告警设备时才播放声音
     if (alarmDeviceCount <= 0) {
-      console.log("没有告警设备，跳过播放")
       return
     }
-
-    console.log("尝试播放滴滴声，告警设备数量:", alarmDeviceCount)
 
     try {
       const audioContext = getAudioContext()
 
       // 尝试自动激活音频上下文
       if (audioContext.state === "suspended") {
-        console.log("音频上下文被暂停，尝试自动激活")
-
         // 方法1: 尝试直接恢复
         audioContext
           .resume()
           .then(() => {
-            console.log("音频上下文自动激活成功")
             // 激活后立即播放一次滴滴声
             playBeep()
           })
-          .catch((error) => {
-            console.log("自动激活失败，尝试其他方法:", error)
-
+          .catch(() => {
             // 方法2: 模拟用户交互
             const clickEvent = new MouseEvent("click", {
               view: window,
@@ -94,10 +97,9 @@ const useBeep = (alarmDeviceCount: number = 0) => {
               audioContext
                 .resume()
                 .then(() => {
-                  console.log("通过模拟点击激活音频上下文")
                   playBeep()
                 })
-                .catch(console.error)
+                .catch(() => {})
             }, 100)
           })
 
@@ -117,16 +119,12 @@ const useBeep = (alarmDeviceCount: number = 0) => {
       oscillator.start()
       oscillator.stop(audioContext.currentTime + 0.1)
 
-      console.log("滴滴声播放成功")
-
       // 清理资源
       setTimeout(() => {
         oscillator.disconnect()
         gainNode.disconnect()
       }, 200)
-    } catch (error) {
-      console.error("播放滴滴声失败:", error)
-
+    } catch {
       // 尝试使用HTML5 Audio作为备选方案
       try {
         const beepSound = new Audio(
@@ -136,24 +134,18 @@ const useBeep = (alarmDeviceCount: number = 0) => {
 
         // 尝试自动播放，如果失败则静音播放
         beepSound.play().catch(() => {
-          console.log("HTML5 Audio自动播放被阻止，尝试静音播放")
           beepSound.muted = true
           beepSound
             .play()
             .then(() => {
-              console.log("静音播放成功")
               // 播放后取消静音
               setTimeout(() => {
                 beepSound.muted = false
               }, 100)
             })
-            .catch(console.error)
+            .catch(() => {})
         })
-
-        console.log("使用HTML5 Audio播放滴滴声")
-      } catch (fallbackError) {
-        console.error("备选方案也失败:", fallbackError)
-      }
+      } catch {}
     }
   }, [alarmDeviceCount, getAudioContext])
 
@@ -161,20 +153,16 @@ const useBeep = (alarmDeviceCount: number = 0) => {
   const startBeep = useCallback(() => {
     if (beepIntervalRef.current) clearInterval(beepIntervalRef.current)
 
-    console.log("尝试启动滴滴声定时器，告警设备数量:", alarmDeviceCount)
-
     // 设置滴滴声状态为开启
     setIsBeeping(true)
 
     // 只有在有告警设备时才启动定时器播放声音
     if (alarmDeviceCount > 0) {
       beepIntervalRef.current = setInterval(playBeep, DASHBOARD_CONFIG.beepInterval)
-      console.log("滴滴声定时器已启动，间隔:", DASHBOARD_CONFIG.beepInterval, "ms")
 
       // 立即播放一次滴滴声
       setTimeout(playBeep, 100)
     } else {
-      console.log("没有告警设备，滴滴声状态已开启但不会播放声音")
     }
   }, [playBeep, alarmDeviceCount])
 
@@ -199,21 +187,17 @@ const useBeep = (alarmDeviceCount: number = 0) => {
 
   // 当告警设备数量变化时自动处理滴滴声
   useEffect(() => {
-    console.log("告警设备数量变化:", alarmDeviceCount, "滴滴声状态:", isBeeping)
-
     if (isBeeping) {
       if (alarmDeviceCount <= 0) {
         // 如果滴滴声状态开启但没有告警设备，停止定时器但不改变状态
         if (beepIntervalRef.current) {
           clearInterval(beepIntervalRef.current)
           beepIntervalRef.current = null
-          console.log("告警设备数量为0，停止滴滴声播放但保持开启状态")
         }
       } else if (alarmDeviceCount > 0) {
         // 如果有告警设备且滴滴声状态开启，则启动定时器播放声音
         if (!beepIntervalRef.current) {
           beepIntervalRef.current = setInterval(playBeep, DASHBOARD_CONFIG.beepInterval)
-          console.log("有告警设备且滴滴声状态开启，启动定时器播放声音")
           // 立即播放一次滴滴声
           setTimeout(playBeep, 100)
         }
@@ -223,7 +207,6 @@ const useBeep = (alarmDeviceCount: number = 0) => {
 
   // 组件挂载时，滴滴声状态默认为关闭
   useEffect(() => {
-    console.log("组件挂载，滴滴声状态初始化为关闭")
     setIsBeeping(false)
   }, [])
 
@@ -233,7 +216,6 @@ const useBeep = (alarmDeviceCount: number = 0) => {
       stopBeep()
       if (audioContextRef.current) {
         audioContextRef.current.close()
-        console.log("音频上下文已关闭")
       }
     }
   }, [stopBeep])
@@ -265,11 +247,17 @@ const usePieConfig = (
       tooltip: {
         formatter: (item: any) => ({
           name: item.type,
-          value: `${item.value} ${t("app.dashboard.unit.device", "devices")} (${((item.value * 100) / (total || 1)).toFixed(2)}%)`,
+          value: `${item.value} ${t("app.dashboard.unit.device", "devices")} (${(
+            (item.value * 100) /
+            (total || 1)
+          ).toFixed(2)}%)`,
         }),
       },
       statistic: {
-        title: { formatter: () => t("app.dashboard.healthRate", "Health Rate"), style: { fontSize: 14 } },
+        title: {
+          formatter: () => t("app.dashboard.healthRate", "Health Rate"),
+          style: { fontSize: 14 },
+        },
         content: {
           style: { fontSize: 12, fontWeight: "bold", color: "#30BF78" },
           content: `${total_healthy.toFixed(2) || 0}%`,
@@ -350,6 +338,7 @@ const Dashboard: React.FC = () => {
   const [currentTowerImage, setCurrentTowerImage] = useState<string>("tower_1")
   const [currentCabinetImage, setCurrentCabinetImage] = useState<string>("cabinet_none")
   const [currentLightImage, setCurrentLightImage] = useState<string>("light_none")
+  const requestPendingRef = useRef(false)
   const t = useCallback(
     (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
     [intl],
@@ -362,13 +351,10 @@ const Dashboard: React.FC = () => {
       if (storedTime) {
         const parsedTime = new Date(storedTime)
         if (!isNaN(parsedTime.getTime())) {
-          console.log("从localStorage读取清除时间:", parsedTime.toISOString())
           return parsedTime
         }
       }
-    } catch (err) {
-      console.error("读取localStorage清除时间失败:", err)
-    }
+    } catch {}
     return null
   })
 
@@ -377,10 +363,8 @@ const Dashboard: React.FC = () => {
     setLastClearTime(time)
     if (time) {
       localStorage.setItem("dashboard_lastClearTime", time.toISOString())
-      console.log("清除时间已保存到localStorage:", time.toISOString())
     } else {
       localStorage.removeItem("dashboard_lastClearTime")
-      console.log("清除时间已从localStorage移除")
     }
   }, [])
 
@@ -400,13 +384,11 @@ const Dashboard: React.FC = () => {
       try {
         const alarmTime = new Date(alarm.alarm_at)
         return alarmTime > lastClearTime
-      } catch (err) {
-        console.error("解析告警时间失败:", err)
+      } catch {
         return true
       }
     }).length
 
-    console.log("总告警设备:", dashboardData.alarm_device.length, "新增告警设备:", newAlarmCount)
     return newAlarmCount
   }, [dashboardData?.alarm_device, lastClearTime])
 
@@ -420,22 +402,25 @@ const Dashboard: React.FC = () => {
 
   // 获取数据
   const getDashboardData = useCallback(async () => {
+    if (requestPendingRef.current) {
+      return
+    }
+
+    requestPendingRef.current = true
     try {
       setError(null)
       const res = await Services.api.postDashboardData({}, { showLoading: false, showToast: false })
 
       if (res?.res) {
-        console.log("Dashboard API Response:", res.res)
-        console.log("Total devices:", res.res.total)
         setDashboardData(res.res)
       } else {
         setError(t("app.dashboard.fetchFailed", "Failed to load data"))
       }
-    } catch (err) {
-      console.error("获取仪表盘数据失败:", err)
+    } catch {
       setError(t("app.dashboard.networkFailed", "Network request failed"))
     } finally {
       setLoading(false)
+      requestPendingRef.current = false
     }
   }, [t])
 
@@ -555,8 +540,7 @@ const Dashboard: React.FC = () => {
                 } else {
                   hasHistoryAlarms = true
                 }
-              } catch (err) {
-                console.error("解析告警时间失败:", err)
+              } catch {
                 hasNewAlarms = true
               }
             }
@@ -571,7 +555,6 @@ const Dashboard: React.FC = () => {
       if (hasNewAlarms) {
         // 有新告警：红灯闪烁
         setCurrentLightImage((prevImage) => {
-          console.log("有新告警，红灯闪烁", prevImage)
           // 在"关闭"状态和"红灯"状态之间切换实现闪烁
           if (prevImage === "light_none") {
             return "light_red"
@@ -581,11 +564,9 @@ const Dashboard: React.FC = () => {
       } else if (hasHistoryAlarms) {
         // 只有历史告警：稳定红灯，不闪烁
         setCurrentLightImage("light_red")
-        console.log("只有历史告警，稳定红灯")
       } else {
         // 无告警：稳定绿灯
         setCurrentLightImage("light_green")
-        console.log("无告警，稳定绿灯")
       }
     }, IMAGE_SWITCH_CONFIG.light)
 
@@ -655,11 +636,12 @@ const Dashboard: React.FC = () => {
               const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
               if (systemConfig) {
                 const config = JSON.parse(systemConfig)
-                return config.system_name || t("app.system.defaultName", "Private Network Communication Intelligent NMS")
+                return (
+                  config.system_name ||
+                  t("app.system.defaultName", "Private Network Communication Intelligent NMS")
+                )
               }
-            } catch (err) {
-              console.error("获取系统配置失败:", err)
-            }
+            } catch {}
             return t("app.system.defaultName", "Private Network Communication Intelligent NMS")
           })()}
         </Title>

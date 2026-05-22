@@ -38,7 +38,6 @@ const DeviceNameSelect: React.FC<DeviceNameSelectProps> = ({
               ? newOptions.res
                   .filter((item) => item != null && (item.id != null || item.value != null))
                   .map((item) => {
-                    console.log("选项项数据:", item)
                     return {
                       label: item.name || item.label || item.value,
                       value: item.id || item.value,

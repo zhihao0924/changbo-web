@@ -9,7 +9,6 @@ export async function postAdminList(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -24,7 +23,6 @@ export async function postAdminCreate(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -39,7 +37,6 @@ export async function postAdminResetPwd(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -54,7 +51,6 @@ export async function postDisableAdmin(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -69,7 +65,6 @@ export async function postAdminUpdate(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res
@@ -84,7 +79,6 @@ export async function postAdminDelete(
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {
-    console.error(err)
     throw err
   })
   return res

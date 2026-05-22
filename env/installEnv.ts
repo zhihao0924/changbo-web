@@ -16,7 +16,6 @@ export default (obj: any) => {
 
   if (process.env.NODE_ENV === "development" && !fs.existsSync(envLocalFile)) {
     // 不存在本地文件
-    console.error("⚠️ Please check your env/.env.local file")
     process.exit(-1)
   }
 
@@ -52,6 +51,5 @@ export default (obj: any) => {
   if (process.env.DEPLOY_ENV) {
     //
   } else {
-    console.error("⚠️  process.env.DEPLOY_ENV undefined")
   }
 }

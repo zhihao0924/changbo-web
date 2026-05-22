@@ -3,12 +3,7 @@ import { Spin } from "antd"
 import { Fragment, useEffect, useMemo } from "react"
 import { useIntl } from "umi"
 
-export type Props = {
-  location: any
-}
-
-const CallBack: React.FC<Props> = ({ location }) => {
-  console.log(location.query, "query")
+const CallBack: React.FC = () => {
   const intl = useIntl()
 
   useEffect(() => {}, [])

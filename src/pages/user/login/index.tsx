@@ -9,7 +9,7 @@ import {
 import Services from "@/pages/user/services"
 import { postSystemConfig } from "@/pages/setting/services/api"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
-import { LoginFormPage, ProFormText } from "@ant-design/pro-form"
+import { ProForm, ProFormText } from "@ant-design/pro-form"
 import { Alert, message, Tabs } from "antd"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { history, useIntl, useModel } from "umi"
@@ -89,7 +89,6 @@ const Login: React.FC = () => {
 
   const handleSubmit = useCallback(
     async (values: any) => {
-      // console.log(values, "values")
       try {
         // 登录
         const res = await Services.api.logIn({
@@ -109,18 +108,15 @@ const Login: React.FC = () => {
               setTimeout(() => {
                 const { query } = history.location
                 const { redirect } = query as { redirect: string }
-                console.log("准备跳转到:", redirect || "/")
                 history.push(redirect || "/")
               }, 100)
             })
 
             /** 此方法会跳转到 redirect 参数所在的位置 */
             if (!history) {
-              console.error("history 不可用")
               return
             }
           } catch (fetchError) {
-            console.error("获取用户信息失败:", fetchError)
             message.error(
               formatMessage(
                 "app.login.fetchUserInfo.failed",
@@ -133,13 +129,11 @@ const Login: React.FC = () => {
           return
         }
 
-        console.log("登录失败:", res.msg || res)
         setUserLoginState("error")
         message.error(
           res.msg || formatMessage("pages.login.failure", "Login failed, please try again!"),
         )
       } catch (error) {
-        console.error("登录异常:", error)
         setUserLoginState("error")
         message.error(
           formatMessage("app.login.exception", "A login error occurred. Please try again."),
@@ -152,21 +146,16 @@ const Login: React.FC = () => {
   // 获取系统配置
   const fetchSystemConfig = async () => {
     try {
-      console.log("开始获取系统配置...")
       const res = await postSystemConfig({})
-      console.log("系统配置响应:", res)
       if (res.err === 0) {
         // 将系统配置存储到 localStorage
         localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
         setSystemConfig(res.res)
-        console.log("系统配置获取成功:", res.res)
         return res.res
       } else {
-        console.error("系统配置接口返回错误:", res.msg)
         return null
       }
     } catch (error) {
-      console.error("获取系统配置失败:", error)
       return null
     }
   }
@@ -176,14 +165,11 @@ const Login: React.FC = () => {
 
     const initSystemConfig = async () => {
       // 如果没有系统配置，从后台获取
-      console.log("没有缓存配置，从后台获取...")
       await fetchSystemConfig()
     }
 
     // 不等待系统配置获取完成，避免阻塞页面渲染
-    initSystemConfig().catch((error) => {
-      console.error("系统配置初始化异常:", error)
-    })
+    initSystemConfig().catch(() => {})
     handleLoginAuto()
     // setQrCode()
     return () => {
@@ -198,6 +184,8 @@ const Login: React.FC = () => {
     )
   }, [formatMessage, systemConfig?.system_name])
 
+  const systemLogo = useMemo(() => systemConfig?.system_logo?.trim() || "/logo.png", [systemConfig])
+
   useEffect(() => {
     const loginTitle = formatMessage("app.login.pageTitle", "Login")
     document.title = systemName ? `${loginTitle} - ${systemName}` : loginTitle
@@ -206,105 +194,138 @@ const Login: React.FC = () => {
   return useMemo(() => {
     return (
       <div className={styles.container}>
-        <div className={styles.content}>
-          <LoginFormPage
-            backgroundImageUrl="/logIn_bg.png"
-            logo={null}
-            containerStyle={{
-              width: "100%",
-              maxWidth: isEnglish ? 440 : 400,
-            }}
-            mainStyle={{
-              width: "100%",
-            }}
-            title={
-              <div className={`${styles.brandTitle} ${isEnglish ? styles.brandTitleEn : ""}`}>
-                <span className={`${styles.brandText} ${isEnglish ? styles.brandTextEn : ""}`}>
-                  {systemName}
-                </span>
+        <main className={styles.shell}>
+          <section className={styles.brandPane}>
+            <div className={styles.brandContent}>
+              <div className={styles.logoMark}>
+                <img src={systemLogo} alt={systemName} />
               </div>
-            }
-            subTitle=""
-            initialValues={{
-              autoLogin: true,
-            }}
-            onFinish={async (values: any) => {
-              await handleSubmit(values)
-            }}
-            actions={<Footer />}
-            submitter={{
-              render: (props: any, dom: any) => {
-                return type == "account" ? [dom[1]] : []
-              },
-            }}
-          >
-            <Tabs
-              activeKey={type}
-              onChange={(activeKey: string) => {
-                setType(activeKey as LoginType)
-              }}
-              items={[
-                {
-                  label: formatMessage("pages.login.accountLogin.tab", "Account Login"),
-                  key: "account",
-                },
-              ]}
-            />
+              <div className={styles.brandKicker}>
+                {formatMessage("pages.login.brand.kicker", "Network Operations")}
+              </div>
+              <h1 className={`${styles.brandTitle} ${isEnglish ? styles.brandTitleEn : ""}`}>
+                {systemName}
+              </h1>
+              <p className={styles.brandDesc}>
+                {formatMessage(
+                  "pages.login.brand.desc",
+                  "Unified access for secure private-network operations.",
+                )}
+              </p>
+              <div className={styles.signalBar} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          </section>
 
-            {userLoginState === "error" && type === "account" && (
-              <LoginMessage
-                content={formatMessage("app.login.account.error", "Incorrect username or password")}
-              />
-            )}
-            {type === "account" && (
-              <>
-                <ProFormText
-                  name="account"
-                  fieldProps={{
+          <section className={styles.loginPane}>
+            <div className={styles.loginPanel}>
+              <div className={styles.loginHeader}>
+                <span>{formatMessage("pages.login.form.kicker", "Account Access")}</span>
+                <h2>{formatMessage("pages.login.form.title", "Secure sign in")}</h2>
+                <p>{formatMessage("pages.login.form.subtitle", "Use your assigned account.")}</p>
+              </div>
+
+              <ProForm
+                className={styles.loginForm}
+                initialValues={{
+                  autoLogin: true,
+                }}
+                onFinish={async (values: any) => {
+                  await handleSubmit(values)
+                }}
+                submitter={{
+                  searchConfig: {
+                    submitText: formatMessage("pages.login.submit", "Login"),
+                  },
+                  submitButtonProps: {
+                    className: styles.submitButton,
                     size: "large",
-                    prefix: <UserOutlined className={styles.prefixIcon} />,
+                  },
+                  render: (props: any, dom: any) => {
+                    return type == "account" ? [dom[1]] : []
+                  },
+                }}
+              >
+                <Tabs
+                  className={styles.loginTabs}
+                  activeKey={type}
+                  onChange={(activeKey: string) => {
+                    setType(activeKey as LoginType)
                   }}
-                  placeholder={formatMessage(
-                    "app.login.username.placeholder",
-                    "Please enter username",
-                  )}
-                  rules={[
+                  items={[
                     {
-                      required: true,
-                      message: formatMessage(
-                        "app.login.username.required",
+                      label: formatMessage("pages.login.accountLogin.tab", "Account Login"),
+                      key: "account",
+                    },
+                  ]}
+                />
+
+                {userLoginState === "error" && type === "account" && (
+                  <LoginMessage
+                    content={formatMessage(
+                      "app.login.account.error",
+                      "Incorrect username or password",
+                    )}
+                  />
+                )}
+                {type === "account" && (
+                  <>
+                    <ProFormText
+                      name="account"
+                      fieldProps={{
+                        size: "large",
+                        prefix: <UserOutlined className={styles.prefixIcon} />,
+                      }}
+                      placeholder={formatMessage(
+                        "app.login.username.placeholder",
                         "Please enter username",
-                      ),
-                    },
-                  ]}
-                />
-                <ProFormText.Password
-                  name="password"
-                  fieldProps={{
-                    size: "large",
-                    prefix: <LockOutlined className={styles.prefixIcon} />,
-                  }}
-                  placeholder={formatMessage(
-                    "app.login.password.placeholder",
-                    "Please enter password",
-                  )}
-                  rules={[
-                    {
-                      required: true,
-                      message: formatMessage(
-                        "app.login.password.required",
+                      )}
+                      rules={[
+                        {
+                          required: true,
+                          message: formatMessage(
+                            "app.login.username.required",
+                            "Please enter username",
+                          ),
+                        },
+                      ]}
+                    />
+                    <ProFormText.Password
+                      name="password"
+                      fieldProps={{
+                        size: "large",
+                        prefix: <LockOutlined className={styles.prefixIcon} />,
+                      }}
+                      placeholder={formatMessage(
+                        "app.login.password.placeholder",
                         "Please enter password",
-                      ),
-                    },
-                  ]}
-                />
-              </>
-            )}
-          </LoginFormPage>
-        </div>
+                      )}
+                      rules={[
+                        {
+                          required: true,
+                          message: formatMessage(
+                            "app.login.password.required",
+                            "Please enter password",
+                          ),
+                        },
+                      ]}
+                    />
+                  </>
+                )}
+              </ProForm>
+
+              <div className={styles.footer}>
+                <Footer />
+              </div>
+            </div>
+          </section>
+        </main>
       </div>
     )
-  }, [formatMessage, handleSubmit, isEnglish, systemName, type, userLoginState])
+  }, [formatMessage, handleSubmit, isEnglish, systemLogo, systemName, type, userLoginState])
 }
 
 export default Login

@@ -16,6 +16,8 @@ import { useIntl } from "umi"
 
 // 常量配置
 const PAGE_SIZE = 300
+const DEFAULT_REFRESH_INTERVAL = 3000
+const MIN_REFRESH_INTERVAL = 500
 
 type DeviceTypeTreeNode = {
   title: string
@@ -26,17 +28,27 @@ type DeviceTypeTreeNode = {
 }
 
 // 工具函数
+const normalizeRefreshInterval = (value: unknown) => {
+  const numericValue = Number(value)
+
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return DEFAULT_REFRESH_INTERVAL
+  }
+
+  const intervalMs = numericValue < 100 ? numericValue * 1000 : numericValue
+
+  return Math.max(MIN_REFRESH_INTERVAL, Math.round(intervalMs))
+}
+
 const getRefreshInterval = (): number => {
   try {
     const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
     if (systemConfig) {
       const config = JSON.parse(systemConfig)
-      return config.refresh_interval || 3000 // 默认3秒
+      return normalizeRefreshInterval(config.refresh_interval)
     }
-  } catch (error) {
-    console.error("获取系统配置失败:", error)
-  }
-  return 3000 // 默认3秒
+  } catch {}
+  return DEFAULT_REFRESH_INTERVAL
 }
 
 // 获取状态图标
@@ -416,7 +428,6 @@ const DeviceStatus: React.FC = () => {
       }
       return []
     } catch (error) {
-      console.error("获取设备类型失败:", error)
       return []
     }
   }, [])
@@ -430,7 +441,6 @@ const DeviceStatus: React.FC = () => {
       ip?: string
       is_alarm_or_module_offline?: boolean
     }) => {
-      console.log(queryParams)
       try {
         const res = await Services.api.postDeviceList(
           {
@@ -453,7 +463,6 @@ const DeviceStatus: React.FC = () => {
         }
         return { success: false }
       } catch (error) {
-        console.error("获取设备列表失败:", error)
         return { success: false }
       }
     },

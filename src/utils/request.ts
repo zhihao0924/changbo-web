@@ -23,7 +23,7 @@ import { refreshToken } from "@/pages/user/services/api"
 // 防抖机制，避免频繁调用刷新token
 let lastRefreshTime = 0
 const REFRESH_DEBOUNCE_TIME = 30000 // 30秒防抖时间
-const DEFAULT_LOCALE = "zh-CN"
+const DEFAULT_LOCALE = "en-US"
 const LOCALE_STORAGE_KEY = "umi_locale"
 
 const getRequestLocale = () => {
@@ -98,11 +98,9 @@ const checkAndRefreshToken = async () => {
           localStorage.setItem("userinfo", JSON.stringify(userInfo))
         }
 
-        console.log("Token refreshed successfully after refresh_after time")
         return true
       }
     } catch (error) {
-      console.error("Token refresh failed:", error)
       // 刷新失败，清除用户信息并跳转到登录页
       removeUserInfo()
       history.replace(redirectLoginPath)
@@ -147,7 +145,7 @@ export const request = async (
     }
 
     // 对于不需要认证的接口（如/system/config），不添加Authorization头
-    if (url !== "/api/system/config" && (!url.endsWith("/system/config"))) {
+    if (url !== "/api/system/config" && !url.endsWith("/system/config")) {
       headers.Authorization =
         "Bearer " +
         (extParams?.gateway && process.env.BUILD_ENV
@@ -182,7 +180,6 @@ export const request = async (
     }
   }
 
-  // console.log(
   //   `%c 请求开始：${_method || "GET"}`,
   //   "background-color: #f25c62; color: #fff; font-size: 12px; font-weight: bold",
   //   `--> ${url} `,
@@ -212,12 +209,6 @@ export const request = async (
 
   const res = await axios(axiosInfo).catch(async (err: AxiosError) => {
     // http 层面异常
-    console.error(
-      "Axios Http Error",
-      JSON.stringify(axiosInfo),
-      err?.response?.status,
-      err?.response?.statusText,
-    )
 
     if (typeof document !== "undefined") {
       if (err?.response?.status == 401) {
@@ -242,7 +233,6 @@ export const request = async (
       if (err?.response?.status == 401) {
         // 如果是refreshToken接口本身返回401，直接退出登录，避免无限循环
         if (url === "/api/admin/refreshToken" || url.includes("admin/refreshToken")) {
-          console.error("Refresh token failed, redirect to login")
           setTimeout(() => {
             removeUserInfo()
             history.replace(redirectLoginPath)
@@ -270,12 +260,10 @@ export const request = async (
               localStorage.setItem("userinfo", JSON.stringify(userInfo))
             }
 
-            console.log("Token refreshed after 401 error")
             // 刷新成功后重新发送原始请求
             return request(url, params, extParams, ctx)
           }
         } catch (refreshError) {
-          console.error("Token refresh failed after 401:", refreshError)
           // 刷新失败，清除用户信息并跳转到登录页
           setTimeout(() => {
             removeUserInfo()
@@ -300,8 +288,6 @@ export const request = async (
     responseData: { status: res?.status, headers: res?.headers, data: res.data },
     time: `${(Date.now() - startTime).toFixed(2)} ms`,
   }
-
-  process.env.NODE_ENV === "development" && console.log(stream)
 
   if (typeof document !== "undefined") {
     extParams.showLoading && message.destroy()
@@ -381,7 +367,6 @@ const resolveApi = (tag: string) => {
       ctx,
     ).catch((_err: any) => {
       //
-      console.error(_err, "resolveApi")
       throw _err
     })
     return info

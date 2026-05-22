@@ -43,7 +43,6 @@ const DailyXlsx: React.FC = () => {
 
   const downloadLoad = async (row: any) => {
     if (!row || !row.id) {
-      console.error('Invalid row data for download')
       return
     }
     try {
@@ -69,13 +68,11 @@ const DailyXlsx: React.FC = () => {
         window.URL.revokeObjectURL(url)
       }
     } catch (error) {
-      console.error("下载失败:", error)
       // 可以添加错误提示
     }
   }
   useCallback(async (row) => {
     if (!row || !row.id) {
-      console.error('Invalid row data for delete')
       return
     }
     try {

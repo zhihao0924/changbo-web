@@ -149,7 +149,6 @@ const DeviceLibiio: React.FC = () => {
       )
       setDevices(res?.res?.list || [])
     } catch (error) {
-      console.error("获取 Libiio 设备失败:", error)
       message.error(t("app.device.libiio.fetchListFailed", "Failed to load device list"))
     } finally {
       setLoading(false)
@@ -243,7 +242,6 @@ const DeviceLibiio: React.FC = () => {
       if (error?.errorFields) {
         return
       }
-      console.error(error)
       message.error(t("app.device.libiio.saveFailed", "Save failed. Please try again later."))
     } finally {
       setSubmitLoading(false)
