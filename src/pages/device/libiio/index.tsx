@@ -43,12 +43,10 @@ type EditFormValues = {
   rx_center_freq?: number
   rx_sampling_rate?: number
   rx_fft_size?: number
-  rx_gain?: number
   tx_ip?: string
   tx_center_freq?: number
   tx_sampling_rate?: number
   tx_fft_size?: number
-  tx_gain?: number
 }
 
 const MAX_FETCH_SIZE = 1000
@@ -181,12 +179,10 @@ const DeviceLibiio: React.FC = () => {
         rx_center_freq: module?.rx_center_freq ?? module?.center_freq,
         rx_sampling_rate: module?.rx_sampling_rate ?? module?.sampling_rate,
         rx_fft_size: module?.rx_fft_size ?? module?.fft_size,
-        rx_gain: module?.rx_gain,
         tx_ip: module?.tx_ip || "",
         tx_center_freq: module?.tx_center_freq ?? module?.center_freq,
         tx_sampling_rate: module?.tx_sampling_rate ?? module?.sampling_rate,
         tx_fft_size: module?.tx_fft_size ?? module?.fft_size,
-        tx_gain: module?.tx_gain,
       })
       setEditModalVisible(true)
     },
@@ -225,12 +221,10 @@ const DeviceLibiio: React.FC = () => {
           rx_center_freq: values.rx_center_freq,
           rx_sampling_rate: values.rx_sampling_rate,
           rx_fft_size: values.rx_fft_size,
-          rx_gain: values.rx_gain,
           tx_ip: values.tx_ip,
           tx_center_freq: values.tx_center_freq,
           tx_sampling_rate: values.tx_sampling_rate,
           tx_fft_size: values.tx_fft_size,
-          tx_gain: values.tx_gain,
         },
         { showLoading: false },
       )
@@ -257,8 +251,6 @@ const DeviceLibiio: React.FC = () => {
         tx_sampling_rate: t("app.device.libiio.samplingRate", "Bandwidth"),
         rx_fft_size: t("app.device.libiio.fftSize", "FFT Size"),
         tx_fft_size: t("app.device.libiio.fftSize", "FFT Size"),
-        rx_gain: t("app.device.libiio.rxGain", "RX Gain"),
-        tx_gain: t("app.device.libiio.txGain", "TX Gain"),
         tx_power: t("app.device.libiio.txPower", "TX Power"),
         rx_rssi: t("app.device.libiio.rxRssi", "RX RSSI"),
       }
@@ -538,16 +530,6 @@ const DeviceLibiio: React.FC = () => {
                       "Please select FFT size",
                     )}
                   />
-                </Form.Item>
-                <Form.Item
-                  name={`${direction}_gain`}
-                  label={
-                    direction === "rx"
-                      ? t("app.device.libiio.rxGain", "RX Gain")
-                      : t("app.device.libiio.txGain", "TX Gain")
-                  }
-                >
-                  <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dB" />
                 </Form.Item>
               </div>
             </div>

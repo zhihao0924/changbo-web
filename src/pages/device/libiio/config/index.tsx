@@ -96,7 +96,7 @@ const buildConfigList = (
     direction: config.direction || direction,
     sort: config.sort,
     target_freq_mhz: config.target_freq_mhz,
-    fix_val: config.fix_val ?? (direction === "tx" ? config.fs_dbm : config.rx_gain),
+    fix_val: config.fix_val ?? (direction === "tx" ? config.fs_dbm : undefined),
     is_alarm: config.is_alarm ?? 0,
     min: normalizeNumber(config.min),
     max: normalizeNumber(config.max),

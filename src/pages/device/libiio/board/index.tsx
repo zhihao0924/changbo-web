@@ -3,19 +3,13 @@ import { Card, Empty, Spin } from "antd"
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useIntl } from "umi"
 import Services from "@/pages/device/services"
-import type {
-  API_PostLibiioBoardList,
-  API_PostLibiioDeviceConfigList,
-  API_PostLibiioDeviceList,
-} from "@/pages/device/services/typings/device"
+import type { API_PostLibiioBoardList } from "@/pages/device/services/typings/device"
 import "./index.less"
 
 type ModuleDirection = "rx" | "tx"
 type BoardDevice = API_PostLibiioBoardList.List
 type BoardModule = API_PostLibiioBoardList.Module
 type BoardChannel = API_PostLibiioBoardList.Channel
-type LegacyLibiioDevice = API_PostLibiioDeviceList.List
-type LegacyFrequencyConfig = API_PostLibiioDeviceConfigList.ConfigItem
 type BoardSection = {
   key: string
   device: BoardDevice
@@ -24,15 +18,14 @@ type BoardSection = {
   moduleIp?: string
   metricLabel: string
   metricUnit: string
+  isOffline: boolean
   chunks: FrequencyChunk<BoardChannel>[]
 }
 
-const MAX_FETCH_SIZE = 1000
 const CHANNELS_PER_ROW = 10
 const CHANNEL_COLUMNS = Array.from({ length: CHANNELS_PER_ROW }, (_, index) => index + 1)
 const MAX_CHANNEL_COUNT = 20
 const BOARD_POLLING_INTERVAL = 3000
-const MODULE_DIRECTIONS: ModuleDirection[] = ["rx", "tx"]
 const BOARD_MODULE_ORDER: ModuleDirection[] = ["tx", "rx"]
 type FrequencyChunk<T> = { key: string; channelOffset: number; items: T[] }
 type StatusTone = "normal" | "high" | "low" | "none"
@@ -54,7 +47,13 @@ const normalizeNumber = (value?: number | string | null) => {
 const isAlarmEnabled = (value?: number | string | boolean | null) =>
   value === true || value === 1 || value === "1" || value === "true"
 
-const getConfigMapKey = (deviceId: number, direction: ModuleDirection) => `${deviceId}-${direction}`
+const isOfflineValue = (value?: number | string | boolean | null) => {
+  if (value === false || value === 0 || value === "0") {
+    return true
+  }
+
+  return typeof value === "string" && ["false", "offline", "离线"].includes(value.trim().toLowerCase())
+}
 
 const formatFrequency = (value?: number | string | null) => {
   const numberValue = normalizeNumber(value)
@@ -79,18 +78,6 @@ const getStatusClassName = (tone?: StatusTone) => {
   return ""
 }
 
-const sortConfigs = <T extends { sort?: number; id?: number }>(items: T[]) =>
-  [...items].sort((prev, next) => {
-    const prevSort = typeof prev.sort === "number" ? prev.sort : Number.MAX_SAFE_INTEGER
-    const nextSort = typeof next.sort === "number" ? next.sort : Number.MAX_SAFE_INTEGER
-
-    if (prevSort !== nextSort) {
-      return prevSort - nextSort
-    }
-
-    return (prev.id || 0) - (next.id || 0)
-  })
-
 const normalizeChannels = (channels: BoardChannel[] = []) => {
   const channelMap = new Map(channels.map((channel) => [channel.channel_no, channel]))
   const maxChannelNo = Math.max(...channels.map((channel) => channel.channel_no), 0)
@@ -112,43 +99,10 @@ const normalizeChannels = (channels: BoardChannel[] = []) => {
   })
 }
 
-const getMetricValue = (
-  channel: Partial<BoardChannel>,
-  direction: ModuleDirection,
-  config?: LegacyFrequencyConfig,
-) =>
-  direction === "tx"
-    ? normalizeNumber(channel.power_w)
-    : normalizeNumber(
-        channel.rssi_dbm ??
-          channel.metric_value ??
-          config?.rssi_dbm ??
-          config?.metric_value ??
-          config?.fix_val ??
-          config?.rx_gain,
-      )
-
 const getChannelMetricValue = (channel: BoardChannel, direction: ModuleDirection) =>
   direction === "tx"
     ? normalizeNumber(channel.power_w)
     : normalizeNumber(channel.rssi_dbm ?? channel.metric_value)
-
-const getConfigByChannel = (
-  channel: BoardChannel,
-  configs: LegacyFrequencyConfig[],
-): LegacyFrequencyConfig | undefined => {
-  const targetFrequency = normalizeNumber(channel.target_freq_mhz)
-  if (targetFrequency !== null) {
-    const configByFrequency = configs.find(
-      (config) => normalizeNumber(config.target_freq_mhz) === targetFrequency,
-    )
-    if (configByFrequency) {
-      return configByFrequency
-    }
-  }
-
-  return configs[channel.channel_no - 1]
-}
 
 const hasModuleData = (module: BoardModule) =>
   (module.channels || []).some(
@@ -160,95 +114,27 @@ const hasModuleData = (module: BoardModule) =>
       normalizeNumber(channel.rssi_dbm) !== null,
   )
 
-const fetchDeviceConfigMap = async (deviceIds: number[]) => {
-  const uniqueDeviceIds = Array.from(new Set(deviceIds.filter((deviceId) => deviceId > 0)))
-  const configEntries = await Promise.all(
-    uniqueDeviceIds.flatMap((deviceId) =>
-      MODULE_DIRECTIONS.map(async (direction) => {
-        const configRes = await Services.api.postLibiioDeviceConfigList(
-          {
-            page: 1,
-            limit: 200,
-            device_id: deviceId,
-            direction,
-          },
-          {
-            showLoading: false,
-            showToast: false,
-          },
-        )
+const isModuleOffline = (module: BoardModule) => {
+  const onlineValue = module.is_online ?? module.online
+  if (onlineValue !== undefined && onlineValue !== null) {
+    return isOfflineValue(onlineValue)
+  }
 
-        return [
-          getConfigMapKey(deviceId, direction),
-          sortConfigs(configRes?.res?.list || []),
-        ] as const
-      }),
-    ),
-  )
+  const statusText = module.status_text?.trim().toLowerCase()
+  if (statusText) {
+    return statusText.includes("offline") || statusText.includes("离线")
+  }
 
-  return Object.fromEntries(configEntries) as Record<string, LegacyFrequencyConfig[]>
+  return !hasModuleData(module)
 }
 
-const mergeBoardDevicesWithConfigs = (
-  devices: BoardDevice[],
-  configMap: Record<string, LegacyFrequencyConfig[]>,
-): BoardDevice[] =>
+const normalizeBoardDevices = (devices: BoardDevice[]): BoardDevice[] =>
   devices.map((device) => ({
     ...device,
     modules: (device.modules || []).map((module) => ({
       ...module,
       metric_unit: module.metric_unit || (module.direction === "tx" ? "W" : "dBm"),
-      channels: (module.channels || []).slice(0, MAX_CHANNEL_COUNT).map((channel) => {
-        const configs = configMap[getConfigMapKey(device.device_id, module.direction)] || []
-        const config = getConfigByChannel(channel, configs)
-        const metricValue = getMetricValue(channel, module.direction, config)
-
-        return {
-          ...channel,
-          configured: channel.configured || Boolean(config),
-          target_freq_mhz: channel.target_freq_mhz ?? config?.target_freq_mhz ?? null,
-          metric_value: metricValue,
-          alarm_enabled: config?.is_alarm ?? 0,
-          alarm_status: null,
-          status_text: undefined,
-          min: config?.min,
-          max: config?.max,
-          power_w: module.direction === "tx" ? channel.power_w : undefined,
-          rssi_dbm: module.direction === "rx" ? channel.rssi_dbm ?? config?.rssi_dbm : undefined,
-        }
-      }),
-    })),
-  }))
-
-const buildLegacyBoardDevices = (
-  devices: LegacyLibiioDevice[],
-  configMap: Record<string, LegacyFrequencyConfig[]>,
-): BoardDevice[] =>
-  devices.map((device) => ({
-    device_id: device.id,
-    ip: device.ip,
-    modules: MODULE_DIRECTIONS.map((direction) => ({
-      direction,
-      ip: direction === "tx" ? device.tx_ip : device.rx_ip,
-      metric_unit: direction === "tx" ? "W" : "dBm",
-      channels: (configMap[getConfigMapKey(device.id, direction)] || [])
-        .slice(0, MAX_CHANNEL_COUNT)
-        .map((config, index) => {
-          const metricValue = getMetricValue({}, direction, config)
-
-          return {
-            channel_no: index + 1,
-            configured: true,
-            target_freq_mhz: config.target_freq_mhz,
-            metric_value: metricValue,
-            alarm_enabled: config.is_alarm,
-            alarm_status: null,
-            min: config.min,
-            max: config.max,
-            power_w: direction === "tx" ? config.power_w : undefined,
-            rssi_dbm: direction === "rx" ? config.rssi_dbm : undefined,
-          }
-        }),
+      channels: (module.channels || []).slice(0, MAX_CHANNEL_COUNT),
     })),
   }))
 
@@ -273,34 +159,11 @@ const chunkItems = <T extends { channel_no: number }>(items: T[], size: number) 
       ]
 }
 
-const fetchLegacyBoardDevices = async () => {
-  const deviceRes = await Services.api.postLibiioDeviceList(
-    {
-      page: 1,
-      limit: MAX_FETCH_SIZE,
-    },
-    {
-      showLoading: false,
-      showToast: false,
-    },
-  )
-  const deviceList = (deviceRes?.res?.list || []).sort((prev, next) => {
-    if ((prev.type || 0) === (next.type || 0)) {
-      return prev.id - next.id
-    }
-    return (prev.type || 0) - (next.type || 0)
-  })
-  const configMap = await fetchDeviceConfigMap(deviceList.map((device) => device.id))
-
-  return buildLegacyBoardDevices(deviceList, configMap)
-}
-
 const FrequencyBoardPage: React.FC = () => {
   const intl = useIntl()
   const [loading, setLoading] = useState(false)
   const [devices, setDevices] = useState<BoardDevice[]>([])
   const loadingRef = useRef(false)
-  const configMapRef = useRef<Record<string, LegacyFrequencyConfig[]>>({})
   const t = useCallback(
     (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
       intl.formatMessage({ id, defaultMessage }, values),
@@ -400,7 +263,7 @@ const FrequencyBoardPage: React.FC = () => {
     [getChannelStatus, t],
   )
 
-  const loadBoardData = useCallback(async (silent = false, refreshConfig = false) => {
+  const loadBoardData = useCallback(async (silent = false) => {
     if (loadingRef.current) {
       return
     }
@@ -412,36 +275,14 @@ const FrequencyBoardPage: React.FC = () => {
         setLoading(true)
       }
 
-      try {
-        const boardRes = await Services.api.postLibiioBoardList(
-          {
-            page: 1,
-            limit: MAX_FETCH_SIZE,
-            directions: MODULE_DIRECTIONS,
-          },
-          {
-            showLoading: false,
-            showToast: false,
-          },
-        )
-        const boardList = boardRes?.res?.list || []
-        const hasBoardData = boardList.some((device) => (device.modules || []).length)
-        if (hasBoardData) {
-          let configMap = configMapRef.current
-          if (refreshConfig || !Object.keys(configMap).length) {
-            try {
-              configMap = await fetchDeviceConfigMap(boardList.map((device) => device.device_id))
-              configMapRef.current = configMap
-            } catch (error) {
-              configMap = {}
-            }
-          }
-          setDevices(mergeBoardDevicesWithConfigs(boardList, configMap))
-          return
-        }
-      } catch (error) {}
-
-      setDevices(await fetchLegacyBoardDevices())
+      const boardRes = await Services.api.postLibiioBoardList(
+        {},
+        {
+          showLoading: false,
+          showToast: false,
+        },
+      )
+      setDevices(normalizeBoardDevices(boardRes?.res?.list || []))
     } catch (error) {
     } finally {
       loadingRef.current = false
@@ -452,7 +293,7 @@ const FrequencyBoardPage: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    loadBoardData(false, true)
+    loadBoardData(false)
     const timer = window.setInterval(() => {
       loadBoardData(true)
     }, BOARD_POLLING_INTERVAL)
@@ -465,12 +306,16 @@ const FrequencyBoardPage: React.FC = () => {
   const boardSections = useMemo<BoardSection[]>(
     () =>
       devices.flatMap((device) =>
-        BOARD_MODULE_ORDER.map((direction) =>
-          (device.modules || []).find((module) => module.direction === direction),
-        )
-          .filter((module): module is BoardModule => Boolean(module))
-          .filter(hasModuleData)
-          .map((module) => ({
+        BOARD_MODULE_ORDER.map((direction) => {
+          const module =
+            (device.modules || []).find((item) => item.direction === direction) ||
+            ({
+              direction,
+              channels: [],
+              metric_unit: direction === "tx" ? "W" : "dBm",
+            } as BoardModule)
+
+          return {
             key: `${device.device_id}-${module.direction}`,
             device,
             direction: module.direction,
@@ -478,8 +323,10 @@ const FrequencyBoardPage: React.FC = () => {
             moduleIp: module.ip,
             metricLabel: getMetricLabel(module),
             metricUnit: getMetricUnit(module),
+            isOffline: isModuleOffline(module),
             chunks: chunkItems(normalizeChannels(module.channels), CHANNELS_PER_ROW),
-          })),
+          }
+        }),
       ),
     [devices, directionLabelMap, getMetricLabel, getMetricUnit],
   )
@@ -499,6 +346,7 @@ const FrequencyBoardPage: React.FC = () => {
                   moduleIp,
                   metricLabel,
                   metricUnit,
+                  isOffline,
                   chunks,
                 }) => (
                   <section className="libiio-board-section" key={key}>
@@ -511,58 +359,64 @@ const FrequencyBoardPage: React.FC = () => {
                         })}
                     </div>
 
-                    <div className="libiio-board-table-wrap">
-                      <table className="libiio-board-table">
-                        <tbody>
-                          {chunks.map((chunk) => (
-                            <React.Fragment key={`${device.device_id}-${chunk.key}`}>
-                              <tr className="libiio-board-table__channel-row">
-                                <th>{t("app.device.libiio.board.channel", "Channel")}</th>
-                                {CHANNEL_COLUMNS.map((channelNumber) => (
-                                  <th
-                                    key={`${device.device_id}-${chunk.key}-channel-${channelNumber}`}
-                                  >
-                                    {t(
-                                      "app.device.libiio.board.channelWithNumber",
-                                      "Channel {number}",
-                                      {
-                                        number: chunk.channelOffset + channelNumber,
-                                      },
-                                    )}
-                                  </th>
-                                ))}
-                              </tr>
-
-                              {buildDisplayRows(
-                                direction,
-                                chunk.items,
-                                metricLabel,
-                                metricUnit,
-                              ).map((row) => (
-                                <tr
-                                  key={`${device.device_id}-${direction}-${chunk.key}-${row.label}`}
-                                >
-                                  <td className="libiio-board-table__row-label">{row.label}</td>
+                    {isOffline ? (
+                      <div className="libiio-board-offline">
+                        {t("app.device.status.moduleOffline", "Module Offline")}
+                      </div>
+                    ) : (
+                      <div className="libiio-board-table-wrap">
+                        <table className="libiio-board-table">
+                          <tbody>
+                            {chunks.map((chunk) => (
+                              <React.Fragment key={`${device.device_id}-${chunk.key}`}>
+                                <tr className="libiio-board-table__channel-row">
+                                  <th>{t("app.device.libiio.board.channel", "Channel")}</th>
                                   {CHANNEL_COLUMNS.map((channelNumber) => (
-                                    <td
-                                      key={`${device.device_id}-${direction}-${chunk.key}-${row.label}-${channelNumber}`}
+                                    <th
+                                      key={`${device.device_id}-${chunk.key}-channel-${channelNumber}`}
                                     >
-                                      <span
-                                        className={getStatusClassName(
-                                          row.statusTones?.[channelNumber - 1],
-                                        )}
-                                      >
-                                        {row.values[channelNumber - 1] || "-"}
-                                      </span>
-                                    </td>
+                                      {t(
+                                        "app.device.libiio.board.channelWithNumber",
+                                        "Channel {number}",
+                                        {
+                                          number: chunk.channelOffset + channelNumber,
+                                        },
+                                      )}
+                                    </th>
                                   ))}
                                 </tr>
-                              ))}
-                            </React.Fragment>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+
+                                {buildDisplayRows(
+                                  direction,
+                                  chunk.items,
+                                  metricLabel,
+                                  metricUnit,
+                                ).map((row) => (
+                                  <tr
+                                    key={`${device.device_id}-${direction}-${chunk.key}-${row.label}`}
+                                  >
+                                    <td className="libiio-board-table__row-label">{row.label}</td>
+                                    {CHANNEL_COLUMNS.map((channelNumber) => (
+                                      <td
+                                        key={`${device.device_id}-${direction}-${chunk.key}-${row.label}-${channelNumber}`}
+                                      >
+                                        <span
+                                          className={getStatusClassName(
+                                            row.statusTones?.[channelNumber - 1],
+                                          )}
+                                        >
+                                          {row.values[channelNumber - 1] || "-"}
+                                        </span>
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </React.Fragment>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </section>
                 ),
               )}

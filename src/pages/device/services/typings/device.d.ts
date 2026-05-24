@@ -106,7 +106,6 @@ declare namespace API_PostLibiioDeviceConfigList {
     power_w?: number
     rssi_dbm?: number
     metric_value?: number | string
-    rx_gain?: number
     direction?: "rx" | "tx"
     is_alarm: number
     min?: number | string
@@ -148,7 +147,6 @@ declare namespace API_PostLibiioDeviceConfigSave {
     fs_dbm?: number
     power_w?: number | string
     rssi_dbm?: number | string
-    rx_gain?: number
     direction?: "rx" | "tx"
     is_alarm: number | string
     min?: number
@@ -184,20 +182,14 @@ declare namespace API_PostLibiioDeviceConfigDelete {
 declare namespace API_PostLibiioBoardList {
   export type ModuleDirection = "rx" | "tx"
 
-  export interface Params {
-    page?: number
-    limit?: number
-    device_id?: number
-    ip?: string
-    directions?: ModuleDirection[]
-  }
+  export type Params = Record<string, never>
 
   export interface Channel {
     channel_no: number
     configured: boolean
     target_freq_mhz?: number | null
     metric_value?: number | string | null
-    alarm_enabled?: number | string
+    alarm_enabled?: number | string | boolean
     alarm_status?: number | null
     status_text?: string
     is_alarm?: number | string
@@ -214,6 +206,9 @@ declare namespace API_PostLibiioBoardList {
     metric_key?: string
     metric_label?: string
     metric_unit?: string
+    is_online?: number | string | boolean
+    online?: number | string | boolean
+    status_text?: string
     channels: Channel[]
   }
 
@@ -253,12 +248,10 @@ declare namespace API_PostLibiioDeviceSave {
     rx_center_freq?: number
     rx_sampling_rate?: number
     rx_fft_size?: number
-    rx_gain?: number
     tx_ip?: string
     tx_center_freq?: number
     tx_sampling_rate?: number
     tx_fft_size?: number
-    tx_gain?: number
   }
 
   export interface Result {
