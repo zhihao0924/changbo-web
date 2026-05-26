@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react"
+import React, { useCallback, useMemo, useRef, useState } from "react"
 import {
   Button,
   Modal,
@@ -18,6 +18,7 @@ import { forEach } from "lodash"
 import type { API_PostDeviceTypes } from "@/pages/device/services/typings/device"
 import type { CheckboxValueType } from "antd/es/checkbox/Group"
 import { useIntl } from "umi"
+import { createBackendLabelFormatter } from "@/utils/i18n"
 
 type Columns = API_PostDeviceTypes.List
 
@@ -59,6 +60,17 @@ const DeviceTypes: React.FC = () => {
   const t = useCallback(
     (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
     [intl],
+  )
+  const formatBackendLabel = useMemo(() => createBackendLabelFormatter(t), [t])
+  const getRecordTitle = useCallback(
+    (record?: Columns | null) =>
+      [
+        formatBackendLabel(record?.device_type_group),
+        formatBackendLabel(record?.device_type_alias || record?.device_type),
+      ]
+        .filter(Boolean)
+        .join(" "),
+    [formatBackendLabel],
   )
 
   const getDeviceTypes = useCallback(async () => {
@@ -134,10 +146,9 @@ const DeviceTypes: React.FC = () => {
         })
         .then(() => {
           message.success(
-            `${currentRecord?.device_type} ${t(
-              "app.device.types.alarmSaveSuccess",
-              "alarm configuration saved successfully",
-            )}`,
+            `${formatBackendLabel(
+              currentRecord?.device_type_alias || currentRecord?.device_type,
+            )} ${t("app.device.types.alarmSaveSuccess", "alarm configuration saved successfully")}`,
             1,
             () => {
               setAlarmModalVisible(false)
@@ -158,7 +169,9 @@ const DeviceTypes: React.FC = () => {
         })
         .then(() => {
           message.success(
-            `${currentRecord?.device_type} ${t(
+            `${formatBackendLabel(
+              currentRecord?.device_type_alias || currentRecord?.device_type,
+            )} ${t(
               "app.device.types.displaySaveSuccess",
               "display configuration saved successfully",
             )}`,
@@ -195,18 +208,22 @@ const DeviceTypes: React.FC = () => {
       dataIndex: "device_type_group",
       key: "device_type_group",
       hideInSearch: true,
+      renderText: (value: string) => formatBackendLabel(value),
     },
     {
       title: t("app.device.types.type", "Device Type"),
       dataIndex: "device_type",
       key: "device_type",
       hideInSearch: true,
+      renderText: (value: string) => formatBackendLabel(value),
     },
     {
       title: t("app.device.types.alias", "Type Alias"),
       dataIndex: "device_type_alias",
       key: "device_type_alias",
       hideInSearch: true,
+      renderText: (value: string, record: Columns) =>
+        formatBackendLabel(value || record.device_type),
     },
     {
       title: t("app.common.action", "Action"),
@@ -350,10 +367,7 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t(
-          "app.common.settings",
-          "Settings",
-        )}`}
+        title={`${getRecordTitle(currentRecord)} ${t("app.common.settings", "Settings")}`}
         open={configModalVisible}
         onOk={handleConfigSubmit}
         onCancel={() => setConfigModalVisible(false)}
@@ -372,8 +386,10 @@ const DeviceTypes: React.FC = () => {
                       <Form.Item
                         {...thresholdItemLayout}
                         label={
-                          <Tooltip title={item.config_type_name}>
-                            <span style={thresholdLabelStyle}>{item.config_type_name}</span>
+                          <Tooltip title={formatBackendLabel(item.config_type_name)}>
+                            <span style={thresholdLabelStyle}>
+                              {formatBackendLabel(item.config_type_name)}
+                            </span>
                           </Tooltip>
                         }
                         style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
@@ -558,10 +574,7 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t(
-          "app.common.settings",
-          "Settings",
-        )}`}
+        title={`${getRecordTitle(currentRecord)} ${t("app.common.settings", "Settings")}`}
         open={alarmModalVisible}
         onOk={handleAlarmSubmit}
         onCancel={() => setAlarmModalVisible(false)}
@@ -607,7 +620,7 @@ const DeviceTypes: React.FC = () => {
                     return (
                       <Col span={8} key={item.config_type}>
                         <Checkbox key={item.config_type} value={item.config_type}>
-                          {item.config_type_name}
+                          {formatBackendLabel(item.config_type_name)}
                         </Checkbox>
                       </Col>
                     )
@@ -620,10 +633,7 @@ const DeviceTypes: React.FC = () => {
       </Modal>
 
       <Modal
-        title={`${currentRecord?.device_type_group} ${currentRecord?.device_type} ${t(
-          "app.common.settings",
-          "Settings",
-        )}`}
+        title={`${getRecordTitle(currentRecord)} ${t("app.common.settings", "Settings")}`}
         open={showModalVisible}
         onOk={handleShowSubmit}
         onCancel={() => setShowModalVisible(false)}
@@ -655,7 +665,7 @@ const DeviceTypes: React.FC = () => {
                   return (
                     <Col span={8} key={item.config_type}>
                       <Checkbox key={item.config_type} value={item.config_type}>
-                        {item.config_type_name}
+                        {formatBackendLabel(item.config_type_name)}
                       </Checkbox>
                     </Col>
                   )
@@ -690,7 +700,7 @@ const DeviceTypes: React.FC = () => {
                     return (
                       <Col span={8} key={item.config_type}>
                         <Checkbox key={item.config_type} value={item.config_type}>
-                          {item.config_type_name}
+                          {formatBackendLabel(item.config_type_name)}
                         </Checkbox>
                       </Col>
                     )

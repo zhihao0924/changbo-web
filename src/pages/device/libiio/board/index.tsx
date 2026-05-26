@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type { API_PostLibiioBoardList } from "@/pages/device/services/typings/device"
+import { normalizeBackendLabel } from "@/utils/i18n"
 import "./index.less"
 
 type ModuleDirection = "rx" | "tx"
@@ -52,7 +53,9 @@ const isOfflineValue = (value?: number | string | boolean | null) => {
     return true
   }
 
-  return typeof value === "string" && ["false", "offline", "离线"].includes(value.trim().toLowerCase())
+  return (
+    typeof value === "string" && ["false", "offline", "离线"].includes(value.trim().toLowerCase())
+  )
 }
 
 const formatFrequency = (value?: number | string | null) => {
@@ -186,7 +189,7 @@ const FrequencyBoardPage: React.FC = () => {
   const getMetricLabel = useCallback(
     (module: BoardModule) => {
       const metricLabel =
-        module.metric_label ||
+        normalizeBackendLabel(module.metric_label, t) ||
         (module.direction === "tx"
           ? t("app.device.libiio.txMonitorPowerWithUnit", "Power (W)")
           : t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"))
@@ -319,7 +322,8 @@ const FrequencyBoardPage: React.FC = () => {
             key: `${device.device_id}-${module.direction}`,
             device,
             direction: module.direction,
-            directionLabel: module.title || directionLabelMap[module.direction],
+            directionLabel:
+              normalizeBackendLabel(module.title, t) || directionLabelMap[module.direction],
             moduleIp: module.ip,
             metricLabel: getMetricLabel(module),
             metricUnit: getMetricUnit(module),
@@ -328,7 +332,7 @@ const FrequencyBoardPage: React.FC = () => {
           }
         }),
       ),
-    [devices, directionLabelMap, getMetricLabel, getMetricUnit],
+    [devices, directionLabelMap, getMetricLabel, getMetricUnit, t],
   )
 
   return (

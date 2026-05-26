@@ -13,6 +13,7 @@ import {
 import type { API_PostDeviceList, API_PostDeviceTypes } from "../services/typings/device"
 import { SYSTEM_CONFIG } from "@/constants"
 import { useIntl } from "umi"
+import { createBackendLabelFormatter } from "@/utils/i18n"
 
 // 常量配置
 const PAGE_SIZE = 300
@@ -121,6 +122,7 @@ interface DeviceCardProps {
   onDoubleClick: () => void
   isEvenRow?: boolean
   t: (id: string, defaultMessage: string) => string
+  formatBackendLabel: (value?: string | null, fallback?: string) => string
 }
 
 const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) => {
@@ -232,13 +234,21 @@ const MetricItem: React.FC<MetricItemProps> = ({ metricItem, alarmItems, t }) =>
   )
 }
 
-const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRow = false, t }) => {
-  const deviceTitle = `${device.device_type_alias || device.device_type_group}:${device.name}`
+const DeviceCard: React.FC<DeviceCardProps> = ({
+  device,
+  onDoubleClick,
+  isEvenRow = false,
+  t,
+  formatBackendLabel,
+}) => {
+  const deviceTitle = `${formatBackendLabel(
+    device.device_type_alias || device.device_type_group,
+  )}:${device.name}`
 
   return (
     <Card
       title={deviceTitle}
-      extra={<Tag color={device.tag_color}>{device.status_text}</Tag>}
+      extra={<Tag color={device.tag_color}>{formatBackendLabel(device.status_text)}</Tag>}
       onDoubleClick={onDoubleClick}
       style={{
         boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.1)",
@@ -287,7 +297,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onDoubleClick, isEvenRo
           ?.filter((metricItem) => metricItem.show_in_list)
           .map((metricItem) => (
             <React.Fragment key={`fragment_Key_${metricItem.config_type}`}>
-              <Col span={8}>{metricItem.config_type_name}</Col>
+              <Col span={8}>{formatBackendLabel(metricItem.config_type_name)}</Col>
               <Col span={12}>
                 <MetricItem
                   metricItem={metricItem}
@@ -320,6 +330,7 @@ interface DeviceDetailModalProps {
   deviceList: API_PostDeviceList.List[]
   onCancel: () => void
   t: (id: string, defaultMessage: string) => string
+  formatBackendLabel: (value?: string | null, fallback?: string) => string
 }
 
 const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
@@ -328,6 +339,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
   deviceList,
   onCancel,
   t,
+  formatBackendLabel,
 }) => {
   const selectedDevice = deviceList.find((d) => d.id === deviceId)
 
@@ -347,7 +359,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
             {t("app.device.status.deviceType", "Device Type")}
           </Col>
           <Col span={16} style={{ backgroundColor: "#ffffff" }}>
-            {selectedDevice.device_type_alias}
+            {formatBackendLabel(selectedDevice.device_type_alias || selectedDevice.device_type)}
           </Col>
           <Col span={8} style={{ backgroundColor: "#f8f9fa" }}>
             {t("app.device.status.deviceId", "Device ID")}
@@ -372,7 +384,7 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                     backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
-                  {metricItem.config_type_name}
+                  {formatBackendLabel(metricItem.config_type_name)}
                 </Col>
                 <Col
                   span={12}
@@ -417,6 +429,7 @@ const DeviceStatus: React.FC = () => {
     (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
     [intl],
   )
+  const formatBackendLabel = useMemo(() => createBackendLabelFormatter(t), [t])
 
   // 获取设备类型
   const getDeviceTypes = useCallback(async () => {
@@ -482,16 +495,16 @@ const DeviceStatus: React.FC = () => {
       }, {})
 
     return Object.entries(groupedTypes).map(([group, types]) => ({
-      title: group,
+      title: formatBackendLabel(group),
       value: `group-${group}`,
       disabled: true,
       selectable: false,
       children: types.map((type) => ({
-        title: type.device_type_alias || type.device_type,
+        title: formatBackendLabel(type.device_type_alias || type.device_type),
         value: type.id,
       })),
     }))
-  }, [deviceTypes])
+  }, [deviceTypes, formatBackendLabel])
 
   // 初始化数据
   useEffect(() => {
@@ -564,6 +577,7 @@ const DeviceStatus: React.FC = () => {
                 }}
                 isEvenRow={index % 2 === 0}
                 t={t}
+                formatBackendLabel={formatBackendLabel}
               />
             </Col>
           ))}
@@ -575,6 +589,7 @@ const DeviceStatus: React.FC = () => {
         deviceList={deviceList}
         onCancel={() => setShowModalVisible(false)}
         t={t}
+        formatBackendLabel={formatBackendLabel}
       />
     </PageContainer>
   )

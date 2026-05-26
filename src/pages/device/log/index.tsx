@@ -5,6 +5,7 @@ import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { useIntl } from "umi"
+import { createBackendLabelFormatter, isRecoveryLog } from "@/utils/i18n"
 import "./index.less"
 
 type Columns = API_PostDeviceList.List
@@ -17,6 +18,7 @@ const DeviceLog: React.FC = () => {
     (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
     [intl],
   )
+  const formatBackendLabel = useMemo(() => createBackendLabelFormatter(t), [t])
 
   const getLists = useCallback(async (params: any) => {
     const data = {
@@ -48,17 +50,14 @@ const DeviceLog: React.FC = () => {
         if (item && item.id) {
           enums.push({
             value: item.id,
-            label: item.device_type_alias
-              ? item.device_type_alias
-              : // : `${item.device_type_group}[${item.device_type}]`,
-                item.device_type,
+            label: formatBackendLabel(item.device_type_alias || item.device_type),
           })
         }
       })
       return enums
     }
     return []
-  }, [])
+  }, [formatBackendLabel])
 
   const columns: ProColumns<Columns>[] = useMemo(() => {
     return [
@@ -75,7 +74,7 @@ const DeviceLog: React.FC = () => {
         valueType: "select",
         request: getDeviceTypes,
         render: (_, row) => {
-          return row.device_type_alias
+          return formatBackendLabel(row.device_type_alias || row.device_type)
         },
         fieldProps: {
           showSearch: true,
@@ -124,14 +123,14 @@ const DeviceLog: React.FC = () => {
         },
       },
     ]
-  }, [getDeviceTypes, t])
+  }, [formatBackendLabel, getDeviceTypes, t])
 
   return (
     <PageContainer>
       <ProTable<Columns>
         actionRef={actionRef}
         rowClassName={(record) => {
-          return record.content.includes("恢复") || record.content.includes("上线") ? "status-recovery" : "status-alarm"
+          return isRecoveryLog(record.content) ? "status-recovery" : "status-alarm"
         }}
         formRef={formRef}
         columns={columns}

@@ -15,14 +15,14 @@ const getBase64 = (img: RcFile, callback: (url: string) => void) => {
   reader.readAsDataURL(img)
 }
 
-const beforeUpload = (file: RcFile) => {
+const beforeUpload = (file: RcFile, t: (id: string, defaultMessage: string) => string) => {
   const isPng = file.type === "image/png"
   if (!isPng) {
-    message.error("You can only upload PNG file!")
+    message.error(t("app.setting.system.logo.onlyPng", "You can only upload PNG files"))
   }
   const isLt2M = file.size / 1024 / 1024 < 2
   if (!isLt2M) {
-    message.error("Image must smaller than 2MB!")
+    message.error(t("app.setting.system.logo.sizeLimit", "Image must be smaller than 2 MB"))
   }
   return isPng && isLt2M
 }
@@ -118,7 +118,7 @@ const SystemSetting: React.FC = () => {
               listType="picture-card"
               className="avatar-uploader"
               showUploadList={false}
-              beforeUpload={beforeUpload}
+              beforeUpload={(file) => beforeUpload(file, t)}
               onChange={handleChange}
             >
               {imageUrl ? (

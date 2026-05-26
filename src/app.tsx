@@ -18,22 +18,16 @@ import { versionTipDialog } from "@/components/versionTipDialog"
 import RightContent from "@/components/RightContent"
 import defaultSettings from "../config/defaultSettings"
 import { postSystemConfig } from "@/pages/setting/services/api"
+import { formatRuntimeMessage } from "@/utils/i18n"
 
 const excludePath = [LOGINPATH, CALLBACKPATH, SYSTEMCONFIGPATH]
-const DEFAULT_LOCALE = "en-US"
-const LOCALE_STORAGE_KEY = "umi_locale"
 const DEFAULT_LOGO = "/logo.png"
 
 const getDefaultSystemName = () => {
-  if (typeof window === "undefined") {
-    return "专网通信智能网管平台"
-  }
-
-  const locale = localStorage.getItem(LOCALE_STORAGE_KEY) || DEFAULT_LOCALE
-
-  return locale === "en-US"
-    ? "Private Network Communication Intelligent NMS"
-    : "专网通信智能网管平台"
+  return formatRuntimeMessage(
+    "app.system.defaultName",
+    "Private Network Communication Intelligent NMS",
+  )
 }
 
 const resolveSystemName = (systemName?: string) => {
@@ -146,7 +140,9 @@ const expire = async () => {
   const { search, pathname } = window.location
 
   if (nowTimeStamp >= expireTimeStamp) {
-    message.error("token失效，请重新登陆！")
+    message.error(
+      formatRuntimeMessage("app.common.tokenExpired", "Token expired. Please sign in again."),
+    )
 
     controller.abort()
 

@@ -1,5 +1,6 @@
 import { Button, message, notification } from "antd"
 import defaultSettings from "../config/defaultSettings"
+import { formatRuntimeMessage } from "@/utils/i18n"
 const { pwa } = defaultSettings
 const isHttps = document.location.protocol === "https:"
 
@@ -20,7 +21,7 @@ const clearCache = () => {
 if (pwa) {
   // Notify user if offline now
   window.addEventListener("sw.offline", () => {
-    message.warning("当前处于离线状态")
+    message.warning(formatRuntimeMessage("app.global.offline", "You are offline"))
   }) // Pop up a prompt on the page asking the user if they want to use the latest version
 
   window.addEventListener("sw.updated", (event: Event) => {
@@ -67,12 +68,15 @@ if (pwa) {
           reloadSW()
         }}
       >
-        {"刷新"}
+        {formatRuntimeMessage("app.common.refresh", "Refresh")}
       </Button>
     )
     notification.open({
-      message: "有新内容",
-      description: "请点击“刷新”按钮或者手动刷新页面",
+      message: formatRuntimeMessage("app.global.updateAvailable", "New content available"),
+      description: formatRuntimeMessage(
+        "app.global.updateDescription",
+        "Click Refresh or reload the page manually.",
+      ),
       btn,
       key,
       onClose: async () => null,

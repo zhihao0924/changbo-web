@@ -17,23 +17,13 @@ import { removeUserInfo } from "@/utils/biz"
 import { history } from "umi"
 import { stringify } from "querystring"
 import { refreshToken } from "@/pages/user/services/api"
+import { formatRuntimeMessage, getRuntimeLocale } from "@/utils/i18n"
 
 // params 仅仅包含常用 url method headers description
 
 // 防抖机制，避免频繁调用刷新token
 let lastRefreshTime = 0
 const REFRESH_DEBOUNCE_TIME = 30000 // 30秒防抖时间
-const DEFAULT_LOCALE = "en-US"
-const LOCALE_STORAGE_KEY = "umi_locale"
-
-const getRequestLocale = () => {
-  if (typeof window === "undefined") {
-    return DEFAULT_LOCALE
-  }
-
-  return localStorage.getItem(LOCALE_STORAGE_KEY) || DEFAULT_LOCALE
-}
-
 // const notify = (msg: string, title="提示") => {
 //   notification.error({
 //     message: title,
@@ -139,8 +129,8 @@ export const request = async (
     if (typeof document !== "undefined") {
       headers = {
         "Content-Type": extParams["Content-Type"] ?? "application/json",
-        "Accept-Language": getRequestLocale(),
-        "X-App-Language": getRequestLocale(),
+        "Accept-Language": getRuntimeLocale(),
+        "X-App-Language": getRuntimeLocale(),
       }
     }
 
@@ -203,7 +193,7 @@ export const request = async (
 
   if (typeof document !== "undefined") {
     if (extParams.showLoading) {
-      message.loading("数据请求中...", 0)
+      message.loading(formatRuntimeMessage("app.common.requesting", "Loading..."), 0)
     }
   }
 
@@ -221,10 +211,10 @@ export const request = async (
 
       let errorInfo =
         err?.response?.status == 401
-          ? "token失效，请重新登陆！"
+          ? formatRuntimeMessage("app.common.tokenExpired", "Token expired. Please sign in again.")
           : err?.response?.statusText
           ? err?.response?.statusText
-          : "服务错误"
+          : formatRuntimeMessage("app.common.serviceError", "Service error")
 
       if (err.name != "CanceledError") {
         extParams.showToast && message.error(errorInfo)
@@ -326,7 +316,7 @@ export const request = async (
 
     if (typeof document !== "undefined") {
       extParams.showLoading && message.destroy()
-      let errorInfo = info.msg || "未知错误"
+      let errorInfo = info.msg || formatRuntimeMessage("app.common.unknownError", "Unknown error")
       extParams.showToast && message.error(errorInfo)
 
       if (info.err == -999999) {
@@ -347,7 +337,7 @@ export const request = async (
       extParams.finallyCallback?.()
     }
   }
-  throw res?.data || "未知错误1"
+  throw res?.data || formatRuntimeMessage("app.common.unknownError", "Unknown error")
 }
 
 const resolveApi = (tag: string) => {

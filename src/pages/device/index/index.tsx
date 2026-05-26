@@ -31,6 +31,14 @@ import Services from "@/pages/device/services"
 import type { API_PostDeviceList } from "@/pages/device/services/typings/device"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { useIntl } from "umi"
+import {
+  createBackendLabelFormatter,
+  isAmplifierDeviceGroup,
+  isNearEndDeviceGroup,
+  isRemoteDeviceGroup,
+  isRfSettingDeviceGroup,
+  isSplitterDeviceGroup,
+} from "@/utils/i18n"
 import "./index.less"
 
 type Columns = API_PostDeviceList.List
@@ -148,25 +156,18 @@ const DEVICE_GROUP_ORDER = DEVICE_GROUP_DEFINITIONS.reduce<Record<string, number
 
 // 配置类型映射
 const CONFIG_TYPE_MAP = {
-  uplink_power: "上行功率",
-  uplink_gain: "上行增益",
-  downlink_power: "下行功率",
-  downlink_gain: "下行增益",
-  same_frequency_forward_switch: "同频转发",
-  downlink_switch: "下行开关",
-  uplink_switch: "上行开关",
-  pa4_alarm_switch: "PA4告警开关",
-} as const
-
-// 需要显示设置按钮的设备类型
-const SETTING_DEVICE_TYPES = [
-  "数字远端机",
-  "模拟远端机",
-  "干线放大器",
-  "数字近端机",
-  "模拟近端机",
-  "接收分路器",
-] as const
+  uplink_power: ["app.device.index.uplinkPowerShort", "Uplink Power"],
+  uplink_gain: ["app.device.index.uplinkGainShort", "Uplink Gain"],
+  downlink_power: ["app.device.index.downlinkPowerShort", "Downlink Power"],
+  downlink_gain: ["app.device.index.downlinkGainShort", "Downlink Gain"],
+  same_frequency_forward_switch: [
+    "app.device.index.sameFrequencyForward",
+    "Same Frequency Forward",
+  ],
+  downlink_switch: ["app.device.index.downlinkSwitch", "Downlink Switch"],
+  uplink_switch: ["app.device.index.uplinkSwitch", "Uplink Switch"],
+  pa4_alarm_switch: ["app.device.index.pa4AlarmSwitch", "PA4 Alarm Switch"],
+} as Record<string, [string, string]>
 
 const DeviceIndex: React.FC = () => {
   const intl = useIntl()
@@ -191,6 +192,7 @@ const DeviceIndex: React.FC = () => {
     (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
     [intl],
   )
+  const formatBackendLabel = useMemo(() => createBackendLabelFormatter(t), [t])
   const deviceGroupLabelMap = useMemo(
     () =>
       DEVICE_GROUP_DEFINITIONS.reduce<Record<string, string>>((acc, item) => {
@@ -222,9 +224,9 @@ const DeviceIndex: React.FC = () => {
       })
       .map((value) => ({
         value,
-        label: deviceGroupLabelMap[value] || value,
+        label: deviceGroupLabelMap[value] || formatBackendLabel(value),
       }))
-  }, [allDeviceTypes, deviceGroupLabelMap])
+  }, [allDeviceTypes, deviceGroupLabelMap, formatBackendLabel])
   const deviceTypeTreeData = useMemo<DeviceTypeTreeNode[]>(() => {
     const groupedTypes = allDeviceTypes.reduce<Record<string, DeviceTypeOption[]>>((acc, item) => {
       if (!acc[item.group]) {
@@ -235,7 +237,7 @@ const DeviceIndex: React.FC = () => {
     }, {})
 
     return Object.entries(groupedTypes).map(([group, types]) => ({
-      title: deviceGroupLabelMap[group] || group,
+      title: deviceGroupLabelMap[group] || formatBackendLabel(group),
       value: `group-${group}`,
       selectable: false,
       disabled: true,
@@ -244,7 +246,7 @@ const DeviceIndex: React.FC = () => {
         value: type.value,
       })),
     }))
-  }, [allDeviceTypes, deviceGroupLabelMap])
+  }, [allDeviceTypes, deviceGroupLabelMap, formatBackendLabel])
 
   const getDeviceTypes = useCallback(async () => {
     // 如果已经有数据，直接返回
@@ -261,7 +263,7 @@ const DeviceIndex: React.FC = () => {
           .filter((item) => item != null && item.id != null)
           .map((item) => ({
             value: item.id,
-            label: item.device_type,
+            label: formatBackendLabel(item.device_type_alias || item.device_type),
             group: item.device_type_group,
           }))
         setAllDeviceTypes(formattedTypes)
@@ -273,7 +275,7 @@ const DeviceIndex: React.FC = () => {
       setDeviceTypesLoading(false)
     }
     return []
-  }, [allDeviceTypes])
+  }, [allDeviceTypes, formatBackendLabel])
 
   // 初始化设备类型数据（首次加载）
   useEffect(() => {
@@ -285,7 +287,7 @@ const DeviceIndex: React.FC = () => {
             .filter((item) => item != null && item.id != null)
             .map((item) => ({
               value: item.id,
-              label: item.device_type,
+              label: formatBackendLabel(item.device_type_alias || item.device_type),
               group: item.device_type_group,
             }))
           setAllDeviceTypes(formattedTypes)
@@ -293,7 +295,7 @@ const DeviceIndex: React.FC = () => {
       } catch (error) {}
     }
     initDeviceTypes()
-  }, [])
+  }, [formatBackendLabel])
 
   const getLists = useCallback(async (params: any) => {
     const data = {
@@ -497,7 +499,7 @@ const DeviceIndex: React.FC = () => {
       }
       Modal.confirm({
         title: t("app.device.index.deleteConfirm", "Confirm deleting ${group}(${name})?")
-          .replace("${group}", record.device_type_group)
+          .replace("${group}", formatBackendLabel(record.device_type_group))
           .replace("${name}", record.name),
         onOk: async () => {
           try {
@@ -517,7 +519,7 @@ const DeviceIndex: React.FC = () => {
         },
       })
     },
-    [t],
+    [formatBackendLabel, t],
   )
 
   const handleMoveDevice = useCallback(
@@ -542,9 +544,13 @@ const DeviceIndex: React.FC = () => {
   )
 
   // 配置类型对应的中文标签
-  const getConfigLabel = useCallback((configType: string): string => {
-    return CONFIG_TYPE_MAP[configType as keyof typeof CONFIG_TYPE_MAP] || configType
-  }, [])
+  const getConfigLabel = useCallback(
+    (configType: string): string => {
+      const configLabel = CONFIG_TYPE_MAP[configType]
+      return configLabel ? t(configLabel[0], configLabel[1]) : configType
+    },
+    [t],
+  )
 
   // 统一的参数配置保存函数
   const saveRFConfig = useCallback(
@@ -640,6 +646,7 @@ const DeviceIndex: React.FC = () => {
         align: "center",
         dataIndex: "device_type_group",
         hideInSearch: true,
+        renderText: (value) => formatBackendLabel(value),
         width: 200,
       },
       {
@@ -696,6 +703,7 @@ const DeviceIndex: React.FC = () => {
         dataIndex: "status_text",
         key: "status_text",
         hideInSearch: true,
+        renderText: (value) => formatBackendLabel(value),
         width: 200,
       },
       {
@@ -919,9 +927,7 @@ const DeviceIndex: React.FC = () => {
           }
 
           // 需要显示设置按钮的设备类型组
-          const showSettingButton = SETTING_DEVICE_TYPES.includes(
-            record.device_type_group as (typeof SETTING_DEVICE_TYPES)[number],
-          )
+          const showSettingButton = isRfSettingDeviceGroup(record.device_type_group)
 
           const actionItems = [
             ...(showSettingButton
@@ -992,6 +998,7 @@ const DeviceIndex: React.FC = () => {
     handleDelDevice,
     handleMoveDevice,
     handleToggleMaintaining,
+    formatBackendLabel,
     openModal,
     openSettingModal,
     t,
@@ -1214,8 +1221,8 @@ const DeviceIndex: React.FC = () => {
       >
         <Form form={rfConfigForm}>
           {!(
-            currentDevice?.device_type_group.includes("近端") ||
-            currentDevice?.device_type_group.includes("分路")
+            isNearEndDeviceGroup(currentDevice?.device_type_group) ||
+            isSplitterDeviceGroup(currentDevice?.device_type_group)
           ) && (
             <Form.Item
               label={t("app.device.index.uplinkPowerShort", "Uplink Power")}
@@ -1260,7 +1267,7 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
-          {!currentDevice?.device_type_group.includes("近端") && (
+          {!isNearEndDeviceGroup(currentDevice?.device_type_group) && (
             <Form.Item
               label={t("app.device.index.downlinkPowerShort", "Downlink Power")}
               labelCol={{ span: 6 }}
@@ -1304,8 +1311,8 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
-          {(currentDevice?.device_type_group.includes("远端") ||
-            currentDevice?.device_type_group.includes("放大")) && (
+          {(isRemoteDeviceGroup(currentDevice?.device_type_group) ||
+            isAmplifierDeviceGroup(currentDevice?.device_type_group)) && (
             <>
               <Form.Item
                 label={t("app.device.index.sameFrequencyForward", "Same Frequency Forward")}

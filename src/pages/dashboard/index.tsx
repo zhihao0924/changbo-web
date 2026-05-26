@@ -14,6 +14,7 @@ import {
 } from "@ant-design/icons"
 import { SYSTEM_CONFIG } from "@/constants"
 import { useIntl } from "umi"
+import { createBackendLabelFormatter } from "@/utils/i18n"
 
 const { Title } = Typography
 const DEFAULT_REFRESH_INTERVAL = 3000
@@ -230,10 +231,17 @@ const usePieConfig = (
   total: number,
   isFirstRender: boolean,
   t: (id: string, defaultMessage: string) => string,
+  formatBackendLabel: (value?: string | null, fallback?: string) => string,
 ) => {
   return useMemo(() => {
+    const sourceData = Array.isArray(data) ? data : data ? [data] : []
+    const normalizedData = sourceData.map((item: any) => ({
+      ...item,
+      type: formatBackendLabel(item.type),
+    }))
+
     return {
-      data: data || [],
+      data: normalizedData,
       angleField: "value",
       colorField: "type",
       radius: 0.7,
@@ -274,7 +282,7 @@ const usePieConfig = (
               return `${t("app.dashboard.total", "Total")}: ${total}`
             }
             // 对于普通数据项，显示对应的值
-            const itemData = data?.[index]
+            const itemData = normalizedData?.[index]
             return `${text || ""}: ${itemData?.value || 0}`
           },
         },
@@ -286,7 +294,7 @@ const usePieConfig = (
         itemSpacing: 2,
         flipPage: false,
         items: [
-          ...(data || []).map((item, index) => ({
+          ...(normalizedData || []).map((item, index) => ({
             value: item.type,
             name: `${item.type || ""}`,
             marker: { symbol: "circle", style: { fill: DASHBOARD_CONFIG.chartColors[index] } },
@@ -301,7 +309,7 @@ const usePieConfig = (
       // height: 200,
       animation: isFirstRender,
     }
-  }, [data, isFirstRender, t, total, total_healthy])
+  }, [data, formatBackendLabel, isFirstRender, t, total, total_healthy])
 }
 
 // 折线图配置
@@ -343,6 +351,7 @@ const Dashboard: React.FC = () => {
     (id: string, defaultMessage: string) => intl.formatMessage({ id, defaultMessage }),
     [intl],
   )
+  const formatBackendLabel = useMemo(() => createBackendLabelFormatter(t), [t])
 
   // 清除告警状态的时间记录（从localStorage读取）
   const [lastClearTime, setLastClearTime] = useState<Date | null>(() => {
@@ -587,6 +596,7 @@ const Dashboard: React.FC = () => {
     dashboardData?.total || 0,
     isFirstRender,
     t,
+    formatBackendLabel,
   )
 
   const lineConfig = useLineConfig(dashboardData?.energy_consumption || [])
@@ -918,8 +928,9 @@ const Dashboard: React.FC = () => {
                           }}
                         >
                           <span style={{ color: "#222222", fontSize: "12px" }}>
-                            {item.device_type_group}（{item.device_name}）
-                            {item.alarm_item.config_type_name} {t("app.dashboard.alarm", "Alarm")}
+                            {formatBackendLabel(item.device_type_group)}（{item.device_name}）
+                            {formatBackendLabel(item.alarm_item.config_type_name)}{" "}
+                            {t("app.dashboard.alarm", "Alarm")}
                           </span>
                         </div>
                         <div
@@ -933,7 +944,7 @@ const Dashboard: React.FC = () => {
                           }}
                         >
                           <span style={{ color: "#808080", fontSize: "10px" }}>
-                            {item.alarm_item.suggested_action}
+                            {formatBackendLabel(item.alarm_item.suggested_action)}
                           </span>
                           <span style={{ color: "#808080", fontSize: "10px" }}>
                             {item.alarm_at}
@@ -957,7 +968,7 @@ const Dashboard: React.FC = () => {
                   title={
                     <Space>
                       <ProductOutlined style={{ color: "#0083FF" }} />
-                      <span>{item.name}</span>
+                      <span>{formatBackendLabel(item.name)}</span>
                     </Space>
                   }
                   loading={loading}

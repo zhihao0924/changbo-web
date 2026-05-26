@@ -1,8 +1,9 @@
 import "./index.css"
 import { setVersionTipTheme } from "./versionTipTheme"
+import { formatRuntimeMessage, getRuntimeLocale } from "@/utils/i18n"
 
 const defaultParams = {
-  buttonText: "刷新",
+  buttonText: formatRuntimeMessage("app.common.refresh", "Refresh"),
 }
 
 export const versionTipDialog = (params: {
@@ -25,8 +26,9 @@ export const versionTipDialog = (params: {
   const getDescription = () => {
     let dom = ""
     if (params?.description) {
+      const listSeparator = getRuntimeLocale() === "zh-CN" ? "、" : ". "
       params.description[params.newVersion].update.map((v: any, idx: number) => {
-        dom += `<div>${idx + 1}、${v}</div>`
+        dom += `<div>${idx + 1}${listSeparator}${v}</div>`
       })
     }
     return dom
@@ -47,7 +49,9 @@ export const versionTipDialog = (params: {
             }
             <div class="version-content">
                 <div class="version-title">
-                  更新v${params.newVersion}版本
+                  ${formatRuntimeMessage("app.version.updateTitle", "Updated to v${version}", {
+                    version: params.newVersion,
+                  })}
                 </div>
                 <div class="version-subtitle">
                   ${getDescription()}

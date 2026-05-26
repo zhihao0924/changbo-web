@@ -16,7 +16,7 @@ const Settings: LayoutSettings & {
   pwa: false,
   logo: "/logo.png",
   splitMenus: false,
-  title: "专网通信智能网管平台",
+  title: "Private Network Communication Intelligent NMS",
   token: {
     header: {
       colorBgHeader: "#163b66",
