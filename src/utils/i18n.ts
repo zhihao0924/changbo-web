@@ -103,11 +103,41 @@ const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
   TX发射功率: ["app.device.libiio.type.txPower", "TX Transmit Power"],
   "TX发射功率 (dBm)": ["app.device.libiio.txPower", "TX Power (dBm)"],
   发射功率: ["app.device.libiio.txPower", "TX Power (dBm)"],
+  full_scale_power_dbm: [
+    "app.device.libiio.deviceFullScalePower",
+    "Device 0 dBFS Full-scale Power",
+  ],
+  device_full_scale_power_dbm: [
+    "app.device.libiio.deviceFullScalePower",
+    "Device 0 dBFS Full-scale Power",
+  ],
+  设备0dBFS对应满幅功率: [
+    "app.device.libiio.deviceFullScalePower",
+    "Device 0 dBFS Full-scale Power",
+  ],
+  "0dBFS对应满幅功率": ["app.device.libiio.deviceFullScalePower", "Device 0 dBFS Full-scale Power"],
+  "0 dBFS full-scale power": [
+    "app.device.libiio.deviceFullScalePower",
+    "Device 0 dBFS Full-scale Power",
+  ],
+  power_offset_db: ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  "power offset": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  "power offset (db)": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
   rssi: ["app.device.libiio.rxRssi", "RX RSSI"],
   "rssi (dbm)": ["app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"],
   RX接收RSSI: ["app.device.libiio.type.rxRssi", "RX Receive RSSI"],
   "RX接收RSSI (dBm)": ["app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"],
   接收RSSI: ["app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"],
+  tx_power_offset_db: ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  "tx power offset": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  "tx power offset (db)": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  "TX 发射功率偏移": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  "TX 发射功率偏移 (dB)": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  rx_rssi_offset_db: ["app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"],
+  "rx rssi offset": ["app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"],
+  "rx rssi offset (db)": ["app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"],
+  "RX RSSI 偏移": ["app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"],
+  "RX RSSI 偏移 (dB)": ["app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"],
 
   在线: ["app.device.status.online", "Online"],
   online: ["app.device.status.online", "Online"],
@@ -195,17 +225,17 @@ export const formatMessageWith = (
   values?: MessageValues,
 ) => replaceValues(t(id, defaultMessage, values), values)
 
-export const normalizeBackendLabel = (value?: string | null, t?: Translate) => {
-  const normalizedValue = value?.trim()
-  if (!normalizedValue) {
+export const formatBackendLabel = (value?: string | null, t?: Translate) => {
+  const trimmedValue = value?.trim()
+  if (!trimmedValue) {
     return ""
   }
 
   const labelKey =
-    BACKEND_LABEL_KEYS[normalizedValue] || BACKEND_LABEL_KEYS[normalizedValue.toLowerCase()]
+    BACKEND_LABEL_KEYS[trimmedValue] || BACKEND_LABEL_KEYS[trimmedValue.toLowerCase()]
 
   if (!labelKey) {
-    return normalizedValue
+    return trimmedValue
   }
 
   return t
@@ -214,14 +244,12 @@ export const normalizeBackendLabel = (value?: string | null, t?: Translate) => {
 }
 
 export const getDeviceGroupKey = (value?: string | null) => {
-  const normalizedValue = value?.trim()
-  if (!normalizedValue) {
+  const trimmedValue = value?.trim()
+  if (!trimmedValue) {
     return ""
   }
 
-  return (
-    DEVICE_GROUP_KEYS[normalizedValue] || DEVICE_GROUP_KEYS[normalizedValue.toLowerCase()] || ""
-  )
+  return DEVICE_GROUP_KEYS[trimmedValue] || DEVICE_GROUP_KEYS[trimmedValue.toLowerCase()] || ""
 }
 
 export const isNearEndDeviceGroup = (value?: string | null) =>
@@ -247,16 +275,16 @@ export const isRfSettingDeviceGroup = (value?: string | null) =>
   ].includes(getDeviceGroupKey(value))
 
 export const isRecoveryLog = (value?: string | null) => {
-  const normalizedValue = value?.toLowerCase() || ""
+  const lowerValue = value?.toLowerCase() || ""
   return (
-    normalizedValue.includes("恢复") ||
-    normalizedValue.includes("上线") ||
-    normalizedValue.includes("recover") ||
-    normalizedValue.includes("online")
+    lowerValue.includes("恢复") ||
+    lowerValue.includes("上线") ||
+    lowerValue.includes("recover") ||
+    lowerValue.includes("online")
   )
 }
 
 export const createBackendLabelFormatter =
   (t: Translate) =>
   (value?: string | null, fallback = "") =>
-    normalizeBackendLabel(value || fallback, t) || fallback
+    formatBackendLabel(value || fallback, t) || fallback

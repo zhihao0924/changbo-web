@@ -47,6 +47,7 @@ type FrequencyFormItem = Omit<API_PostLibiioDeviceConfigSave.ConfigItem, "target
   target_freq_mhz?: number
 }
 const MAX_FREQUENCY_CONFIG_COUNT = 20
+const OFFSET_UNIT = "dB"
 
 const createEmptyConfigItem = (direction: "rx" | "tx" = "rx"): FrequencyFormItem => ({
   device_id: 0,
@@ -54,7 +55,7 @@ const createEmptyConfigItem = (direction: "rx" | "tx" = "rx"): FrequencyFormItem
   direction,
   sort: undefined,
   target_freq_mhz: undefined,
-  fix_val: undefined,
+  power_offset_db: undefined,
   is_alarm: 0,
   min: undefined,
   max: undefined,
@@ -72,7 +73,7 @@ const sortConfigs = <T extends { sort?: number; id?: number }>(configs: T[]) =>
     return (prev.id || 0) - (next.id || 0)
   })
 
-const normalizeNumber = (value?: number | string | null) => {
+const toFiniteNumber = (value?: number | string | null) => {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : undefined
   }
@@ -96,20 +97,20 @@ const buildConfigList = (
     direction: config.direction || direction,
     sort: config.sort,
     target_freq_mhz: config.target_freq_mhz,
-    fix_val: config.fix_val ?? (direction === "tx" ? config.fs_dbm : undefined),
+    power_offset_db: toFiniteNumber(config.power_offset_db),
     is_alarm: config.is_alarm ?? 0,
-    min: normalizeNumber(config.min),
-    max: normalizeNumber(config.max),
+    min: toFiniteNumber(config.min),
+    max: toFiniteNumber(config.max),
   }))
 
-const normalizeConfigByDirection = (config: FrequencyFormItem, direction: "rx" | "tx") => ({
+const buildConfigPayloadByDirection = (config: FrequencyFormItem, direction: "rx" | "tx") => ({
   id: config.id,
   device_id: config.device_id,
   type: direction,
   direction,
   sort: config.sort,
   target_freq_mhz: config.target_freq_mhz as number,
-  fix_val: config.fix_val,
+  power_offset_db: config.power_offset_db,
   is_alarm: config.is_alarm,
   min: config.min,
   max: config.max,
@@ -138,7 +139,10 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
     direction === "tx"
       ? t("app.device.libiio.module.tx", "TX Module")
       : t("app.device.libiio.module.rx", "RX Module")
-  const metricUnit = direction === "tx" ? "W" : "dBm"
+  const offsetLabel =
+    direction === "tx"
+      ? t("app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)")
+      : t("app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)")
 
   const loadPageData = useCallback(async () => {
     if (!isValidDeviceId) {
@@ -200,8 +204,9 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
 
       await Services.api.postLibiioDeviceConfigSave(
         {
+          direction,
           list: configs.map((item) => ({
-            ...normalizeConfigByDirection(item, direction),
+            ...buildConfigPayloadByDirection(item, direction),
             device_id: deviceId,
           })),
         },
@@ -377,30 +382,18 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                       <InputNumber style={{ width: "100%" }} min={0} />
                                     </Form.Item>
                                   </Col>
-                                  {direction === "rx" ? (
-                                    <Col xs={24} sm={12} lg={8}>
-                                      <Form.Item
-                                        {...restField}
-                                        name={[field.name, "fix_val"]}
-                                        label={t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)")}
-                                      >
-                                        <InputNumber style={{ width: "100%" }} addonAfter="dBm" />
-                                      </Form.Item>
-                                    </Col>
-                                  ) : (
-                                    <Col xs={24} sm={12} lg={8}>
-                                      <Form.Item
-                                        {...restField}
-                                        name={[field.name, "fix_val"]}
-                                        label={t(
-                                          "app.device.libiio.txMonitorPowerWithUnit",
-                                          "Power (W)",
-                                        )}
-                                      >
-                                        <InputNumber style={{ width: "100%" }} addonAfter="W" />
-                                      </Form.Item>
-                                    </Col>
-                                  )}
+                                  <Col xs={24} sm={12} lg={8}>
+                                    <Form.Item
+                                      {...restField}
+                                      name={[field.name, "power_offset_db"]}
+                                      label={offsetLabel}
+                                    >
+                                      <InputNumber
+                                        style={{ width: "100%" }}
+                                        addonAfter={OFFSET_UNIT}
+                                      />
+                                    </Form.Item>
+                                  </Col>
                                 </Row>
                                 <Row gutter={[12, 0]}>
                                   <Col xs={24} sm={12} lg={8}>
@@ -433,12 +426,12 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                       label={t(
                                         "app.device.libiio.config.minValueWithUnit",
                                         "Minimum ({unit})",
-                                        { unit: metricUnit },
+                                        { unit: OFFSET_UNIT },
                                       )}
                                     >
                                       <InputNumber
                                         style={{ width: "100%" }}
-                                        addonAfter={metricUnit}
+                                        addonAfter={OFFSET_UNIT}
                                       />
                                     </Form.Item>
                                   </Col>
@@ -449,7 +442,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                       label={t(
                                         "app.device.libiio.config.maxValueWithUnit",
                                         "Maximum ({unit})",
-                                        { unit: metricUnit },
+                                        { unit: OFFSET_UNIT },
                                       )}
                                       dependencies={[
                                         ["configs", field.name, "is_alarm"],
@@ -501,7 +494,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                     >
                                       <InputNumber
                                         style={{ width: "100%" }}
-                                        addonAfter={metricUnit}
+                                        addonAfter={OFFSET_UNIT}
                                       />
                                     </Form.Item>
                                   </Col>

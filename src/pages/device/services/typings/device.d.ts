@@ -83,7 +83,10 @@ declare namespace API_PostLibiioDeviceList {
     center_freq: number
     sampling_rate: number
     fft_size: number
-    fs_dbm?: number
+    full_scale_power_dbm?: number
+    device_full_scale_power_dbm?: number
+    tx_power_offset_db?: number
+    rx_rssi_offset_db?: number
     rx_ip?: string
     tx_ip?: string
     target_freq_count?: number
@@ -101,8 +104,7 @@ declare namespace API_PostLibiioDeviceConfigList {
     type?: "rx" | "tx"
     sort?: number
     target_freq_mhz: number
-    fix_val?: number
-    fs_dbm?: number
+    power_offset_db?: number
     power_w?: number
     rssi_dbm?: number
     metric_value?: number | string
@@ -143,8 +145,7 @@ declare namespace API_PostLibiioDeviceConfigSave {
     type?: "rx" | "tx"
     sort?: number
     target_freq_mhz: number
-    fix_val?: number
-    fs_dbm?: number
+    power_offset_db?: number | string
     power_w?: number | string
     rssi_dbm?: number | string
     direction?: "rx" | "tx"
@@ -243,7 +244,10 @@ declare namespace API_PostLibiioDeviceSave {
     center_freq: number
     sampling_rate: number
     fft_size: number
-    fs_dbm?: number
+    full_scale_power_dbm?: number
+    device_full_scale_power_dbm?: number
+    tx_power_offset_db?: number
+    rx_rssi_offset_db?: number
     rx_ip?: string
     rx_center_freq?: number
     rx_sampling_rate?: number

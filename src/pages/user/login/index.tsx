@@ -18,9 +18,9 @@ import styles from "./index.less"
 type LoginType = "account"
 
 const getResolvedSystemName = (systemName: string | undefined, fallbackName: string) => {
-  const normalized = systemName?.trim()
+  const trimmedSystemName = systemName?.trim()
 
-  return normalized || fallbackName
+  return trimmedSystemName || fallbackName
 }
 
 const LoginMessage: React.FC<{

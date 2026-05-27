@@ -31,15 +31,15 @@ const getDefaultSystemName = () => {
 }
 
 const resolveSystemName = (systemName?: string) => {
-  const normalized = systemName?.trim()
+  const trimmedSystemName = systemName?.trim()
 
-  return normalized || getDefaultSystemName()
+  return trimmedSystemName || getDefaultSystemName()
 }
 
 const resolveSystemLogo = (systemLogo?: string | null) => {
-  const normalized = systemLogo?.trim()
+  const trimmedSystemLogo = systemLogo?.trim()
 
-  return normalized || DEFAULT_LOGO
+  return trimmedSystemLogo || DEFAULT_LOGO
 }
 
 /** 获取用户信息比较慢的时候会展示一个 loading */

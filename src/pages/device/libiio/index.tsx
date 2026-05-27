@@ -19,6 +19,7 @@ import Services from "@/pages/device/services"
 import type {
   API_PostDeviceList,
   API_PostLibiioDeviceList,
+  API_PostLibiioDeviceSave,
 } from "@/pages/device/services/typings/device"
 import "./index.less"
 
@@ -38,7 +39,9 @@ type LibiioModuleField = {
 
 type EditFormValues = {
   ip: string
-  fs_dbm?: number
+  full_scale_power_dbm?: number
+  tx_power_offset_db?: number
+  rx_rssi_offset_db?: number
   rx_ip?: string
   rx_center_freq?: number
   rx_sampling_rate?: number
@@ -69,6 +72,8 @@ const COMMON_MODULE_FIELDS = new Set([
   "center_freq",
   "sampling_rate",
   "fft_size",
+  "full_scale_power_dbm",
+  "device_full_scale_power_dbm",
   "target_freq_count",
   "output_frequency_count",
   "output_frequency_configs",
@@ -91,6 +96,18 @@ const formatModuleFieldValue = (value: any, key?: string) => {
   }
   return value
 }
+
+const FULL_SCALE_POWER_DBM_FIELDS = ["full_scale_power_dbm", "device_full_scale_power_dbm"] as const
+
+const getFullScalePowerField = (module?: LibiioModule) =>
+  FULL_SCALE_POWER_DBM_FIELDS.find((field) =>
+    Object.prototype.hasOwnProperty.call(module || {}, field),
+  ) || FULL_SCALE_POWER_DBM_FIELDS[0]
+
+const getFullScalePowerValue = (module?: LibiioModule) => module?.[getFullScalePowerField(module)]
+
+const omitUndefined = <T extends Record<string, any>>(obj: T) =>
+  Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as T
 
 const formatFieldName = (key: string) =>
   key
@@ -174,7 +191,9 @@ const DeviceLibiio: React.FC = () => {
       setEditingModule(module)
       editForm.setFieldsValue({
         ip: device.ip || module?.ip || "",
-        fs_dbm: typeof module?.fs_dbm === "number" ? module.fs_dbm : undefined,
+        full_scale_power_dbm: getFullScalePowerValue(module),
+        tx_power_offset_db: module?.tx_power_offset_db,
+        rx_rssi_offset_db: module?.rx_rssi_offset_db,
         rx_ip: module?.rx_ip || "",
         rx_center_freq: module?.rx_center_freq ?? module?.center_freq,
         rx_sampling_rate: module?.rx_sampling_rate ?? module?.sampling_rate,
@@ -206,28 +225,33 @@ const DeviceLibiio: React.FC = () => {
       const rxCenterFreq = values.rx_center_freq as number
       const rxSamplingRate = values.rx_sampling_rate as number
       const rxFftSize = values.rx_fft_size as number
+      const fullScalePowerField = getFullScalePowerField(editingModule)
+      const submitParams = omitUndefined<API_PostLibiioDeviceSave.Params>({
+        id: editingModule?.id,
+        ip: values.ip,
+        type: editingModule?.type,
+        center_freq: editingModule?.center_freq ?? rxCenterFreq,
+        sampling_rate: editingModule?.sampling_rate ?? rxSamplingRate,
+        fft_size: editingModule?.fft_size ?? rxFftSize,
+        full_scale_power_dbm: values.full_scale_power_dbm,
+        tx_power_offset_db: values.tx_power_offset_db,
+        rx_rssi_offset_db: values.rx_rssi_offset_db,
+        rx_ip: values.rx_ip,
+        rx_center_freq: values.rx_center_freq,
+        rx_sampling_rate: values.rx_sampling_rate,
+        rx_fft_size: values.rx_fft_size,
+        tx_ip: values.tx_ip,
+        tx_center_freq: values.tx_center_freq,
+        tx_sampling_rate: values.tx_sampling_rate,
+        tx_fft_size: values.tx_fft_size,
+      })
+      if (fullScalePowerField !== "full_scale_power_dbm") {
+        submitParams[fullScalePowerField] = values.full_scale_power_dbm
+        delete submitParams.full_scale_power_dbm
+      }
       setSubmitLoading(true)
 
-      await Services.api.postLibiioDeviceSave(
-        {
-          id: editingModule?.id,
-          ip: values.ip,
-          type: editingModule?.type,
-          center_freq: editingModule?.center_freq ?? rxCenterFreq,
-          sampling_rate: editingModule?.sampling_rate ?? rxSamplingRate,
-          fft_size: editingModule?.fft_size ?? rxFftSize,
-          fs_dbm: values.fs_dbm,
-          rx_ip: values.rx_ip,
-          rx_center_freq: values.rx_center_freq,
-          rx_sampling_rate: values.rx_sampling_rate,
-          rx_fft_size: values.rx_fft_size,
-          tx_ip: values.tx_ip,
-          tx_center_freq: values.tx_center_freq,
-          tx_sampling_rate: values.tx_sampling_rate,
-          tx_fft_size: values.tx_fft_size,
-        },
-        { showLoading: false },
-      )
+      await Services.api.postLibiioDeviceSave(submitParams, { showLoading: false })
 
       message.success(t("app.device.libiio.updateSuccess", "Libiio device updated"))
       closeEditModal()
@@ -253,6 +277,8 @@ const DeviceLibiio: React.FC = () => {
         tx_fft_size: t("app.device.libiio.fftSize", "FFT Size"),
         tx_power: t("app.device.libiio.txPower", "TX Power"),
         rx_rssi: t("app.device.libiio.rxRssi", "RX RSSI"),
+        tx_power_offset_db: t("app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"),
+        rx_rssi_offset_db: t("app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"),
       }
 
       return labelMap[key] || formatFieldName(key)
@@ -357,10 +383,15 @@ const DeviceLibiio: React.FC = () => {
                       </div>
                       <div className="libiio-device-meta-item">
                         <span>
-                          {t("app.device.libiio.fullScalePower", "0 dBFS Full-scale Power")}
+                          {t(
+                            "app.device.libiio.deviceFullScalePower",
+                            "Device 0 dBFS Full-scale Power",
+                          )}
                         </span>
-                        <strong title={String(formatModuleFieldValue(module?.fs_dbm))}>
-                          {formatModuleFieldValue(module?.fs_dbm)}
+                        <strong
+                          title={String(formatModuleFieldValue(getFullScalePowerValue(module)))}
+                        >
+                          {formatModuleFieldValue(getFullScalePowerValue(module))}
                         </strong>
                       </div>
                     </div>
@@ -423,8 +454,11 @@ const DeviceLibiio: React.FC = () => {
                 />
               </Form.Item>
               <Form.Item
-                name="fs_dbm"
-                label={t("app.device.libiio.fullScalePower", "0 dBFS Full-scale Power")}
+                name="full_scale_power_dbm"
+                label={t(
+                  "app.device.libiio.deviceFullScalePower",
+                  "Device 0 dBFS Full-scale Power",
+                )}
               >
                 <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dBm" />
               </Form.Item>
@@ -530,6 +564,16 @@ const DeviceLibiio: React.FC = () => {
                       "Please select FFT size",
                     )}
                   />
+                </Form.Item>
+                <Form.Item
+                  name={direction === "tx" ? "tx_power_offset_db" : "rx_rssi_offset_db"}
+                  label={
+                    direction === "tx"
+                      ? t("app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)")
+                      : t("app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)")
+                  }
+                >
+                  <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dB" />
                 </Form.Item>
               </div>
             </div>

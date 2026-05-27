@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type { API_PostLibiioBoardList } from "@/pages/device/services/typings/device"
-import { normalizeBackendLabel } from "@/utils/i18n"
+import { formatBackendLabel } from "@/utils/i18n"
 import "./index.less"
 
 type ModuleDirection = "rx" | "tx"
@@ -32,7 +32,7 @@ type FrequencyChunk<T> = { key: string; channelOffset: number; items: T[] }
 type StatusTone = "normal" | "high" | "low" | "none"
 type DisplayRow = { label: string; values: string[]; statusTones?: StatusTone[] }
 
-const normalizeNumber = (value?: number | string | null) => {
+const toFiniteNumberOrNull = (value?: number | string | null) => {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : null
   }
@@ -59,12 +59,12 @@ const isOfflineValue = (value?: number | string | boolean | null) => {
 }
 
 const formatFrequency = (value?: number | string | null) => {
-  const numberValue = normalizeNumber(value)
+  const numberValue = toFiniteNumberOrNull(value)
   return numberValue !== null ? `${numberValue} MHz` : "-"
 }
 
 const formatMetricValue = (value?: number | string | null, suffix?: string) => {
-  const numberValue = normalizeNumber(value)
+  const numberValue = toFiniteNumberOrNull(value)
   return numberValue !== null ? `${numberValue}${suffix || ""}` : "-"
 }
 
@@ -81,7 +81,7 @@ const getStatusClassName = (tone?: StatusTone) => {
   return ""
 }
 
-const normalizeChannels = (channels: BoardChannel[] = []) => {
+const fillMissingChannels = (channels: BoardChannel[] = []) => {
   const channelMap = new Map(channels.map((channel) => [channel.channel_no, channel]))
   const maxChannelNo = Math.max(...channels.map((channel) => channel.channel_no), 0)
   const targetChannelCount = maxChannelNo > CHANNELS_PER_ROW ? MAX_CHANNEL_COUNT : CHANNELS_PER_ROW
@@ -104,17 +104,17 @@ const normalizeChannels = (channels: BoardChannel[] = []) => {
 
 const getChannelMetricValue = (channel: BoardChannel, direction: ModuleDirection) =>
   direction === "tx"
-    ? normalizeNumber(channel.power_w)
-    : normalizeNumber(channel.rssi_dbm ?? channel.metric_value)
+    ? toFiniteNumberOrNull(channel.power_w)
+    : toFiniteNumberOrNull(channel.rssi_dbm ?? channel.metric_value)
 
 const hasModuleData = (module: BoardModule) =>
   (module.channels || []).some(
     (channel) =>
       channel.configured ||
-      normalizeNumber(channel.target_freq_mhz) !== null ||
-      normalizeNumber(channel.metric_value) !== null ||
-      normalizeNumber(channel.power_w) !== null ||
-      normalizeNumber(channel.rssi_dbm) !== null,
+      toFiniteNumberOrNull(channel.target_freq_mhz) !== null ||
+      toFiniteNumberOrNull(channel.metric_value) !== null ||
+      toFiniteNumberOrNull(channel.power_w) !== null ||
+      toFiniteNumberOrNull(channel.rssi_dbm) !== null,
   )
 
 const isModuleOffline = (module: BoardModule) => {
@@ -131,7 +131,7 @@ const isModuleOffline = (module: BoardModule) => {
   return !hasModuleData(module)
 }
 
-const normalizeBoardDevices = (devices: BoardDevice[]): BoardDevice[] =>
+const buildBoardDevices = (devices: BoardDevice[]): BoardDevice[] =>
   devices.map((device) => ({
     ...device,
     modules: (device.modules || []).map((module) => ({
@@ -189,7 +189,7 @@ const FrequencyBoardPage: React.FC = () => {
   const getMetricLabel = useCallback(
     (module: BoardModule) => {
       const metricLabel =
-        normalizeBackendLabel(module.metric_label, t) ||
+        formatBackendLabel(module.metric_label, t) ||
         (module.direction === "tx"
           ? t("app.device.libiio.txMonitorPowerWithUnit", "Power (W)")
           : t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"))
@@ -215,12 +215,12 @@ const FrequencyBoardPage: React.FC = () => {
         return { text: "-", tone: "none" as StatusTone }
       }
 
-      const max = normalizeNumber(channel.max)
+      const max = toFiniteNumberOrNull(channel.max)
       if (max !== null && metricValue > max) {
         return { text: t("app.device.libiio.board.statusHigh", "High"), tone: "high" as StatusTone }
       }
 
-      const min = normalizeNumber(channel.min)
+      const min = toFiniteNumberOrNull(channel.min)
       if (min !== null && metricValue < min) {
         return { text: t("app.device.libiio.board.statusLow", "Low"), tone: "low" as StatusTone }
       }
@@ -285,7 +285,7 @@ const FrequencyBoardPage: React.FC = () => {
           showToast: false,
         },
       )
-      setDevices(normalizeBoardDevices(boardRes?.res?.list || []))
+      setDevices(buildBoardDevices(boardRes?.res?.list || []))
     } catch (error) {
     } finally {
       loadingRef.current = false
@@ -323,12 +323,12 @@ const FrequencyBoardPage: React.FC = () => {
             device,
             direction: module.direction,
             directionLabel:
-              normalizeBackendLabel(module.title, t) || directionLabelMap[module.direction],
+              formatBackendLabel(module.title, t) || directionLabelMap[module.direction],
             moduleIp: module.ip,
             metricLabel: getMetricLabel(module),
             metricUnit: getMetricUnit(module),
             isOffline: isModuleOffline(module),
-            chunks: chunkItems(normalizeChannels(module.channels), CHANNELS_PER_ROW),
+            chunks: chunkItems(fillMissingChannels(module.channels), CHANNELS_PER_ROW),
           }
         }),
       ),

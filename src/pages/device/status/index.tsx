@@ -29,7 +29,7 @@ type DeviceTypeTreeNode = {
 }
 
 // 工具函数
-const normalizeRefreshInterval = (value: unknown) => {
+const getRefreshIntervalMs = (value: unknown) => {
   const numericValue = Number(value)
 
   if (!Number.isFinite(numericValue) || numericValue <= 0) {
@@ -46,7 +46,7 @@ const getRefreshInterval = (): number => {
     const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
     if (systemConfig) {
       const config = JSON.parse(systemConfig)
-      return normalizeRefreshInterval(config.refresh_interval)
+      return getRefreshIntervalMs(config.refresh_interval)
     }
   } catch {}
   return DEFAULT_REFRESH_INTERVAL

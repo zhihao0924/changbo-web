@@ -20,7 +20,7 @@ const { Title } = Typography
 const DEFAULT_REFRESH_INTERVAL = 3000
 const MIN_REFRESH_INTERVAL = 500
 
-const normalizeRefreshInterval = (value: unknown) => {
+const getRefreshIntervalMs = (value: unknown) => {
   const numericValue = Number(value)
 
   if (!Number.isFinite(numericValue) || numericValue <= 0) {
@@ -39,7 +39,7 @@ const DASHBOARD_CONFIG = {
       const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
       if (systemConfig) {
         const config = JSON.parse(systemConfig)
-        return normalizeRefreshInterval(config.refresh_interval)
+        return getRefreshIntervalMs(config.refresh_interval)
       }
     } catch {}
     return DEFAULT_REFRESH_INTERVAL
@@ -235,13 +235,13 @@ const usePieConfig = (
 ) => {
   return useMemo(() => {
     const sourceData = Array.isArray(data) ? data : data ? [data] : []
-    const normalizedData = sourceData.map((item: any) => ({
+    const chartData = sourceData.map((item: any) => ({
       ...item,
       type: formatBackendLabel(item.type),
     }))
 
     return {
-      data: normalizedData,
+      data: chartData,
       angleField: "value",
       colorField: "type",
       radius: 0.7,
@@ -282,7 +282,7 @@ const usePieConfig = (
               return `${t("app.dashboard.total", "Total")}: ${total}`
             }
             // 对于普通数据项，显示对应的值
-            const itemData = normalizedData?.[index]
+            const itemData = chartData?.[index]
             return `${text || ""}: ${itemData?.value || 0}`
           },
         },
@@ -294,7 +294,7 @@ const usePieConfig = (
         itemSpacing: 2,
         flipPage: false,
         items: [
-          ...(normalizedData || []).map((item, index) => ({
+          ...(chartData || []).map((item, index) => ({
             value: item.type,
             name: `${item.type || ""}`,
             marker: { symbol: "circle", style: { fill: DASHBOARD_CONFIG.chartColors[index] } },
