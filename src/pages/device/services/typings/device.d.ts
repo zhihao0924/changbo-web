@@ -84,11 +84,16 @@ declare namespace API_PostLibiioDeviceList {
     sampling_rate: number
     fft_size: number
     full_scale_power_dbm?: number
-    device_full_scale_power_dbm?: number
     tx_power_offset_db?: number
     rx_rssi_offset_db?: number
     rx_ip?: string
+    rx_center_freq?: number
+    rx_sampling_rate?: number
+    rx_fft_size?: number
     tx_ip?: string
+    tx_center_freq?: number
+    tx_sampling_rate?: number
+    tx_fft_size?: number
     target_freq_count?: number
     output_frequency_count?: number
     output_frequency_configs?: OutputFrequencyConfig[]
@@ -245,7 +250,6 @@ declare namespace API_PostLibiioDeviceSave {
     sampling_rate: number
     fft_size: number
     full_scale_power_dbm?: number
-    device_full_scale_power_dbm?: number
     tx_power_offset_db?: number
     rx_rssi_offset_db?: number
     rx_ip?: string

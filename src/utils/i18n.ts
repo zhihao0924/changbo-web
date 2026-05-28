@@ -107,10 +107,6 @@ const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
     "app.device.libiio.deviceFullScalePower",
     "Device 0 dBFS Full-scale Power",
   ],
-  device_full_scale_power_dbm: [
-    "app.device.libiio.deviceFullScalePower",
-    "Device 0 dBFS Full-scale Power",
-  ],
   设备0dBFS对应满幅功率: [
     "app.device.libiio.deviceFullScalePower",
     "Device 0 dBFS Full-scale Power",
