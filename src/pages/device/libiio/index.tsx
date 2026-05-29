@@ -250,7 +250,7 @@ const DeviceLibiio: React.FC = () => {
           <div className="libiio-module-card__content">
             {direction === "tx" ? (
               <>
-                {renderModuleField("IP", module.tx_ip)}
+                {renderModuleField(t("app.device.libiio.ipAddress", "IP Address"), module.tx_ip)}
                 {renderModuleField(
                   t("app.device.libiio.centerFrequency", "Center Frequency"),
                   module.tx_center_freq,
@@ -271,7 +271,7 @@ const DeviceLibiio: React.FC = () => {
               </>
             ) : (
               <>
-                {renderModuleField("IP", module.rx_ip)}
+                {renderModuleField(t("app.device.libiio.ipAddress", "IP Address"), module.rx_ip)}
                 {renderModuleField(
                   t("app.device.libiio.centerFrequency", "Center Frequency"),
                   module.rx_center_freq,
@@ -420,7 +420,7 @@ const DeviceLibiio: React.FC = () => {
             <div className="libiio-edit-grid">
               <Form.Item
                 name="tx_ip"
-                label="IP"
+                label={t("app.device.libiio.ipAddress", "IP Address")}
                 rules={[
                   {
                     pattern: IPV4_REGEXP,
@@ -526,7 +526,7 @@ const DeviceLibiio: React.FC = () => {
             <div className="libiio-edit-grid">
               <Form.Item
                 name="rx_ip"
-                label="IP"
+                label={t("app.device.libiio.ipAddress", "IP Address")}
                 rules={[
                   {
                     pattern: IPV4_REGEXP,

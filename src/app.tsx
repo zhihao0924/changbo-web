@@ -18,22 +18,17 @@ import { versionTipDialog } from "@/components/versionTipDialog"
 import RightContent from "@/components/RightContent"
 import defaultSettings from "../config/defaultSettings"
 import { postSystemConfig } from "@/pages/setting/services/api"
-import { formatRuntimeMessage } from "@/utils/i18n"
+import { formatRuntimeMessage, resolveSystemDisplayName } from "@/utils/i18n"
 
 const excludePath = [LOGINPATH, CALLBACKPATH, SYSTEMCONFIGPATH]
 const DEFAULT_LOGO = "/logo.png"
 
 const getDefaultSystemName = () => {
-  return formatRuntimeMessage(
-    "app.system.defaultName",
-    "Private Network Communication Intelligent NMS",
-  )
+  return resolveSystemDisplayName()
 }
 
 const resolveSystemName = (systemName?: string) => {
-  const trimmedSystemName = systemName?.trim()
-
-  return trimmedSystemName || getDefaultSystemName()
+  return resolveSystemDisplayName(systemName)
 }
 
 const resolveSystemLogo = (systemLogo?: string | null) => {

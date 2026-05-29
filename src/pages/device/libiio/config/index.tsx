@@ -48,6 +48,10 @@ type FrequencyFormItem = Omit<API_PostLibiioDeviceConfigSave.ConfigItem, "target
 }
 const MAX_FREQUENCY_CONFIG_COUNT = 20
 const OFFSET_UNIT = "dB"
+const TX_ALARM_VALUE_UNIT = "W"
+const RX_ALARM_VALUE_UNIT = "dBm"
+const ALARM_ENABLED_VALUE = 1
+const ALARM_DISABLED_VALUE = -1
 
 const createEmptyConfigItem = (direction: "rx" | "tx" = "rx"): FrequencyFormItem => ({
   device_id: 0,
@@ -56,7 +60,7 @@ const createEmptyConfigItem = (direction: "rx" | "tx" = "rx"): FrequencyFormItem
   sort: undefined,
   target_freq_mhz: undefined,
   power_offset_db: undefined,
-  is_alarm: 0,
+  is_alarm: ALARM_DISABLED_VALUE,
   min: undefined,
   max: undefined,
 })
@@ -98,7 +102,7 @@ const buildConfigList = (
     sort: config.sort,
     target_freq_mhz: config.target_freq_mhz,
     power_offset_db: toFiniteNumber(config.power_offset_db),
-    is_alarm: config.is_alarm ?? 0,
+    is_alarm: config.is_alarm ?? ALARM_DISABLED_VALUE,
     min: toFiniteNumber(config.min),
     max: toFiniteNumber(config.max),
   }))
@@ -143,6 +147,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
     direction === "tx"
       ? t("app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)")
       : t("app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)")
+  const alarmValueUnit = direction === "tx" ? TX_ALARM_VALUE_UNIT : RX_ALARM_VALUE_UNIT
 
   const loadPageData = useCallback(async () => {
     if (!isValidDeviceId) {
@@ -413,8 +418,14 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                     >
                                       <Select
                                         options={[
-                                          { label: t("app.common.yes", "Yes"), value: 1 },
-                                          { label: t("app.common.no", "No"), value: 0 },
+                                          {
+                                            label: t("app.common.yes", "Yes"),
+                                            value: ALARM_ENABLED_VALUE,
+                                          },
+                                          {
+                                            label: t("app.common.no", "No"),
+                                            value: ALARM_DISABLED_VALUE,
+                                          },
                                         ]}
                                       />
                                     </Form.Item>
@@ -426,12 +437,12 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                       label={t(
                                         "app.device.libiio.config.minValueWithUnit",
                                         "Minimum ({unit})",
-                                        { unit: OFFSET_UNIT },
+                                        { unit: alarmValueUnit },
                                       )}
                                     >
                                       <InputNumber
                                         style={{ width: "100%" }}
-                                        addonAfter={OFFSET_UNIT}
+                                        addonAfter={alarmValueUnit}
                                       />
                                     </Form.Item>
                                   </Col>
@@ -442,7 +453,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                       label={t(
                                         "app.device.libiio.config.maxValueWithUnit",
                                         "Maximum ({unit})",
-                                        { unit: OFFSET_UNIT },
+                                        { unit: alarmValueUnit },
                                       )}
                                       dependencies={[
                                         ["configs", field.name, "is_alarm"],
@@ -453,7 +464,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                           validator(_, value) {
                                             const isAlarm =
                                               getFieldValue(["configs", field.name, "is_alarm"]) ===
-                                              1
+                                              ALARM_ENABLED_VALUE
                                             const min = getFieldValue([
                                               "configs",
                                               field.name,
@@ -494,7 +505,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
                                     >
                                       <InputNumber
                                         style={{ width: "100%" }}
-                                        addonAfter={OFFSET_UNIT}
+                                        addonAfter={alarmValueUnit}
                                       />
                                     </Form.Item>
                                   </Col>

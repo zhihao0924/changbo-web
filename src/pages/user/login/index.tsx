@@ -8,6 +8,7 @@ import {
 } from "@/constants"
 import Services from "@/pages/user/services"
 import { postSystemConfig } from "@/pages/setting/services/api"
+import { resolveSystemDisplayName } from "@/utils/i18n"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { ProForm, ProFormText } from "@ant-design/pro-form"
 import { Alert, message, Tabs } from "antd"
@@ -16,12 +17,6 @@ import { history, useIntl, useModel } from "umi"
 import styles from "./index.less"
 
 type LoginType = "account"
-
-const getResolvedSystemName = (systemName: string | undefined, fallbackName: string) => {
-  const trimmedSystemName = systemName?.trim()
-
-  return trimmedSystemName || fallbackName
-}
 
 const LoginMessage: React.FC<{
   content: string
@@ -178,7 +173,7 @@ const Login: React.FC = () => {
   }, [])
 
   const systemName = useMemo(() => {
-    return getResolvedSystemName(
+    return resolveSystemDisplayName(
       systemConfig?.system_name,
       formatMessage("app.system.defaultName", "Private Network Communication Intelligent NMS"),
     )

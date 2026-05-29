@@ -169,6 +169,21 @@ const CONFIG_TYPE_MAP = {
   pa4_alarm_switch: ["app.device.index.pa4AlarmSwitch", "PA4 Alarm Switch"],
 } as Record<string, [string, string]>
 
+const SWITCH_ENABLED_VALUE = "1"
+const SWITCH_DISABLED_VALUE = "-1"
+
+const getSwitchFormValue = (
+  isSet?: boolean,
+  value?: number | string | boolean | null,
+): string | null => {
+  if (!isSet) {
+    return null
+  }
+  return value === 1 || value === "1" || value === true
+    ? SWITCH_ENABLED_VALUE
+    : SWITCH_DISABLED_VALUE
+}
+
 const DeviceIndex: React.FC = () => {
   const intl = useIntl()
   const actionRef = useRef<ActionType>()
@@ -381,26 +396,22 @@ const DeviceIndex: React.FC = () => {
             uplink_gain: configRes.is_set_uplink_gain ? configRes.uplink_gain : "——",
             downlink_power: configRes.is_set_downlink_power ? configRes.downlink_power : "——",
             uplink_power: configRes.is_set_uplink_power ? configRes.uplink_power : "——",
-            same_frequency_forward_switch: configRes.is_set_same_frequency_forward_switch
-              ? configRes.same_frequency_forward_switch
-                ? "1"
-                : "0"
-              : null,
-            downlink_switch: configRes.is_set_downlink_switch
-              ? configRes.downlink_switch
-                ? "1"
-                : "0"
-              : null,
-            uplink_switch: configRes.is_set_uplink_switch
-              ? configRes.uplink_switch
-                ? "1"
-                : "0"
-              : null,
-            pa4_alarm_switch: configRes.is_set_pa4_alarm_switch
-              ? configRes.pa4_alarm_switch
-                ? "1"
-                : "0"
-              : null,
+            same_frequency_forward_switch: getSwitchFormValue(
+              configRes.is_set_same_frequency_forward_switch,
+              configRes.same_frequency_forward_switch,
+            ),
+            downlink_switch: getSwitchFormValue(
+              configRes.is_set_downlink_switch,
+              configRes.downlink_switch,
+            ),
+            uplink_switch: getSwitchFormValue(
+              configRes.is_set_uplink_switch,
+              configRes.uplink_switch,
+            ),
+            pa4_alarm_switch: getSwitchFormValue(
+              configRes.is_set_pa4_alarm_switch,
+              configRes.pa4_alarm_switch,
+            ),
           })
         })
         .then(() => {
@@ -1330,7 +1341,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.enable", "Enable")}
                             </span>
                           ),
-                          value: "1",
+                          value: SWITCH_ENABLED_VALUE,
                         },
                         {
                           label: (
@@ -1338,7 +1349,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.disable", "Disable")}
                             </span>
                           ),
-                          value: "0",
+                          value: SWITCH_DISABLED_VALUE,
                         },
                       ]}
                     />
@@ -1364,7 +1375,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.enable", "Enable")}
                             </span>
                           ),
-                          value: "1",
+                          value: SWITCH_ENABLED_VALUE,
                         },
                         {
                           label: (
@@ -1372,7 +1383,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.disable", "Disable")}
                             </span>
                           ),
-                          value: "0",
+                          value: SWITCH_DISABLED_VALUE,
                         },
                       ]}
                     />
@@ -1398,7 +1409,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.enable", "Enable")}
                             </span>
                           ),
-                          value: "1",
+                          value: SWITCH_ENABLED_VALUE,
                         },
                         {
                           label: (
@@ -1406,7 +1417,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.disable", "Disable")}
                             </span>
                           ),
-                          value: "0",
+                          value: SWITCH_DISABLED_VALUE,
                         },
                       ]}
                     />
@@ -1432,7 +1443,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.enable", "Enable")}
                             </span>
                           ),
-                          value: "1",
+                          value: SWITCH_ENABLED_VALUE,
                         },
                         {
                           label: (
@@ -1440,7 +1451,7 @@ const DeviceIndex: React.FC = () => {
                               {t("app.common.disable", "Disable")}
                             </span>
                           ),
-                          value: "0",
+                          value: SWITCH_DISABLED_VALUE,
                         },
                       ]}
                     />

@@ -1,4 +1,15 @@
 declare namespace API_PostDashboard {
+  export type I18nText =
+    | string
+    | {
+        key?: string | null
+        code?: string | null
+        params?: Record<string, string | number | boolean | null | undefined> | null
+        fallback?: string | null
+        defaultMessage?: string | null
+        value?: string | null
+      }
+
   export interface Result {
     err: number
     msg: string
@@ -18,13 +29,13 @@ declare namespace API_PostDashboard {
   }
 
   export interface Statistic {
-    type: string
+    type: I18nText
     value: number
     sort: number
   }
 
   export interface StatisticNumber {
-    name: string
+    name: I18nText
     total_num: number
     online_num: number
     offline_num: number
@@ -36,14 +47,14 @@ declare namespace API_PostDashboard {
     device_id: number
     device_name: string
     device_type: string
-    device_type_group: string
+    device_type_group: I18nText
     alarm_at: string
   }
 
   export interface AlarmItem {
     config_type: number
-    config_type_name: string
-    alarm_text: string
-    suggested_action: string
+    config_type_name: I18nText
+    alarm_text: I18nText
+    suggested_action: I18nText
   }
 }

@@ -1,9 +1,28 @@
 export type MessageValues = Record<string, string | number>
 
+export type BackendMessageParams = Record<string, string | number | boolean | null | undefined>
+
+export type BackendI18nPayload = {
+  key?: string | null
+  code?: string | null
+  params?: BackendMessageParams | null
+  fallback?: string | null
+  defaultMessage?: string | null
+  value?: string | null
+}
+
+export type BackendI18nValue = string | BackendI18nPayload | null | undefined
+
 export type Translate = (id: string, defaultMessage: string, values?: MessageValues) => string
 
 export const DEFAULT_LOCALE = "en-US"
 export const LOCALE_STORAGE_KEY = "umi_locale"
+export const DEFAULT_SYSTEM_NAME_EN = "Private Network Communication Intelligent NMS"
+export const DEFAULT_SYSTEM_NAME_ZH = "专网通信智能网管平台"
+const DEFAULT_SYSTEM_NAME_VALUES = new Set([
+  DEFAULT_SYSTEM_NAME_EN.toLowerCase(),
+  DEFAULT_SYSTEM_NAME_ZH,
+])
 
 const RUNTIME_MESSAGES: Record<string, Record<string, string>> = {
   "en-US": {
@@ -35,8 +54,12 @@ const RUNTIME_MESSAGES: Record<string, Record<string, string>> = {
 const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
   发射合路器: ["app.device.index.group.transmitterMixer", "Transmitter Mixer"],
   "transmitter mixer": ["app.device.index.group.transmitterMixer", "Transmitter Mixer"],
+  mixer: ["app.device.index.group.transmitterMixer", "Transmitter Mixer"],
   接收分路器: ["app.device.index.group.receiverSplitter", "Receiver Splitter"],
   "receiver splitter": ["app.device.index.group.receiverSplitter", "Receiver Splitter"],
+  receiver: ["app.device.index.group.receiverSplitter", "Receiver Splitter"],
+  splitter: ["app.device.index.group.receiverSplitter", "Receiver Splitter"],
+  分路器: ["app.device.index.group.receiverSplitter", "Receiver Splitter"],
   带通双工器: ["app.device.index.group.bandpassDuplexer", "Bandpass Duplexer"],
   "bandpass duplexer": ["app.device.index.group.bandpassDuplexer", "Bandpass Duplexer"],
   上行信号剥离器: ["app.device.index.group.uplinkStripper", "Uplink Signal Stripper"],
@@ -48,8 +71,14 @@ const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
   ],
   数字近端机: ["app.device.index.group.digitalNearEnd", "Digital Near-end Unit"],
   "digital near-end unit": ["app.device.index.group.digitalNearEnd", "Digital Near-end Unit"],
+  "near-end unit": ["app.device.index.group.nearEnd", "Near-end Unit"],
+  "near end unit": ["app.device.index.group.nearEnd", "Near-end Unit"],
+  "near-end": ["app.device.index.group.nearEnd", "Near-end Unit"],
+  "near end": ["app.device.index.group.nearEnd", "Near-end Unit"],
   数字远端机: ["app.device.index.group.digitalRemote", "Digital Remote Unit"],
   "digital remote unit": ["app.device.index.group.digitalRemote", "Digital Remote Unit"],
+  "remote unit": ["app.device.index.group.remote", "Remote Unit"],
+  remote: ["app.device.index.group.remote", "Remote Unit"],
   模拟近端机: ["app.device.index.group.analogNearEnd", "Analog Near-end Unit"],
   "analog near-end unit": ["app.device.index.group.analogNearEnd", "Analog Near-end Unit"],
   模拟远端机: ["app.device.index.group.analogRemote", "Analog Remote Unit"],
@@ -87,12 +116,363 @@ const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
   PA4告警开关: ["app.device.index.pa4AlarmSwitch", "PA4 Alarm Switch"],
   "pa4 alarm switch": ["app.device.index.pa4AlarmSwitch", "PA4 Alarm Switch"],
 
+  总计: ["app.dashboard.total", "Total"],
+  total: ["app.dashboard.total", "Total"],
+  设备总计: ["app.dashboard.deviceTotal", "Total Devices"],
+  "total devices": ["app.dashboard.deviceTotal", "Total Devices"],
+  "device total": ["app.dashboard.deviceTotal", "Total Devices"],
+  "total device": ["app.dashboard.deviceTotal", "Total Devices"],
+  total_devices: ["app.dashboard.deviceTotal", "Total Devices"],
+  total_device: ["app.dashboard.deviceTotal", "Total Devices"],
+  健康率: ["app.dashboard.healthRate", "Health Rate"],
+  "health rate": ["app.dashboard.healthRate", "Health Rate"],
+  health_rate: ["app.dashboard.healthRate", "Health Rate"],
+  健康: ["app.dashboard.healthy", "Healthy"],
+  healthy: ["app.dashboard.healthy", "Healthy"],
+  total_healthy: ["app.dashboard.healthy", "Healthy"],
+  不健康: ["app.dashboard.unhealthy", "Unhealthy"],
+  unhealthy: ["app.dashboard.unhealthy", "Unhealthy"],
+  total_unhealthy: ["app.dashboard.unhealthy", "Unhealthy"],
+  在线设备: ["app.dashboard.onlineDevices", "Online Devices"],
+  "online devices": ["app.dashboard.onlineDevices", "Online Devices"],
+  online_devices: ["app.dashboard.onlineDevices", "Online Devices"],
+  total_online: ["app.dashboard.onlineDevices", "Online Devices"],
+  离线设备: ["app.dashboard.offlineDevices", "Offline Devices"],
+  "offline devices": ["app.dashboard.offlineDevices", "Offline Devices"],
+  offline_devices: ["app.dashboard.offlineDevices", "Offline Devices"],
+  total_offline: ["app.dashboard.offlineDevices", "Offline Devices"],
+  告警设备: ["app.dashboard.alarmDevices", "Alarm Devices"],
+  "alarm devices": ["app.dashboard.alarmDevices", "Alarm Devices"],
+  alarm_devices: ["app.dashboard.alarmDevices", "Alarm Devices"],
+  total_alarm: ["app.dashboard.alarmDevices", "Alarm Devices"],
+  健康设备: ["app.dashboard.healthyDevices", "Healthy Devices"],
+  "healthy devices": ["app.dashboard.healthyDevices", "Healthy Devices"],
+  healthy_devices: ["app.dashboard.healthyDevices", "Healthy Devices"],
+  不健康设备: ["app.dashboard.unhealthyDevices", "Unhealthy Devices"],
+  "unhealthy devices": ["app.dashboard.unhealthyDevices", "Unhealthy Devices"],
+  unhealthy_devices: ["app.dashboard.unhealthyDevices", "Unhealthy Devices"],
+  维护中设备: ["app.dashboard.maintainingDevices", "Maintaining Devices"],
+  "maintaining devices": ["app.dashboard.maintainingDevices", "Maintaining Devices"],
+  maintaining_devices: ["app.dashboard.maintainingDevices", "Maintaining Devices"],
+  total_maintaining: ["app.dashboard.maintainingDevices", "Maintaining Devices"],
+  今日: ["app.dashboard.time.today", "Today"],
+  today: ["app.dashboard.time.today", "Today"],
+  day: ["app.dashboard.time.today", "Today"],
+  daily: ["app.dashboard.time.today", "Today"],
+  昨日: ["app.dashboard.time.yesterday", "Yesterday"],
+  yesterday: ["app.dashboard.time.yesterday", "Yesterday"],
+  本周: ["app.dashboard.time.thisWeek", "This Week"],
+  "this week": ["app.dashboard.time.thisWeek", "This Week"],
+  week: ["app.dashboard.time.thisWeek", "This Week"],
+  weekly: ["app.dashboard.time.thisWeek", "This Week"],
+  本月: ["app.dashboard.time.thisMonth", "This Month"],
+  "this month": ["app.dashboard.time.thisMonth", "This Month"],
+  month: ["app.dashboard.time.thisMonth", "This Month"],
+  monthly: ["app.dashboard.time.thisMonth", "This Month"],
+  本年: ["app.dashboard.time.thisYear", "This Year"],
+  "this year": ["app.dashboard.time.thisYear", "This Year"],
+  year: ["app.dashboard.time.thisYear", "This Year"],
+  yearly: ["app.dashboard.time.thisYear", "This Year"],
+  transmitter_mixer_downlink_forward_power_signal: [
+    "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+    "Transmitter Mixer Downlink Forward Power",
+  ],
+  "transmitter mixer downlink forward power signal": [
+    "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+    "Transmitter Mixer Downlink Forward Power",
+  ],
+  "transmitter mixer downlink forward power": [
+    "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+    "Transmitter Mixer Downlink Forward Power",
+  ],
+  发射合路器下行正向功率信号: [
+    "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+    "Transmitter Mixer Downlink Forward Power",
+  ],
+  合路器下行正向: [
+    "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+    "Transmitter Mixer Downlink Forward Power",
+  ],
+  near_end_bs1_downlink_input_power_signal: [
+    "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+    "Near-end Unit BS1 Downlink Input Power",
+  ],
+  "near end bs1 downlink input power signal": [
+    "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+    "Near-end Unit BS1 Downlink Input Power",
+  ],
+  "near-end bs1 downlink input power signal": [
+    "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+    "Near-end Unit BS1 Downlink Input Power",
+  ],
+  "near-end unit bs1 downlink input power": [
+    "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+    "Near-end Unit BS1 Downlink Input Power",
+  ],
+  近端机BS1下行输入: [
+    "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+    "Near-end Unit BS1 Downlink Input Power",
+  ],
+  近端机BS1下行输入功率: [
+    "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+    "Near-end Unit BS1 Downlink Input Power",
+  ],
+  near_end_bs1_uplink_output_rssi_signal: [
+    "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+    "Near-end Unit BS1 Uplink Output RSSI",
+  ],
+  "near end bs1 uplink output rssi signal": [
+    "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+    "Near-end Unit BS1 Uplink Output RSSI",
+  ],
+  "near-end bs1 uplink output rssi signal": [
+    "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+    "Near-end Unit BS1 Uplink Output RSSI",
+  ],
+  "near-end unit bs1 uplink output rssi": [
+    "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+    "Near-end Unit BS1 Uplink Output RSSI",
+  ],
+  近端机BS1上行输出RSSI值: [
+    "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+    "Near-end Unit BS1 Uplink Output RSSI",
+  ],
+  近端机BS1上行输出RSSI: [
+    "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+    "Near-end Unit BS1 Uplink Output RSSI",
+  ],
+  splitter_rx_output_rssi_signal: [
+    "app.dashboard.alarmItem.splitterRxOutputRssiSignal",
+    "Splitter RX Uplink Output RSSI",
+  ],
+  "splitter rx output rssi signal": [
+    "app.dashboard.alarmItem.splitterRxOutputRssiSignal",
+    "Splitter RX Uplink Output RSSI",
+  ],
+  "splitter rx uplink output rssi": [
+    "app.dashboard.alarmItem.splitterRxOutputRssiSignal",
+    "Splitter RX Uplink Output RSSI",
+  ],
+  分路器RX上行输出RSSI值: [
+    "app.dashboard.alarmItem.splitterRxOutputRssiSignal",
+    "Splitter RX Uplink Output RSSI",
+  ],
+  分路器RX上行输出RSSI: [
+    "app.dashboard.alarmItem.splitterRxOutputRssiSignal",
+    "Splitter RX Uplink Output RSSI",
+  ],
+  downlink_forward_power_signal: [
+    "app.dashboard.alarmItem.downlinkForwardPowerSignal",
+    "Downlink Forward Power",
+  ],
+  "downlink forward power signal": [
+    "app.dashboard.alarmItem.downlinkForwardPowerSignal",
+    "Downlink Forward Power",
+  ],
+  "downlink forward power": [
+    "app.dashboard.alarmItem.downlinkForwardPowerSignal",
+    "Downlink Forward Power",
+  ],
+  下行正向功率信号: [
+    "app.dashboard.alarmItem.downlinkForwardPowerSignal",
+    "Downlink Forward Power",
+  ],
+  下行正向功率: ["app.dashboard.alarmItem.downlinkForwardPowerSignal", "Downlink Forward Power"],
+  downlink_input_power_signal: [
+    "app.dashboard.alarmItem.downlinkInputPowerSignal",
+    "Downlink Input Power",
+  ],
+  "downlink input power signal": [
+    "app.dashboard.alarmItem.downlinkInputPowerSignal",
+    "Downlink Input Power",
+  ],
+  "downlink input power": [
+    "app.dashboard.alarmItem.downlinkInputPowerSignal",
+    "Downlink Input Power",
+  ],
+  下行输入功率信号: ["app.dashboard.alarmItem.downlinkInputPowerSignal", "Downlink Input Power"],
+  下行输入功率: ["app.dashboard.alarmItem.downlinkInputPowerSignal", "Downlink Input Power"],
+  uplink_output_rssi_signal: [
+    "app.dashboard.alarmItem.uplinkOutputRssiSignal",
+    "Uplink Output RSSI",
+  ],
+  "uplink output rssi signal": [
+    "app.dashboard.alarmItem.uplinkOutputRssiSignal",
+    "Uplink Output RSSI",
+  ],
+  "uplink output rssi": ["app.dashboard.alarmItem.uplinkOutputRssiSignal", "Uplink Output RSSI"],
+  上行输出RSSI值: ["app.dashboard.alarmItem.uplinkOutputRssiSignal", "Uplink Output RSSI"],
+  上行输出RSSI: ["app.dashboard.alarmItem.uplinkOutputRssiSignal", "Uplink Output RSSI"],
+  rx_output_rssi_signal: ["app.dashboard.alarmItem.rxOutputRssiSignal", "RX Output RSSI"],
+  "rx output rssi signal": ["app.dashboard.alarmItem.rxOutputRssiSignal", "RX Output RSSI"],
+  "rx output rssi": ["app.dashboard.alarmItem.rxOutputRssiSignal", "RX Output RSSI"],
+  RX输出RSSI值: ["app.dashboard.alarmItem.rxOutputRssiSignal", "RX Output RSSI"],
+  RX输出RSSI: ["app.dashboard.alarmItem.rxOutputRssiSignal", "RX Output RSSI"],
+  "check device": ["app.dashboard.action.checkDevice", "Please check the device"],
+  "please check device": ["app.dashboard.action.checkDevice", "Please check the device"],
+  "please check the device": ["app.dashboard.action.checkDevice", "Please check the device"],
+  请检查设备: ["app.dashboard.action.checkDevice", "Please check the device"],
+  "check device status": [
+    "app.dashboard.action.checkDeviceStatus",
+    "Please check the device status",
+  ],
+  "please check device status": [
+    "app.dashboard.action.checkDeviceStatus",
+    "Please check the device status",
+  ],
+  "please check the device status": [
+    "app.dashboard.action.checkDeviceStatus",
+    "Please check the device status",
+  ],
+  请检查设备状态: ["app.dashboard.action.checkDeviceStatus", "Please check the device status"],
+  "check device connection": [
+    "app.dashboard.action.checkDeviceConnection",
+    "Please check the device connection",
+  ],
+  "please check device connection": [
+    "app.dashboard.action.checkDeviceConnection",
+    "Please check the device connection",
+  ],
+  "please check the device connection": [
+    "app.dashboard.action.checkDeviceConnection",
+    "Please check the device connection",
+  ],
+  请检查设备连接: [
+    "app.dashboard.action.checkDeviceConnection",
+    "Please check the device connection",
+  ],
+  "check the device power supply and network connection": [
+    "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+    "Check the device power supply and network connection",
+  ],
+  "please check the device power supply and network connection": [
+    "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+    "Check the device power supply and network connection",
+  ],
+  "check device power supply and network connection": [
+    "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+    "Check the device power supply and network connection",
+  ],
+  "please check device power supply and network connection": [
+    "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+    "Check the device power supply and network connection",
+  ],
+  "check the power supply and network connection": [
+    "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+    "Check the power supply and network connection",
+  ],
+  "check power supply and network connection": [
+    "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+    "Check the power supply and network connection",
+  ],
+  "please check the power supply and network connection": [
+    "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+    "Check the power supply and network connection",
+  ],
+  "please check power supply and network connection": [
+    "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+    "Check the power supply and network connection",
+  ],
+  "check the device power supply": [
+    "app.dashboard.action.checkDevicePowerSupply",
+    "Check the device power supply",
+  ],
+  "check device power supply": [
+    "app.dashboard.action.checkDevicePowerSupply",
+    "Check the device power supply",
+  ],
+  "please check the device power supply": [
+    "app.dashboard.action.checkDevicePowerSupply",
+    "Check the device power supply",
+  ],
+  "please check device power supply": [
+    "app.dashboard.action.checkDevicePowerSupply",
+    "Check the device power supply",
+  ],
+  "check the power supply": ["app.dashboard.action.checkPowerSupply", "Check the power supply"],
+  "check power supply": ["app.dashboard.action.checkPowerSupply", "Check the power supply"],
+  "please check the power supply": [
+    "app.dashboard.action.checkPowerSupply",
+    "Check the power supply",
+  ],
+  "please check power supply": ["app.dashboard.action.checkPowerSupply", "Check the power supply"],
+  "check the network connection": [
+    "app.dashboard.action.checkNetworkConnection",
+    "Check the network connection",
+  ],
+  "check network connection": [
+    "app.dashboard.action.checkNetworkConnection",
+    "Check the network connection",
+  ],
+  "please check the network connection": [
+    "app.dashboard.action.checkNetworkConnection",
+    "Check the network connection",
+  ],
+  "please check network connection": [
+    "app.dashboard.action.checkNetworkConnection",
+    "Check the network connection",
+  ],
+  请检查设备电源和网络连接: [
+    "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+    "Check the device power supply and network connection",
+  ],
+  请检查电源和网络连接: [
+    "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+    "Check the power supply and network connection",
+  ],
+  请检查设备电源: ["app.dashboard.action.checkDevicePowerSupply", "Check the device power supply"],
+  请检查电源: ["app.dashboard.action.checkPowerSupply", "Check the power supply"],
+  请检查网络连接: ["app.dashboard.action.checkNetworkConnection", "Check the network connection"],
+  "check power": ["app.dashboard.action.checkPower", "Please check the power"],
+  "please check power": ["app.dashboard.action.checkPower", "Please check the power"],
+  "please check the power": ["app.dashboard.action.checkPower", "Please check the power"],
+  请检查功率: ["app.dashboard.action.checkPower", "Please check the power"],
+  "check rssi": ["app.dashboard.action.checkRssi", "Please check RSSI"],
+  "please check rssi": ["app.dashboard.action.checkRssi", "Please check RSSI"],
+  请检查RSSI: ["app.dashboard.action.checkRssi", "Please check RSSI"],
+  "handle alarm": ["app.dashboard.action.handleAlarm", "Please handle the alarm promptly"],
+  "please handle alarm": ["app.dashboard.action.handleAlarm", "Please handle the alarm promptly"],
+  "please handle the alarm promptly": [
+    "app.dashboard.action.handleAlarm",
+    "Please handle the alarm promptly",
+  ],
+  请及时处理告警: ["app.dashboard.action.handleAlarm", "Please handle the alarm promptly"],
+  "no action required": ["app.dashboard.action.noAction", "No action required"],
+  无需处理: ["app.dashboard.action.noAction", "No action required"],
+  "check the frequency board module power, network, and libiio sampling process": [
+    "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+    "Check the frequency board module power, network, and libiio sampling process",
+  ],
+  "check the frequency board module power, network and libiio sampling process": [
+    "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+    "Check the frequency board module power, network, and libiio sampling process",
+  ],
+  "please check the frequency board module power, network, and libiio sampling process": [
+    "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+    "Check the frequency board module power, network, and libiio sampling process",
+  ],
+  "please check the frequency board module power, network and libiio sampling process": [
+    "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+    "Check the frequency board module power, network, and libiio sampling process",
+  ],
   rx: ["app.device.libiio.module.rx", "RX Module"],
   "rx module": ["app.device.libiio.module.rx", "RX Module"],
   "rx 模块": ["app.device.libiio.module.rx", "RX Module"],
+  "rx module offline": ["app.device.libiio.module.rxOffline", "RX Module Offline"],
+  "rx module is offline": ["app.device.libiio.module.rxOffline", "RX Module Offline"],
+  "rx 模块离线": ["app.device.libiio.module.rxOffline", "RX Module Offline"],
   tx: ["app.device.libiio.module.tx", "TX Module"],
   "tx module": ["app.device.libiio.module.tx", "TX Module"],
   "tx 模块": ["app.device.libiio.module.tx", "TX Module"],
+  "tx module offline": ["app.device.libiio.module.txOffline", "TX Module Offline"],
+  "tx module is offline": ["app.device.libiio.module.txOffline", "TX Module Offline"],
+  "tx 模块离线": ["app.device.libiio.module.txOffline", "TX Module Offline"],
+  "frequency point": ["app.device.libiio.frequencyPoint", "Frequency Point"],
+  "rx frequency point": ["app.device.libiio.rxFrequencyPoint", "RX Frequency Point"],
+  "tx frequency point": ["app.device.libiio.txFrequencyPoint", "TX Frequency Point"],
+  频点: ["app.device.libiio.frequencyPoint", "Frequency Point"],
+  "RX 频点": ["app.device.libiio.rxFrequencyPoint", "RX Frequency Point"],
+  "TX 频点": ["app.device.libiio.txFrequencyPoint", "TX Frequency Point"],
   频率: ["app.device.libiio.board.frequency", "Frequency"],
   "频率 (MHz)": ["app.device.libiio.board.frequency", "Frequency"],
   frequency: ["app.device.libiio.board.frequency", "Frequency"],
@@ -103,7 +483,14 @@ const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
   TX发射功率: ["app.device.libiio.type.txPower", "TX Transmit Power"],
   "TX发射功率 (dBm)": ["app.device.libiio.txPower", "TX Power (dBm)"],
   发射功率: ["app.device.libiio.txPower", "TX Power (dBm)"],
+  "tx power": ["app.device.libiio.txPower", "TX Power (dBm)"],
+  "tx power (dbm)": ["app.device.libiio.txPower", "TX Power (dBm)"],
+  "tx transmit power": ["app.device.libiio.type.txPower", "TX Transmit Power"],
   full_scale_power_dbm: [
+    "app.device.libiio.deviceFullScalePower",
+    "Device 0 dBFS Full-scale Power",
+  ],
+  "device 0 dbfs full-scale power": [
     "app.device.libiio.deviceFullScalePower",
     "Device 0 dBFS Full-scale Power",
   ],
@@ -157,11 +544,179 @@ const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
   low: ["app.device.libiio.board.statusLow", "Low"],
 }
 
+const BACKEND_CODE_KEYS: Record<string, [string, string]> = {
+  "dashboard.total": ["app.dashboard.total", "Total"],
+  "dashboard.deviceTotal": ["app.dashboard.deviceTotal", "Total Devices"],
+  "dashboard.healthRate": ["app.dashboard.healthRate", "Health Rate"],
+  "dashboard.healthy": ["app.dashboard.healthy", "Healthy"],
+  "dashboard.unhealthy": ["app.dashboard.unhealthy", "Unhealthy"],
+  "dashboard.online": ["app.dashboard.online", "Online"],
+  "dashboard.offline": ["app.dashboard.offline", "Offline"],
+  "dashboard.onlineDevices": ["app.dashboard.onlineDevices", "Online Devices"],
+  "dashboard.offlineDevices": ["app.dashboard.offlineDevices", "Offline Devices"],
+  "dashboard.alarmDevices": ["app.dashboard.alarmDevices", "Alarm Devices"],
+  "dashboard.healthyDevices": ["app.dashboard.healthyDevices", "Healthy Devices"],
+  "dashboard.unhealthyDevices": ["app.dashboard.unhealthyDevices", "Unhealthy Devices"],
+  "dashboard.maintainingDevices": ["app.dashboard.maintainingDevices", "Maintaining Devices"],
+  "dashboard.time.today": ["app.dashboard.time.today", "Today"],
+  "dashboard.time.yesterday": ["app.dashboard.time.yesterday", "Yesterday"],
+  "dashboard.time.thisWeek": ["app.dashboard.time.thisWeek", "This Week"],
+  "dashboard.time.thisMonth": ["app.dashboard.time.thisMonth", "This Month"],
+  "dashboard.time.thisYear": ["app.dashboard.time.thisYear", "This Year"],
+  "dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal": [
+    "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+    "Transmitter Mixer Downlink Forward Power",
+  ],
+  "dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal": [
+    "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+    "Near-end Unit BS1 Downlink Input Power",
+  ],
+  "dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal": [
+    "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+    "Near-end Unit BS1 Uplink Output RSSI",
+  ],
+  "dashboard.alarmItem.splitterRxOutputRssiSignal": [
+    "app.dashboard.alarmItem.splitterRxOutputRssiSignal",
+    "Splitter RX Uplink Output RSSI",
+  ],
+  "dashboard.alarmItem.downlinkForwardPowerSignal": [
+    "app.dashboard.alarmItem.downlinkForwardPowerSignal",
+    "Downlink Forward Power",
+  ],
+  "dashboard.alarmItem.downlinkInputPowerSignal": [
+    "app.dashboard.alarmItem.downlinkInputPowerSignal",
+    "Downlink Input Power",
+  ],
+  "dashboard.alarmItem.uplinkOutputRssiSignal": [
+    "app.dashboard.alarmItem.uplinkOutputRssiSignal",
+    "Uplink Output RSSI",
+  ],
+  "dashboard.alarmItem.rxOutputRssiSignal": [
+    "app.dashboard.alarmItem.rxOutputRssiSignal",
+    "RX Output RSSI",
+  ],
+  "dashboard.action.checkDevice": ["app.dashboard.action.checkDevice", "Please check the device"],
+  "dashboard.action.checkDeviceStatus": [
+    "app.dashboard.action.checkDeviceStatus",
+    "Please check the device status",
+  ],
+  "dashboard.action.checkDeviceConnection": [
+    "app.dashboard.action.checkDeviceConnection",
+    "Please check the device connection",
+  ],
+  "dashboard.action.checkDevicePowerSupplyAndNetworkConnection": [
+    "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+    "Check the device power supply and network connection",
+  ],
+  "dashboard.action.checkPowerSupplyAndNetworkConnection": [
+    "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+    "Check the power supply and network connection",
+  ],
+  "dashboard.action.checkDevicePowerSupply": [
+    "app.dashboard.action.checkDevicePowerSupply",
+    "Check the device power supply",
+  ],
+  "dashboard.action.checkPowerSupply": [
+    "app.dashboard.action.checkPowerSupply",
+    "Check the power supply",
+  ],
+  "dashboard.action.checkNetworkConnection": [
+    "app.dashboard.action.checkNetworkConnection",
+    "Check the network connection",
+  ],
+  "dashboard.action.checkPower": ["app.dashboard.action.checkPower", "Please check the power"],
+  "dashboard.action.checkRssi": ["app.dashboard.action.checkRssi", "Please check RSSI"],
+  "dashboard.action.handleAlarm": [
+    "app.dashboard.action.handleAlarm",
+    "Please handle the alarm promptly",
+  ],
+  "dashboard.action.noAction": ["app.dashboard.action.noAction", "No action required"],
+  "dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess": [
+    "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+    "Check the frequency board module power, network, and libiio sampling process",
+  ],
+  "dashboard.status.isAbnormal": ["app.dashboard.status.isAbnormal", "Abnormal"],
+  "dashboard.status.isNormal": ["app.dashboard.status.isNormal", "Normal"],
+  "dashboard.status.isHigh": ["app.dashboard.status.isHigh", "High"],
+  "dashboard.status.isLow": ["app.dashboard.status.isLow", "Low"],
+  "device.index.group.transmitterMixer": [
+    "app.device.index.group.transmitterMixer",
+    "Transmitter Mixer",
+  ],
+  "device.index.group.receiverSplitter": [
+    "app.device.index.group.receiverSplitter",
+    "Receiver Splitter",
+  ],
+  "device.index.group.nearEnd": ["app.device.index.group.nearEnd", "Near-end Unit"],
+  "device.index.group.remote": ["app.device.index.group.remote", "Remote Unit"],
+  "device.index.group.bandpassDuplexer": [
+    "app.device.index.group.bandpassDuplexer",
+    "Bandpass Duplexer",
+  ],
+  "device.index.group.uplinkStripper": [
+    "app.device.index.group.uplinkStripper",
+    "Uplink Signal Stripper",
+  ],
+  "device.index.group.downlinkStripper": [
+    "app.device.index.group.downlinkStripper",
+    "Downlink Signal Stripper",
+  ],
+  "device.index.group.digitalNearEnd": [
+    "app.device.index.group.digitalNearEnd",
+    "Digital Near-end Unit",
+  ],
+  "device.index.group.digitalRemote": [
+    "app.device.index.group.digitalRemote",
+    "Digital Remote Unit",
+  ],
+  "device.index.group.analogNearEnd": [
+    "app.device.index.group.analogNearEnd",
+    "Analog Near-end Unit",
+  ],
+  "device.index.group.analogRemote": ["app.device.index.group.analogRemote", "Analog Remote Unit"],
+  "device.index.group.trunkAmplifier": ["app.device.index.group.trunkAmplifier", "Trunk Amplifier"],
+  "device.index.group.powerCollectionGateway": [
+    "app.device.index.group.powerCollectionGateway",
+    "Power Collection Gateway",
+  ],
+  "device.status.online": ["app.device.status.online", "Online"],
+  "device.status.offline": ["app.device.status.offline", "Offline"],
+  "device.status.inAlarm": ["app.device.status.inAlarm", "In Alarm"],
+  "device.status.moduleOffline": ["app.device.status.moduleOffline", "Module Offline"],
+  "device.libiio.module.rx": ["app.device.libiio.module.rx", "RX Module"],
+  "device.libiio.module.tx": ["app.device.libiio.module.tx", "TX Module"],
+  "device.libiio.module.rxOffline": ["app.device.libiio.module.rxOffline", "RX Module Offline"],
+  "device.libiio.module.txOffline": ["app.device.libiio.module.txOffline", "TX Module Offline"],
+  "device.libiio.frequencyPoint": ["app.device.libiio.frequencyPoint", "Frequency Point"],
+  "device.libiio.rxFrequencyPoint": ["app.device.libiio.rxFrequencyPoint", "RX Frequency Point"],
+  "device.libiio.txFrequencyPoint": ["app.device.libiio.txFrequencyPoint", "TX Frequency Point"],
+  "device.libiio.board.statusAbnormal": ["app.device.libiio.board.statusAbnormal", "Abnormal"],
+  "device.libiio.board.statusNormal": ["app.device.libiio.board.statusNormal", "Normal"],
+  "device.libiio.board.statusHigh": ["app.device.libiio.board.statusHigh", "High"],
+  "device.libiio.board.statusLow": ["app.device.libiio.board.statusLow", "Low"],
+  "device.libiio.board.frequency": ["app.device.libiio.board.frequency", "Frequency"],
+  "device.libiio.board.power": ["app.device.libiio.board.power", "Power"],
+  "device.libiio.rxRssi": ["app.device.libiio.rxRssi", "RX RSSI"],
+  "device.libiio.rxRssiWithUnit": ["app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"],
+  "device.libiio.txPower": ["app.device.libiio.txPower", "TX Power (dBm)"],
+  "device.libiio.txMonitorPowerWithUnit": ["app.device.libiio.txMonitorPowerWithUnit", "Power (W)"],
+  "device.libiio.deviceFullScalePower": [
+    "app.device.libiio.deviceFullScalePower",
+    "Device 0 dBFS Full-scale Power",
+  ],
+  "device.libiio.txPowerOffsetDb": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
+  "device.libiio.rxRssiOffsetDb": ["app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"],
+}
+
 const DEVICE_GROUP_KEYS: Record<string, string> = {
   发射合路器: "transmitterMixer",
   "transmitter mixer": "transmitterMixer",
+  mixer: "transmitterMixer",
   接收分路器: "receiverSplitter",
   "receiver splitter": "receiverSplitter",
+  receiver: "receiverSplitter",
+  splitter: "receiverSplitter",
+  分路器: "receiverSplitter",
   带通双工器: "bandpassDuplexer",
   "bandpass duplexer": "bandpassDuplexer",
   上行信号剥离器: "uplinkStripper",
@@ -170,10 +725,16 @@ const DEVICE_GROUP_KEYS: Record<string, string> = {
   "downlink signal stripper": "downlinkStripper",
   数字近端机: "digitalNearEnd",
   "digital near-end unit": "digitalNearEnd",
+  "near-end unit": "digitalNearEnd",
+  "near end unit": "digitalNearEnd",
+  "near-end": "digitalNearEnd",
+  "near end": "digitalNearEnd",
   模拟近端机: "analogNearEnd",
   "analog near-end unit": "analogNearEnd",
   数字远端机: "digitalRemote",
   "digital remote unit": "digitalRemote",
+  "remote unit": "digitalRemote",
+  remote: "digitalRemote",
   模拟远端机: "analogRemote",
   "analog remote unit": "analogRemote",
   干线放大器: "trunkAmplifier",
@@ -181,6 +742,257 @@ const DEVICE_GROUP_KEYS: Record<string, string> = {
   功率采集网关: "powerCollectionGateway",
   "power collection gateway": "powerCollectionGateway",
 }
+
+const BACKEND_TEXT_PART_KEYS: [string, [string, string]][] = [
+  [
+    "transmitter mixer downlink forward power signal",
+    [
+      "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+      "Transmitter Mixer Downlink Forward Power",
+    ],
+  ],
+  [
+    "transmitter mixer downlink forward power",
+    [
+      "app.dashboard.alarmItem.transmitterMixerDownlinkForwardPowerSignal",
+      "Transmitter Mixer Downlink Forward Power",
+    ],
+  ],
+  [
+    "near-end unit bs1 downlink input power",
+    [
+      "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+      "Near-end Unit BS1 Downlink Input Power",
+    ],
+  ],
+  [
+    "near-end bs1 downlink input power signal",
+    [
+      "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+      "Near-end Unit BS1 Downlink Input Power",
+    ],
+  ],
+  [
+    "near end bs1 downlink input power signal",
+    [
+      "app.dashboard.alarmItem.nearEndBs1DownlinkInputPowerSignal",
+      "Near-end Unit BS1 Downlink Input Power",
+    ],
+  ],
+  [
+    "near-end unit bs1 uplink output rssi",
+    [
+      "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+      "Near-end Unit BS1 Uplink Output RSSI",
+    ],
+  ],
+  [
+    "near-end bs1 uplink output rssi signal",
+    [
+      "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+      "Near-end Unit BS1 Uplink Output RSSI",
+    ],
+  ],
+  [
+    "near end bs1 uplink output rssi signal",
+    [
+      "app.dashboard.alarmItem.nearEndBs1UplinkOutputRssiSignal",
+      "Near-end Unit BS1 Uplink Output RSSI",
+    ],
+  ],
+  [
+    "splitter rx uplink output rssi",
+    ["app.dashboard.alarmItem.splitterRxOutputRssiSignal", "Splitter RX Uplink Output RSSI"],
+  ],
+  [
+    "splitter rx output rssi signal",
+    ["app.dashboard.alarmItem.splitterRxOutputRssiSignal", "Splitter RX Uplink Output RSSI"],
+  ],
+  [
+    "downlink forward power signal",
+    ["app.dashboard.alarmItem.downlinkForwardPowerSignal", "Downlink Forward Power"],
+  ],
+  [
+    "downlink forward power",
+    ["app.dashboard.alarmItem.downlinkForwardPowerSignal", "Downlink Forward Power"],
+  ],
+  [
+    "downlink input power signal",
+    ["app.dashboard.alarmItem.downlinkInputPowerSignal", "Downlink Input Power"],
+  ],
+  [
+    "downlink input power",
+    ["app.dashboard.alarmItem.downlinkInputPowerSignal", "Downlink Input Power"],
+  ],
+  [
+    "uplink output rssi signal",
+    ["app.dashboard.alarmItem.uplinkOutputRssiSignal", "Uplink Output RSSI"],
+  ],
+  ["uplink output rssi", ["app.dashboard.alarmItem.uplinkOutputRssiSignal", "Uplink Output RSSI"]],
+  ["rx output rssi signal", ["app.dashboard.alarmItem.rxOutputRssiSignal", "RX Output RSSI"]],
+  ["rx output rssi", ["app.dashboard.alarmItem.rxOutputRssiSignal", "RX Output RSSI"]],
+  [
+    "please check the device connection",
+    ["app.dashboard.action.checkDeviceConnection", "Please check the device connection"],
+  ],
+  [
+    "please check device connection",
+    ["app.dashboard.action.checkDeviceConnection", "Please check the device connection"],
+  ],
+  [
+    "check device connection",
+    ["app.dashboard.action.checkDeviceConnection", "Please check the device connection"],
+  ],
+  [
+    "check the device power supply and network connection",
+    [
+      "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+      "Check the device power supply and network connection",
+    ],
+  ],
+  [
+    "please check the device power supply and network connection",
+    [
+      "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+      "Check the device power supply and network connection",
+    ],
+  ],
+  [
+    "check device power supply and network connection",
+    [
+      "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+      "Check the device power supply and network connection",
+    ],
+  ],
+  [
+    "please check device power supply and network connection",
+    [
+      "app.dashboard.action.checkDevicePowerSupplyAndNetworkConnection",
+      "Check the device power supply and network connection",
+    ],
+  ],
+  [
+    "please check the power supply and network connection",
+    [
+      "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+      "Check the power supply and network connection",
+    ],
+  ],
+  [
+    "please check power supply and network connection",
+    [
+      "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+      "Check the power supply and network connection",
+    ],
+  ],
+  [
+    "check the power supply and network connection",
+    [
+      "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+      "Check the power supply and network connection",
+    ],
+  ],
+  [
+    "check power supply and network connection",
+    [
+      "app.dashboard.action.checkPowerSupplyAndNetworkConnection",
+      "Check the power supply and network connection",
+    ],
+  ],
+  [
+    "please check the device power supply",
+    ["app.dashboard.action.checkDevicePowerSupply", "Check the device power supply"],
+  ],
+  [
+    "please check device power supply",
+    ["app.dashboard.action.checkDevicePowerSupply", "Check the device power supply"],
+  ],
+  [
+    "check the device power supply",
+    ["app.dashboard.action.checkDevicePowerSupply", "Check the device power supply"],
+  ],
+  [
+    "check device power supply",
+    ["app.dashboard.action.checkDevicePowerSupply", "Check the device power supply"],
+  ],
+  [
+    "please check the power supply",
+    ["app.dashboard.action.checkPowerSupply", "Check the power supply"],
+  ],
+  [
+    "please check power supply",
+    ["app.dashboard.action.checkPowerSupply", "Check the power supply"],
+  ],
+  ["check the power supply", ["app.dashboard.action.checkPowerSupply", "Check the power supply"]],
+  ["check power supply", ["app.dashboard.action.checkPowerSupply", "Check the power supply"]],
+  [
+    "please check the network connection",
+    ["app.dashboard.action.checkNetworkConnection", "Check the network connection"],
+  ],
+  [
+    "please check network connection",
+    ["app.dashboard.action.checkNetworkConnection", "Check the network connection"],
+  ],
+  [
+    "check the network connection",
+    ["app.dashboard.action.checkNetworkConnection", "Check the network connection"],
+  ],
+  [
+    "check network connection",
+    ["app.dashboard.action.checkNetworkConnection", "Check the network connection"],
+  ],
+  [
+    "please check the device status",
+    ["app.dashboard.action.checkDeviceStatus", "Please check the device status"],
+  ],
+  [
+    "please check device status",
+    ["app.dashboard.action.checkDeviceStatus", "Please check the device status"],
+  ],
+  [
+    "check device status",
+    ["app.dashboard.action.checkDeviceStatus", "Please check the device status"],
+  ],
+  ["please check the device", ["app.dashboard.action.checkDevice", "Please check the device"]],
+  ["please check device", ["app.dashboard.action.checkDevice", "Please check the device"]],
+  ["please check the power", ["app.dashboard.action.checkPower", "Please check the power"]],
+  ["please check power", ["app.dashboard.action.checkPower", "Please check the power"]],
+  ["please check rssi", ["app.dashboard.action.checkRssi", "Please check RSSI"]],
+  ["please check", ["app.dashboard.action.checkPrefix", "Please check"]],
+  ["no action required", ["app.dashboard.action.noAction", "No action required"]],
+  [
+    "please check the frequency board module power, network, and libiio sampling process",
+    [
+      "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+      "Check the frequency board module power, network, and libiio sampling process",
+    ],
+  ],
+  [
+    "please check the frequency board module power, network and libiio sampling process",
+    [
+      "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+      "Check the frequency board module power, network, and libiio sampling process",
+    ],
+  ],
+  [
+    "check the frequency board module power, network, and libiio sampling process",
+    [
+      "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+      "Check the frequency board module power, network, and libiio sampling process",
+    ],
+  ],
+  [
+    "check the frequency board module power, network and libiio sampling process",
+    [
+      "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess",
+      "Check the frequency board module power, network, and libiio sampling process",
+    ],
+  ],
+  ["abnormal", ["app.dashboard.status.isAbnormal", "Abnormal"]],
+  ["normal", ["app.dashboard.status.isNormal", "Normal"]],
+  ["high", ["app.dashboard.status.isHigh", "High"]],
+  ["low", ["app.dashboard.status.isLow", "Low"]],
+]
 
 const replaceValues = (message: string, values?: MessageValues) => {
   if (!values) {
@@ -192,6 +1004,67 @@ const replaceValues = (message: string, values?: MessageValues) => {
       acc.replace(new RegExp(`\\$\\{${key}\\}|\\{${key}\\}`, "g"), String(value)),
     message,
   )
+}
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+const createBackendTextPartRegExp = (pattern: string) => {
+  const escapedPattern = escapeRegExp(pattern)
+
+  return /^[a-z0-9 -]+$/i.test(pattern)
+    ? new RegExp(`(^|[^a-z0-9])(${escapedPattern})(?=$|[^a-z0-9])`, "gi")
+    : new RegExp(escapedPattern, "gi")
+}
+
+const BACKEND_CODE_KEY_LOOKUP = Object.entries(BACKEND_CODE_KEYS).reduce((acc, [key, value]) => {
+  acc[key] = value
+  acc[key.toLowerCase()] = value
+  return acc
+}, {} as Record<string, [string, string]>)
+
+const isBackendI18nPayload = (value: BackendI18nValue): value is BackendI18nPayload =>
+  !!value && typeof value === "object"
+
+const getTextValue = (...values: (string | null | undefined)[]) => {
+  const text = values.find((item) => item?.trim())
+
+  return text?.trim() || ""
+}
+
+const getMessageValues = (params?: BackendMessageParams | null): MessageValues | undefined => {
+  if (!params) {
+    return undefined
+  }
+
+  const values = Object.entries(params).reduce((acc, [key, value]) => {
+    if (value === null || value === undefined) {
+      return acc
+    }
+
+    acc[key] = typeof value === "boolean" ? String(value) : value
+    return acc
+  }, {} as MessageValues)
+
+  return Object.keys(values).length ? values : undefined
+}
+
+const getBackendMessageKey = (value?: string | null) => {
+  const trimmedValue = value?.trim()
+  if (!trimmedValue) {
+    return undefined
+  }
+
+  const lowerValue = trimmedValue.toLowerCase()
+  const codeKey = BACKEND_CODE_KEY_LOOKUP[trimmedValue] || BACKEND_CODE_KEY_LOOKUP[lowerValue]
+  if (codeKey) {
+    return codeKey
+  }
+
+  if (trimmedValue.startsWith("app.")) {
+    return [trimmedValue, trimmedValue]
+  }
+
+  return BACKEND_LABEL_KEYS[trimmedValue] || BACKEND_LABEL_KEYS[lowerValue]
 }
 
 export const getRuntimeLocale = () => {
@@ -221,22 +1094,90 @@ export const formatMessageWith = (
   values?: MessageValues,
 ) => replaceValues(t(id, defaultMessage, values), values)
 
-export const formatBackendLabel = (value?: string | null, t?: Translate) => {
+const formatBackendStringLabel = (value?: string | null, t?: Translate) => {
   const trimmedValue = value?.trim()
   if (!trimmedValue) {
     return ""
   }
 
-  const labelKey =
-    BACKEND_LABEL_KEYS[trimmedValue] || BACKEND_LABEL_KEYS[trimmedValue.toLowerCase()]
+  const labelKey = getBackendMessageKey(trimmedValue)
 
-  if (!labelKey) {
-    return trimmedValue
+  if (labelKey) {
+    return t
+      ? formatMessageWith(t, labelKey[0], labelKey[1])
+      : formatRuntimeMessage(labelKey[0], labelKey[1])
   }
 
-  return t
-    ? formatMessageWith(t, labelKey[0], labelKey[1])
-    : formatRuntimeMessage(labelKey[0], labelKey[1])
+  const lowerValue = trimmedValue.toLowerCase()
+  const translatedText = BACKEND_TEXT_PART_KEYS.reduce((text, [pattern, messageKey]) => {
+    if (!lowerValue.includes(pattern)) {
+      return text
+    }
+
+    const translatedPart = t
+      ? formatMessageWith(t, messageKey[0], messageKey[1])
+      : formatRuntimeMessage(messageKey[0], messageKey[1])
+
+    return text.replace(
+      createBackendTextPartRegExp(pattern),
+      (_match, prefix = "") => `${prefix}${translatedPart}`,
+    )
+  }, trimmedValue)
+
+  return translatedText
+}
+
+export const resolveSystemDisplayName = (systemName?: string | null, fallbackName?: string) => {
+  const trimmedSystemName = systemName?.trim()
+  const defaultName =
+    fallbackName || formatRuntimeMessage("app.system.defaultName", DEFAULT_SYSTEM_NAME_EN)
+
+  if (!trimmedSystemName) {
+    return defaultName
+  }
+
+  const compareName =
+    trimmedSystemName === DEFAULT_SYSTEM_NAME_ZH
+      ? trimmedSystemName
+      : trimmedSystemName.toLowerCase()
+
+  return DEFAULT_SYSTEM_NAME_VALUES.has(compareName) ? defaultName : trimmedSystemName
+}
+
+export const formatBackendLabel = (value?: BackendI18nValue, t?: Translate) => {
+  if (typeof value === "string") {
+    return formatBackendStringLabel(value, t)
+  }
+
+  if (!isBackendI18nPayload(value)) {
+    return ""
+  }
+
+  const messageKey = getTextValue(value.key)
+  const fallback = getTextValue(value.fallback, value.defaultMessage, value.value, value.code)
+  const values = getMessageValues(value.params)
+  const mappedMessageKey = getBackendMessageKey(messageKey)
+
+  if (mappedMessageKey) {
+    return t
+      ? formatMessageWith(t, mappedMessageKey[0], fallback || mappedMessageKey[1], values)
+      : formatRuntimeMessage(mappedMessageKey[0], fallback || mappedMessageKey[1], values)
+  }
+
+  if (messageKey) {
+    return t
+      ? formatMessageWith(t, messageKey, fallback, values)
+      : formatRuntimeMessage(messageKey, fallback, values)
+  }
+
+  const codeKey = getBackendMessageKey(value.code)
+  if (codeKey) {
+    return t
+      ? formatMessageWith(t, codeKey[0], fallback || codeKey[1], values)
+      : formatRuntimeMessage(codeKey[0], fallback || codeKey[1], values)
+  }
+
+  return formatBackendStringLabel(fallback, t) || fallback
 }
 
 export const getDeviceGroupKey = (value?: string | null) => {
@@ -282,5 +1223,5 @@ export const isRecoveryLog = (value?: string | null) => {
 
 export const createBackendLabelFormatter =
   (t: Translate) =>
-  (value?: string | null, fallback = "") =>
+  (value?: BackendI18nValue, fallback = "") =>
     formatBackendLabel(value || fallback, t) || fallback

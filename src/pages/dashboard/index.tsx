@@ -14,7 +14,8 @@ import {
 } from "@ant-design/icons"
 import { SYSTEM_CONFIG } from "@/constants"
 import { useIntl } from "umi"
-import { createBackendLabelFormatter } from "@/utils/i18n"
+import { createBackendLabelFormatter, resolveSystemDisplayName } from "@/utils/i18n"
+import type { BackendI18nValue } from "@/utils/i18n"
 
 const { Title } = Typography
 const DEFAULT_REFRESH_INTERVAL = 3000
@@ -30,6 +31,20 @@ const getRefreshIntervalMs = (value: unknown) => {
   const intervalMs = numericValue < 100 ? numericValue * 1000 : numericValue
 
   return Math.max(MIN_REFRESH_INTERVAL, Math.round(intervalMs))
+}
+
+const getBackendValueKey = (value: BackendI18nValue, fallback = "") => {
+  if (typeof value === "string") {
+    return value || fallback
+  }
+
+  if (!value) {
+    return fallback
+  }
+
+  return (
+    value.key || value.code || value.fallback || value.defaultMessage || value.value || fallback
+  )
 }
 
 // 常量配置
@@ -231,7 +246,7 @@ const usePieConfig = (
   total: number,
   isFirstRender: boolean,
   t: (id: string, defaultMessage: string) => string,
-  formatBackendLabel: (value?: string | null, fallback?: string) => string,
+  formatBackendLabel: (value?: BackendI18nValue, fallback?: string) => string,
 ) => {
   return useMemo(() => {
     const sourceData = Array.isArray(data) ? data : data ? [data] : []
@@ -313,17 +328,26 @@ const usePieConfig = (
 }
 
 // 折线图配置
-const useLineConfig = (data: any[]) => {
-  return useMemo(
-    () => ({
-      data: data || [],
+const useLineConfig = (
+  data: any[],
+  t: (id: string, defaultMessage: string) => string,
+  formatBackendLabel: (value?: BackendI18nValue, fallback?: string) => string,
+) => {
+  return useMemo(() => {
+    const chartData = (data || []).map((item) => ({
+      ...item,
+      type: formatBackendLabel(item.type),
+    }))
+
+    return {
+      data: chartData,
       xField: "type",
       yField: "value",
       padding: "auto",
       tooltip: {
         formatter: (item: any) => ({
           name: item.type,
-          value: `${item.value?.toFixed(2) || 0} wh`,
+          value: `${item.value?.toFixed(2) || 0} ${t("app.dashboard.unit.wh", "Wh")}`,
         }),
       },
       lineStyle: {
@@ -332,9 +356,8 @@ const useLineConfig = (data: any[]) => {
       },
       smooth: true,
       animation: false,
-    }),
-    [data],
-  )
+    }
+  }, [data, formatBackendLabel, t])
 }
 
 const Dashboard: React.FC = () => {
@@ -599,7 +622,7 @@ const Dashboard: React.FC = () => {
     formatBackendLabel,
   )
 
-  const lineConfig = useLineConfig(dashboardData?.energy_consumption || [])
+  const lineConfig = useLineConfig(dashboardData?.energy_consumption || [], t, formatBackendLabel)
 
   if (loading) {
     return (
@@ -646,9 +669,9 @@ const Dashboard: React.FC = () => {
               const systemConfig = localStorage.getItem(SYSTEM_CONFIG)
               if (systemConfig) {
                 const config = JSON.parse(systemConfig)
-                return (
-                  config.system_name ||
-                  t("app.system.defaultName", "Private Network Communication Intelligent NMS")
+                return resolveSystemDisplayName(
+                  config.system_name,
+                  t("app.system.defaultName", "Private Network Communication Intelligent NMS"),
                 )
               }
             } catch {}
@@ -944,7 +967,9 @@ const Dashboard: React.FC = () => {
                           }}
                         >
                           <span style={{ color: "#808080", fontSize: "10px" }}>
-                            {formatBackendLabel(item.alarm_item.suggested_action)}
+                            {formatBackendLabel(
+                              item.alarm_item.suggested_action || item.alarm_item.alarm_text,
+                            )}
                           </span>
                           <span style={{ color: "#808080", fontSize: "10px" }}>
                             {item.alarm_at}
@@ -962,8 +987,8 @@ const Dashboard: React.FC = () => {
         {/* 设备类型统计详情 */}
         {dashboardData?.type_statistic && dashboardData?.type_statistic.length > 0 && (
           <Row gutter={24} style={{ marginBottom: 16 }}>
-            {dashboardData?.type_statistic.map((item: any) => (
-              <Col key={item.type} xs={12} sm={8} md={6} lg={4}>
+            {dashboardData?.type_statistic.map((item: any, index) => (
+              <Col key={getBackendValueKey(item.name, String(index))} xs={12} sm={8} md={6} lg={4}>
                 <Card
                   title={
                     <Space>

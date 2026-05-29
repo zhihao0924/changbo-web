@@ -28,6 +28,7 @@ const CHANNEL_COLUMNS = Array.from({ length: CHANNELS_PER_ROW }, (_, index) => i
 const MAX_CHANNEL_COUNT = 20
 const BOARD_POLLING_INTERVAL = 3000
 const BOARD_MODULE_ORDER: ModuleDirection[] = ["tx", "rx"]
+const ALARM_DISABLED_VALUE = -1
 type FrequencyChunk<T> = { key: string; channelOffset: number; items: T[] }
 type StatusTone = "normal" | "high" | "low" | "none"
 type DisplayRow = { label: string; values: string[]; statusTones?: StatusTone[] }
@@ -94,7 +95,7 @@ const fillMissingChannels = (channels: BoardChannel[] = []) => {
         configured: false,
         target_freq_mhz: null,
         metric_value: null,
-        alarm_enabled: 0,
+        alarm_enabled: ALARM_DISABLED_VALUE,
         alarm_status: null,
         status_text: "-",
       }
