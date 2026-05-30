@@ -8,7 +8,7 @@ import {
 } from "@/constants"
 import Services from "@/pages/user/services"
 import { postSystemConfig } from "@/pages/setting/services/api"
-import { formatApiResponseMessage, resolveSystemDisplayName } from "@/utils/i18n"
+import { formatApiResponseMessage, getRuntimeLocale, resolveSystemDisplayName } from "@/utils/i18n"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { ProForm, ProFormText } from "@ant-design/pro-form"
 import { Alert, message, Tabs } from "antd"
@@ -37,7 +37,7 @@ const Login: React.FC = () => {
   const [systemConfig, setSystemConfig] = useState<any>(null)
   const { setInitialState } = useModel("@@initialState")
   const intl = useIntl()
-  const isEnglish = intl.locale === "en-US"
+  const isEnglish = getRuntimeLocale() === "en-US"
 
   const formatMessage = useCallback(
     (id: string, defaultMessage: string) =>

@@ -8,6 +8,7 @@ import type { RcFile, UploadChangeParam } from "antd/es/upload"
 import Services from "@/pages/setting/services"
 import { SYSTEM_CONFIG } from "@/constants"
 import { useIntl } from "umi"
+import { BASE_LOCALE, I18N_ENABLED } from "@/utils/i18n"
 
 const getBase64 = (img: RcFile, callback: (url: string) => void) => {
   const reader = new FileReader()
@@ -47,7 +48,7 @@ const SystemSetting: React.FC = () => {
     if (res) {
       setImageUrl(res.res.system_logo)
       form.setFieldsValue({
-        report_locale: "en-US",
+        report_locale: BASE_LOCALE,
         ...res.res,
       })
     }
@@ -61,7 +62,7 @@ const SystemSetting: React.FC = () => {
     Services.api
       .postSystemConfigSave({
         ...values,
-        report_locale: values.report_locale || "en-US",
+        report_locale: I18N_ENABLED ? values.report_locale || BASE_LOCALE : BASE_LOCALE,
       })
       .then((res) => {
         localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
@@ -190,24 +191,26 @@ const SystemSetting: React.FC = () => {
               ]}
             />
           </Form.Item>
-          <Form.Item
-            labelCol={{ span: 6 }}
-            label={t("app.setting.system.reportLocale", "Email and Backup File Language")}
-            name="report_locale"
-            initialValue="en-US"
-            rules={[
-              {
-                required: true,
-                message: t(
-                  "app.setting.system.reportLocale.required",
-                  "Please select a language for email and backup files",
-                ),
-              },
-            ]}
-            style={{ maxWidth: 600 }}
-          >
-            <Select options={reportLocaleOptions} />
-          </Form.Item>
+          {I18N_ENABLED && (
+            <Form.Item
+              labelCol={{ span: 6 }}
+              label={t("app.setting.system.reportLocale", "Email and Backup File Language")}
+              name="report_locale"
+              initialValue="en-US"
+              rules={[
+                {
+                  required: true,
+                  message: t(
+                    "app.setting.system.reportLocale.required",
+                    "Please select a language for email and backup files",
+                  ),
+                },
+              ]}
+              style={{ maxWidth: 600 }}
+            >
+              <Select options={reportLocaleOptions} />
+            </Form.Item>
+          )}
           <Divider dashed={true} />
           <Form.Item
             labelCol={{ span: 6 }}

@@ -6,6 +6,8 @@ import styles from "./index.less"
 
 export type SiderTheme = "light" | "dark"
 
+const isBaseFeatureSet = process.env.FEATURE_SET === "base"
+
 const GlobalHeaderRight: React.FC = () => {
   const { initialState } = useModel("@@initialState")
 
@@ -26,7 +28,7 @@ const GlobalHeaderRight: React.FC = () => {
     <div className={className}>
       <TimeLine showModal={showModal} onCloseModal={() => setShowModalCB(false)} />
       <Avatar />
-      <SelectLang className={`${styles.action} ${styles.langAction}`} />
+      {!isBaseFeatureSet && <SelectLang className={`${styles.action} ${styles.langAction}`} />}
     </div>
   )
 }

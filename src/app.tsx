@@ -18,7 +18,13 @@ import { versionTipDialog } from "@/components/versionTipDialog"
 import RightContent from "@/components/RightContent"
 import defaultSettings from "../config/defaultSettings"
 import { postSystemConfig } from "@/pages/setting/services/api"
-import { formatRuntimeMessage, resolveSystemDisplayName } from "@/utils/i18n"
+import {
+  BASE_LOCALE,
+  formatRuntimeMessage,
+  I18N_ENABLED,
+  LOCALE_STORAGE_KEY,
+  resolveSystemDisplayName,
+} from "@/utils/i18n"
 
 const excludePath = [LOGINPATH, CALLBACKPATH, SYSTEMCONFIGPATH]
 const DEFAULT_LOGO = "/logo.png"
@@ -37,6 +43,15 @@ const resolveSystemLogo = (systemLogo?: string | null) => {
   return trimmedSystemLogo || DEFAULT_LOGO
 }
 
+export const locale = {
+  getLocale() {
+    if (!I18N_ENABLED) {
+      return BASE_LOCALE
+    }
+    return undefined
+  },
+}
+
 /** 获取用户信息比较慢的时候会展示一个 loading */
 export const initialStateConfig = {
   loading: <PageLoading />,
@@ -53,6 +68,10 @@ export async function getInitialState(): Promise<{
   fetchUserInfo?: () => Promise<API_USER.Res | undefined>
   fetchSystemConfig?: () => Promise<API_PostSystemConfig.Config | undefined>
 }> {
+  if (!I18N_ENABLED && typeof window !== "undefined") {
+    localStorage.removeItem(LOCALE_STORAGE_KEY)
+  }
+
   if (process.env.NODE_ENV !== "development") {
     if (process.env.BUILD_ENV == "prod" || process.env.BUILD_ENV == "dev") {
       checkVersion({

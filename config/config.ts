@@ -6,6 +6,7 @@ import proxy from "./proxy"
 import routes from "./routes"
 
 const BUILD_TIME = dayjs().format("YYYY-MM-DD HH:mm:ss")
+const baseFeatureConfig = require(`${process.cwd()}/config/baseFeature`)
 
 installEnv({
   BUILD_TIME,
@@ -26,6 +27,8 @@ export default defineConfig({
     "process.env.DEPLOY_ENV": process.env.DEPLOY_ENV,
     "process.env.DEVELOPER": process.env.DEVELOPER,
     "process.env.BUILD_ENV": process.env.BUILD_ENV,
+    "process.env.FEATURE_SET": process.env.FEATURE_SET || "full",
+    "process.env.BASE_LOCALE": baseFeatureConfig.locale,
   },
   theme: {
     "@primary-color": defaultSettings.colorPrimary, // 全局主色

@@ -24,6 +24,14 @@ export type Translate = (id: string, defaultMessage: string, values?: MessageVal
 
 export const DEFAULT_LOCALE = "en-US"
 export const LOCALE_STORAGE_KEY = "umi_locale"
+export const I18N_ENABLED = process.env.FEATURE_SET !== "base"
+export const SUPPORTED_LOCALES = ["en-US", "zh-CN"] as const
+export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
+export const BASE_LOCALE: SupportedLocale = SUPPORTED_LOCALES.includes(
+  process.env.BASE_LOCALE as SupportedLocale,
+)
+  ? (process.env.BASE_LOCALE as SupportedLocale)
+  : DEFAULT_LOCALE
 export const DEFAULT_SYSTEM_NAME_EN = "Private Network Communication Intelligent NMS"
 export const DEFAULT_SYSTEM_NAME_ZH = "专网通信智能网管平台"
 const DEFAULT_SYSTEM_NAME_VALUES = new Set([
@@ -1154,6 +1162,10 @@ const getBackendMessageKey = (value?: string | null) => {
 }
 
 export const getRuntimeLocale = () => {
+  if (!I18N_ENABLED) {
+    return BASE_LOCALE
+  }
+
   if (typeof window === "undefined") {
     return DEFAULT_LOCALE
   }
