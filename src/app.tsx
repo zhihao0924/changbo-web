@@ -30,6 +30,21 @@ import {
 const excludePath = [LOGINPATH, CALLBACKPATH, SYSTEMCONFIGPATH]
 const DEFAULT_LOGO = "/logo.png"
 
+const getCurrentPathname = (location?: { pathname?: string }) => {
+  if (location?.pathname) {
+    return location.pathname
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.pathname
+  }
+
+  return ""
+}
+
+const isProtectedPathname = (pathname: string) =>
+  excludePath.every((item) => !pathname.startsWith(item))
+
 const getDefaultSystemName = () => {
   return resolveSystemDisplayName()
 }
@@ -189,7 +204,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     // },
     onPageChange: () => {
       const { location } = history
-      const isAuthPage = excludePath.every((item) => !location.pathname.startsWith(item))
+      const isAuthPage = isProtectedPathname(getCurrentPathname(location))
       const { search, pathname } = window.location
 
       if (isAuthPage) {
@@ -208,7 +223,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
 }
 
 export function onRouteChange({ location }: any) {
-  const isAuthPage = excludePath.every((item) => !location.pathname.startsWith(item))
+  const isAuthPage = isProtectedPathname(getCurrentPathname(location))
 
   if (isAuthPage) {
     expire()
