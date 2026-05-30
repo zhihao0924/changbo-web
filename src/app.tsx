@@ -21,6 +21,7 @@ import { postSystemConfig } from "@/pages/setting/services/api"
 import {
   BASE_LOCALE,
   formatRuntimeMessage,
+  getRuntimeLocale,
   I18N_ENABLED,
   LOCALE_STORAGE_KEY,
   resolveSystemDisplayName,
@@ -48,7 +49,7 @@ export const locale = {
     if (!I18N_ENABLED) {
       return BASE_LOCALE
     }
-    return undefined
+    return getRuntimeLocale()
   },
 }
 
