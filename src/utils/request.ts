@@ -44,6 +44,42 @@ const redirectLoginPath = {
 
 let controller = new AbortController()
 
+const joinUrlPath = (base: string, path: string) => {
+  return `${base.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`
+}
+
+const getUrlPathname = (url: string) => {
+  try {
+    return new URL(url).pathname
+  } catch (error) {
+    return url
+  }
+}
+
+const hasGatewayPrefix = (target: string, gateway: string) => {
+  const normalizedTargetPath = `/${getUrlPathname(target).replace(/^\/+|\/+$/g, "")}`
+  const normalizedGateway = `/${gateway.replace(/^\/+|\/+$/g, "")}`
+
+  return normalizedTargetPath === normalizedGateway || normalizedTargetPath.startsWith(`${normalizedGateway}/`)
+}
+
+const resolveRequestUrl = (rawUrl: string, gateway: string) => {
+  if (process.env.NODE_ENV === "development") {
+    return joinUrlPath(gateway, rawUrl)
+  }
+
+  const target =
+    process.env.BUILD_ENV && proxy[process.env.BUILD_ENV]?.[gateway]?.target
+      ? proxy[process.env.BUILD_ENV][gateway].target
+      : gateway
+
+  if (/^https?:\/\//.test(target) && !hasGatewayPrefix(target, gateway)) {
+    return joinUrlPath(joinUrlPath(target, gateway), rawUrl)
+  }
+
+  return joinUrlPath(target, rawUrl)
+}
+
 // axios.interceptors.response.use(
 //   (response) => {
 //     return response
@@ -111,10 +147,7 @@ export const request = async (
 
   const rawUrl = url
   const gateway = extParams?.gateway || "/api/"
-  url =
-    process.env.NODE_ENV === "development"
-      ? gateway + rawUrl
-      : (process.env.BUILD_ENV && proxy[process.env.BUILD_ENV][gateway].target) + rawUrl
+  url = resolveRequestUrl(rawUrl, gateway)
 
   // 检查并刷新token（排除刷新token接口本身）
   if (
