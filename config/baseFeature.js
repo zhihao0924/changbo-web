@@ -1,8 +1,11 @@
 module.exports = {
-  // Base version fixed locale. Supported values: "en-US", "zh-CN".
+  // Whether to enable runtime language switching and i18n-only settings.
+  i18nEnabled: false,
+
+  // Fixed locale when i18nEnabled is false. Supported values: "en-US", "zh-CN".
   locale: "en-US",
 
-  // Base version menu whitelist. Remove items here to exclude corresponding routes from base builds.
+  // Menu whitelist. Remove items here to exclude corresponding routes from builds.
   menus: [
     "dashboard",
     "device.status",

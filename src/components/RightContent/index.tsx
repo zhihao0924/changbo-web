@@ -3,10 +3,9 @@ import { SelectLang, useModel } from "umi"
 import Avatar from "./AvatarDropdown"
 import TimeLine from "../timeLine"
 import styles from "./index.less"
+import { I18N_ENABLED } from "@/utils/i18n"
 
 export type SiderTheme = "light" | "dark"
-
-const isBaseFeatureSet = process.env.FEATURE_SET === "base"
 
 const GlobalHeaderRight: React.FC = () => {
   const { initialState } = useModel("@@initialState")
@@ -28,7 +27,7 @@ const GlobalHeaderRight: React.FC = () => {
     <div className={className}>
       <TimeLine showModal={showModal} onCloseModal={() => setShowModalCB(false)} />
       <Avatar />
-      {!isBaseFeatureSet && <SelectLang className={`${styles.action} ${styles.langAction}`} />}
+      {I18N_ENABLED && <SelectLang className={`${styles.action} ${styles.langAction}`} />}
     </div>
   )
 }

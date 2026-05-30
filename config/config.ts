@@ -27,7 +27,7 @@ export default defineConfig({
     "process.env.DEPLOY_ENV": process.env.DEPLOY_ENV,
     "process.env.DEVELOPER": process.env.DEVELOPER,
     "process.env.BUILD_ENV": process.env.BUILD_ENV,
-    "process.env.FEATURE_SET": process.env.FEATURE_SET || "full",
+    "process.env.I18N_ENABLED": Boolean(baseFeatureConfig.i18nEnabled),
     "process.env.BASE_LOCALE": baseFeatureConfig.locale,
   },
   theme: {

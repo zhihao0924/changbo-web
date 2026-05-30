@@ -24,7 +24,7 @@ export type Translate = (id: string, defaultMessage: string, values?: MessageVal
 
 export const DEFAULT_LOCALE = "en-US"
 export const LOCALE_STORAGE_KEY = "umi_locale"
-export const I18N_ENABLED = process.env.FEATURE_SET !== "base"
+export const I18N_ENABLED = process.env.I18N_ENABLED === "true"
 export const SUPPORTED_LOCALES = ["en-US", "zh-CN"] as const
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 export const BASE_LOCALE: SupportedLocale = SUPPORTED_LOCALES.includes(

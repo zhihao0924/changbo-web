@@ -25,11 +25,10 @@ type MenuKey =
   | "admin"
   | "setting"
 
-const isBaseFeatureSet = process.env.FEATURE_SET === "base"
-const baseMenuSet = new Set<string>(baseFeatureConfig.menus)
+const enabledMenuSet = new Set<string>(baseFeatureConfig.menus)
 
-const enabledInBase = (key: MenuKey) => !isBaseFeatureSet || baseMenuSet.has(key)
-const allEnabledInBase = (...keys: MenuKey[]) => keys.some((key) => enabledInBase(key))
+const enabledMenu = (key: MenuKey) => enabledMenuSet.has(key)
+const anyMenuEnabled = (...keys: MenuKey[]) => keys.some((key) => enabledMenu(key))
 const firstEnabledPath = (featureRoutes: AppRoute[], fallback: string) => {
   const firstRoute = featureRoutes.find((route) => route.name || route.path === "/device")
 
@@ -126,11 +125,11 @@ const deviceChildRoutes: Array<AppRoute & { menuKey?: MenuKey }> = [
 ]
 
 const enabledDeviceChildRoutes = deviceChildRoutes
-  .filter((route) => !route.menuKey || enabledInBase(route.menuKey))
+  .filter((route) => !route.menuKey || enabledMenu(route.menuKey))
   .map(({ menuKey, ...route }) => route)
 
 const featureRoutes: AppRoute[] = [
-  ...(enabledInBase("dashboard")
+  ...(enabledMenu("dashboard")
     ? [
         {
           name: "dashboard",
@@ -140,7 +139,7 @@ const featureRoutes: AppRoute[] = [
         },
       ]
     : []),
-  ...(allEnabledInBase(
+  ...(anyMenuEnabled(
     "device.status",
     "device.index",
     "device.libiioBoard",
@@ -159,7 +158,7 @@ const featureRoutes: AppRoute[] = [
         },
       ]
     : []),
-  ...(enabledInBase("admin")
+  ...(enabledMenu("admin")
     ? [
         {
           name: "admin",
@@ -180,7 +179,7 @@ const featureRoutes: AppRoute[] = [
         },
       ]
     : []),
-  ...(enabledInBase("setting")
+  ...(enabledMenu("setting")
     ? [
         {
           name: "setting",
