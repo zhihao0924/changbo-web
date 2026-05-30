@@ -47,6 +47,7 @@ export default {
   "app.common.save": "Save",
   "app.common.saveSettings": "Save Settings",
   "app.common.saveSuccess": "Saved successfully",
+  "app.common.deleteSuccess": "Deleted successfully",
   "app.common.edit": "Edit",
   "app.common.delete": "Delete",
   "app.common.more": "More",
@@ -92,6 +93,10 @@ export default {
   "app.setting.system.refresh.3000": "3 sec/time",
   "app.setting.system.refresh.5000": "5 sec/time",
   "app.setting.system.refresh.10000": "10 sec/time",
+  "app.setting.system.reportLocale": "Email and Backup File Language",
+  "app.setting.system.reportLocale.required": "Please select a language for email and backup files",
+  "app.setting.system.reportLocale.enUS": "English",
+  "app.setting.system.reportLocale.zhCN": "Chinese",
   "app.setting.system.email.host": "Mail Server",
   "app.setting.system.email.host.requiredWhenEnabled":
     "Mail server is required when email sending is enabled",
@@ -162,6 +167,7 @@ export default {
   "app.dashboard.action.checkRssi": "Please check RSSI",
   "app.dashboard.action.handleAlarm": "Please handle the alarm promptly",
   "app.dashboard.action.noAction": "No action required",
+  "app.dashboard.action.pleaseContactAdministrator": "Please contact the administrator",
   "app.dashboard.action.checkPrefix": "Please check",
   "app.dashboard.action.checkFrequencyBoardModulePowerNetworkAndLibiioSamplingProcess":
     "Check the frequency board module power, network, and libiio sampling process",

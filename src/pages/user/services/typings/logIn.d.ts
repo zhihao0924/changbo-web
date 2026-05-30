@@ -7,6 +7,8 @@ declare namespace API_USER {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: Res
   }
   export interface Res {
@@ -31,6 +33,8 @@ namespace API_PostChangePassword {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: Res
   }
 }
@@ -39,6 +43,8 @@ namespace API_RefreshToken {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: Res
   }
   export interface Res {

@@ -2,6 +2,8 @@ declare namespace API_PostAdminList {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: Res
   }
 
@@ -26,6 +28,8 @@ declare namespace API_PostAdminCreate {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: any
   }
 }
@@ -33,6 +37,8 @@ declare namespace API_PostAdminResetPwd {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: any
   }
 }
@@ -41,6 +47,8 @@ declare namespace API_PostAdminDisabled {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: any
   }
 }

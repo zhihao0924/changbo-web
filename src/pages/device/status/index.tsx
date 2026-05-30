@@ -242,13 +242,23 @@ const DeviceCard: React.FC<DeviceCardProps> = ({
   formatBackendLabel,
 }) => {
   const deviceTitle = `${formatBackendLabel(
-    device.device_type_alias || device.device_type_group,
+    {
+      key: device.device_type_alias_key || device.device_type_group_key,
+      fallback: device.device_type_alias || device.device_type_group,
+    },
   )}:${device.name}`
 
   return (
     <Card
       title={deviceTitle}
-      extra={<Tag color={device.tag_color}>{formatBackendLabel(device.status_text)}</Tag>}
+      extra={
+        <Tag color={device.tag_color}>
+          {formatBackendLabel({
+            key: device.status_key,
+            fallback: device.status_text || String(device.status),
+          })}
+        </Tag>
+      }
       onDoubleClick={onDoubleClick}
       style={{
         boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.1)",
@@ -297,7 +307,12 @@ const DeviceCard: React.FC<DeviceCardProps> = ({
           ?.filter((metricItem) => metricItem.show_in_list)
           .map((metricItem) => (
             <React.Fragment key={`fragment_Key_${metricItem.config_type}`}>
-              <Col span={8}>{formatBackendLabel(metricItem.config_type_name)}</Col>
+              <Col span={8}>
+                {formatBackendLabel({
+                  key: metricItem.config_type_key,
+                  fallback: metricItem.config_type_name,
+                })}
+              </Col>
               <Col span={12}>
                 <MetricItem
                   metricItem={metricItem}
@@ -359,7 +374,10 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
             {t("app.device.status.deviceType", "Device Type")}
           </Col>
           <Col span={16} style={{ backgroundColor: "#ffffff" }}>
-            {formatBackendLabel(selectedDevice.device_type_alias || selectedDevice.device_type)}
+            {formatBackendLabel({
+              key: selectedDevice.device_type_alias_key,
+              fallback: selectedDevice.device_type_alias || selectedDevice.device_type,
+            })}
           </Col>
           <Col span={8} style={{ backgroundColor: "#f8f9fa" }}>
             {t("app.device.status.deviceId", "Device ID")}
@@ -384,7 +402,10 @@ const DeviceDetailModal: React.FC<DeviceDetailModalProps> = ({
                     backgroundColor: index % 2 === 0 ? "#f8f9fa" : "#ffffff",
                   }}
                 >
-                  {formatBackendLabel(metricItem.config_type_name)}
+                  {formatBackendLabel({
+                    key: metricItem.config_type_key,
+                    fallback: metricItem.config_type_name,
+                  })}
                 </Col>
                 <Col
                   span={12}
@@ -487,20 +508,27 @@ const DeviceStatus: React.FC = () => {
     const groupedTypes = deviceTypes
       .filter((type) => type != null && type.id != null)
       .reduce<Record<string, API_PostDeviceTypes.List[]>>((acc, type) => {
-        if (!acc[type.device_type_group]) {
-          acc[type.device_type_group] = []
+        const groupKey = type.device_type_group_key || type.device_type_group
+        if (!acc[groupKey]) {
+          acc[groupKey] = []
         }
-        acc[type.device_type_group].push(type)
+        acc[groupKey].push(type)
         return acc
       }, {})
 
     return Object.entries(groupedTypes).map(([group, types]) => ({
-      title: formatBackendLabel(group),
+      title: formatBackendLabel({
+        key: group,
+        fallback: types[0]?.device_type_group,
+      }),
       value: `group-${group}`,
       disabled: true,
       selectable: false,
       children: types.map((type) => ({
-        title: formatBackendLabel(type.device_type_alias || type.device_type),
+        title: formatBackendLabel({
+          key: type.device_type_alias_key,
+          fallback: type.device_type_alias || type.device_type,
+        }),
         value: type.id,
       })),
     }))

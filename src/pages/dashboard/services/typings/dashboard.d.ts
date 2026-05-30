@@ -13,12 +13,14 @@ declare namespace API_PostDashboard {
   export interface Result {
     err: number
     msg: string
-    res: Result
+    msg_key?: string
+    res_key?: string
+    res: Res
   }
-  export interface Result {
+  export interface Res {
     total: number
-    statistic: Statistic
-    energy_consumption: Statistic
+    statistic: Statistic[]
+    energy_consumption: Statistic[]
     total_healthy: number
     type_statistic: StatisticNumber[]
     alarm_device: AlarmDevice[]
@@ -30,12 +32,14 @@ declare namespace API_PostDashboard {
 
   export interface Statistic {
     type: I18nText
+    type_key?: string
     value: number
     sort: number
   }
 
   export interface StatisticNumber {
     name: I18nText
+    name_key?: string
     total_num: number
     online_num: number
     offline_num: number
@@ -48,13 +52,16 @@ declare namespace API_PostDashboard {
     device_name: string
     device_type: string
     device_type_group: I18nText
+    device_type_group_key?: string
     alarm_at: string
   }
 
   export interface AlarmItem {
     config_type: number
     config_type_name: I18nText
+    config_type_key?: string
     alarm_text: I18nText
     suggested_action: I18nText
+    suggested_action_key?: string
   }
 }

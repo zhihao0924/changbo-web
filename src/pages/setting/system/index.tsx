@@ -37,11 +37,19 @@ const SystemSetting: React.FC = () => {
     [intl],
   )
 
+  const reportLocaleOptions = [
+    { label: t("app.setting.system.reportLocale.enUS", "English"), value: "en-US" },
+    { label: t("app.setting.system.reportLocale.zhCN", "Chinese"), value: "zh-CN" },
+  ]
+
   const getSystemConfig = useCallback(async () => {
     const res = await Services.api.postSystemConfig({})
     if (res) {
       setImageUrl(res.res.system_logo)
-      form.setFieldsValue(res.res)
+      form.setFieldsValue({
+        report_locale: "en-US",
+        ...res.res,
+      })
     }
   }, [form])
 
@@ -51,7 +59,10 @@ const SystemSetting: React.FC = () => {
 
   const onFinish = async (values: any) => {
     Services.api
-      .postSystemConfigSave(values)
+      .postSystemConfigSave({
+        ...values,
+        report_locale: values.report_locale || "en-US",
+      })
       .then((res) => {
         localStorage.setItem(SYSTEM_CONFIG, JSON.stringify(res.res))
       })
@@ -178,6 +189,24 @@ const SystemSetting: React.FC = () => {
                 { label: t("app.setting.system.refresh.10000", "10 sec/time"), value: 10000 },
               ]}
             />
+          </Form.Item>
+          <Form.Item
+            labelCol={{ span: 6 }}
+            label={t("app.setting.system.reportLocale", "Email and Backup File Language")}
+            name="report_locale"
+            initialValue="en-US"
+            rules={[
+              {
+                required: true,
+                message: t(
+                  "app.setting.system.reportLocale.required",
+                  "Please select a language for email and backup files",
+                ),
+              },
+            ]}
+            style={{ maxWidth: 600 }}
+          >
+            <Select options={reportLocaleOptions} />
           </Form.Item>
           <Divider dashed={true} />
           <Form.Item

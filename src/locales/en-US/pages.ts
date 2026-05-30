@@ -10,7 +10,7 @@ export default {
   "pages.login.form.kicker": "Account Access",
   "pages.login.form.title": "Secure sign in",
   "pages.login.form.subtitle": "Use your assigned account to enter the management platform.",
-  "pages.login.username.placeholder": "Username: admin or user",
+  "pages.login.username.placeholder": "Username: admin or operator",
   "pages.login.username.required": "Please input your username!",
   "pages.login.password.placeholder": "Password: ant.design",
   "pages.login.password.required": "Please input your password!",

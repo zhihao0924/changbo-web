@@ -18,7 +18,7 @@ import { forEach } from "lodash"
 import type { API_PostDeviceTypes } from "@/pages/device/services/typings/device"
 import type { CheckboxValueType } from "antd/es/checkbox/Group"
 import { useIntl } from "umi"
-import { createBackendLabelFormatter } from "@/utils/i18n"
+import { createBackendLabelFormatter, formatApiResponseMessage } from "@/utils/i18n"
 
 type Columns = API_PostDeviceTypes.List
 
@@ -65,8 +65,14 @@ const DeviceTypes: React.FC = () => {
   const getRecordTitle = useCallback(
     (record?: Columns | null) =>
       [
-        formatBackendLabel(record?.device_type_group),
-        formatBackendLabel(record?.device_type_alias || record?.device_type),
+        formatBackendLabel({
+          key: record?.device_type_group_key,
+          fallback: record?.device_type_group,
+        }),
+        formatBackendLabel({
+          key: record?.device_type_alias_key,
+          fallback: record?.device_type_alias || record?.device_type,
+        }),
       ]
         .filter(Boolean)
         .join(" "),
@@ -96,7 +102,7 @@ const DeviceTypes: React.FC = () => {
       })
 
       message.success(
-        res?.msg ||
+        formatApiResponseMessage(res) ||
           (currentRecord
             ? t("app.device.types.updateSuccess", "Device type updated successfully")
             : t("app.device.types.createSuccess", "Device type created successfully")),
@@ -146,9 +152,10 @@ const DeviceTypes: React.FC = () => {
         })
         .then(() => {
           message.success(
-            `${formatBackendLabel(
-              currentRecord?.device_type_alias || currentRecord?.device_type,
-            )} ${t("app.device.types.alarmSaveSuccess", "alarm configuration saved successfully")}`,
+            `${formatBackendLabel({
+              key: currentRecord?.device_type_alias_key,
+              fallback: currentRecord?.device_type_alias || currentRecord?.device_type,
+            })} ${t("app.device.types.alarmSaveSuccess", "alarm configuration saved successfully")}`,
             1,
             () => {
               setAlarmModalVisible(false)
@@ -169,9 +176,10 @@ const DeviceTypes: React.FC = () => {
         })
         .then(() => {
           message.success(
-            `${formatBackendLabel(
-              currentRecord?.device_type_alias || currentRecord?.device_type,
-            )} ${t(
+            `${formatBackendLabel({
+              key: currentRecord?.device_type_alias_key,
+              fallback: currentRecord?.device_type_alias || currentRecord?.device_type,
+            })} ${t(
               "app.device.types.displaySaveSuccess",
               "display configuration saved successfully",
             )}`,
@@ -208,14 +216,16 @@ const DeviceTypes: React.FC = () => {
       dataIndex: "device_type_group",
       key: "device_type_group",
       hideInSearch: true,
-      renderText: (value: string) => formatBackendLabel(value),
+      renderText: (value: string, record: Columns) =>
+        formatBackendLabel({ key: record.device_type_group_key, fallback: value }),
     },
     {
       title: t("app.device.types.type", "Device Type"),
       dataIndex: "device_type",
       key: "device_type",
       hideInSearch: true,
-      renderText: (value: string) => formatBackendLabel(value),
+      renderText: (value: string, record: Columns) =>
+        formatBackendLabel({ key: record.device_type_alias_key, fallback: value }),
     },
     {
       title: t("app.device.types.alias", "Type Alias"),
@@ -223,7 +233,10 @@ const DeviceTypes: React.FC = () => {
       key: "device_type_alias",
       hideInSearch: true,
       renderText: (value: string, record: Columns) =>
-        formatBackendLabel(value || record.device_type),
+        formatBackendLabel({
+          key: record.device_type_alias_key,
+          fallback: value || record.device_type,
+        }),
     },
     {
       title: t("app.common.action", "Action"),
@@ -386,9 +399,17 @@ const DeviceTypes: React.FC = () => {
                       <Form.Item
                         {...thresholdItemLayout}
                         label={
-                          <Tooltip title={formatBackendLabel(item.config_type_name)}>
+                          <Tooltip
+                            title={formatBackendLabel({
+                              key: item.config_type_key,
+                              fallback: item.config_type_name,
+                            })}
+                          >
                             <span style={thresholdLabelStyle}>
-                              {formatBackendLabel(item.config_type_name)}
+                              {formatBackendLabel({
+                                key: item.config_type_key,
+                                fallback: item.config_type_name,
+                              })}
                             </span>
                           </Tooltip>
                         }
@@ -620,7 +641,10 @@ const DeviceTypes: React.FC = () => {
                     return (
                       <Col span={8} key={item.config_type}>
                         <Checkbox key={item.config_type} value={item.config_type}>
-                          {formatBackendLabel(item.config_type_name)}
+                          {formatBackendLabel({
+                            key: item.config_type_key,
+                            fallback: item.config_type_name,
+                          })}
                         </Checkbox>
                       </Col>
                     )
@@ -665,7 +689,10 @@ const DeviceTypes: React.FC = () => {
                   return (
                     <Col span={8} key={item.config_type}>
                       <Checkbox key={item.config_type} value={item.config_type}>
-                        {formatBackendLabel(item.config_type_name)}
+                        {formatBackendLabel({
+                          key: item.config_type_key,
+                          fallback: item.config_type_name,
+                        })}
                       </Checkbox>
                     </Col>
                   )
@@ -700,7 +727,10 @@ const DeviceTypes: React.FC = () => {
                     return (
                       <Col span={8} key={item.config_type}>
                         <Checkbox key={item.config_type} value={item.config_type}>
-                          {formatBackendLabel(item.config_type_name)}
+                          {formatBackendLabel({
+                            key: item.config_type_key,
+                            fallback: item.config_type_name,
+                          })}
                         </Checkbox>
                       </Col>
                     )

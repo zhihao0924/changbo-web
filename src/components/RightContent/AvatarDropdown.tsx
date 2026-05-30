@@ -9,6 +9,7 @@ import { history, useIntl, useModel } from "umi"
 import { removeUserInfo } from "@/utils/biz"
 import { changePassword } from "@/pages/user/services/api"
 import { LOGINPATH } from "@/constants"
+import { formatApiResponseMessage } from "@/utils/i18n"
 import HeaderDropdown from "../HeaderDropdown"
 import styles from "./index.less"
 
@@ -60,17 +61,34 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
           new_password: values.newPassword,
         }).then((res) => {
           if (res?.err === 0) {
-            message.success(formatMessage("app.user.password.change.success", "Password changed successfully"), 1, () => {
-              loginOut()
-            })
+            message.success(
+              formatApiResponseMessage(
+                res,
+                formatMessage("app.user.password.change.success", "Password changed successfully"),
+              ),
+              1,
+              () => {
+                loginOut()
+              },
+            )
             setVisible(false)
             form.resetFields()
           } else {
-            message.error(res?.msg || formatMessage("app.user.password.change.failed", "Failed to change password"))
+            message.error(
+              formatApiResponseMessage(
+                res,
+                formatMessage("app.user.password.change.failed", "Failed to change password"),
+              ),
+            )
           }
         })
       } catch (error) {
-        message.error(formatMessage("app.user.password.change.failed", "Failed to change password"))
+        message.error(
+          formatApiResponseMessage(
+            error as any,
+            formatMessage("app.user.password.change.failed", "Failed to change password"),
+          ),
+        )
       }
     })
   }
@@ -165,7 +183,10 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             rules={[
               {
                 required: true,
-                message: formatMessage("app.user.password.old.required", "Please enter your current password"),
+                message: formatMessage(
+                  "app.user.password.old.required",
+                  "Please enter your current password",
+                ),
               },
             ]}
           >
@@ -177,11 +198,17 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             rules={[
               {
                 required: true,
-                message: formatMessage("app.user.password.new.required", "Please enter a new password"),
+                message: formatMessage(
+                  "app.user.password.new.required",
+                  "Please enter a new password",
+                ),
               },
               {
                 min: 8,
-                message: formatMessage("app.user.password.new.min", "Password must be at least 8 characters"),
+                message: formatMessage(
+                  "app.user.password.new.min",
+                  "Password must be at least 8 characters",
+                ),
               },
               {
                 validator: (_, value) => {
@@ -226,7 +253,10 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
             rules={[
               {
                 required: true,
-                message: formatMessage("app.user.password.confirm.required", "Please confirm your new password"),
+                message: formatMessage(
+                  "app.user.password.confirm.required",
+                  "Please confirm your new password",
+                ),
               },
               ({ getFieldValue }) => ({
                 validator(_, value) {

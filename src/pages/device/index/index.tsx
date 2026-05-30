@@ -33,6 +33,9 @@ import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { useIntl } from "umi"
 import {
   createBackendLabelFormatter,
+  formatApiResponseMessage,
+  formatMessageWith,
+  getDeviceGroupKey,
   isAmplifierDeviceGroup,
   isNearEndDeviceGroup,
   isRemoteDeviceGroup,
@@ -75,6 +78,7 @@ type DeviceTypeOption = {
   value: number
   label: string
   group: string
+  groupCode: string
 }
 
 type DeviceTypeTreeNode = {
@@ -85,74 +89,22 @@ type DeviceTypeTreeNode = {
   children?: DeviceTypeTreeNode[]
 }
 
-// 设备类型组常量。接口可能按当前语言返回中文或英文分组，value 必须使用接口原值。
-const DEVICE_GROUP_DEFINITIONS = [
-  {
-    values: ["发射合路器", "Transmitter Mixer"],
-    messageId: "app.device.index.group.transmitterMixer",
-    defaultMessage: "Transmitter Mixer",
-  },
-  {
-    values: ["接收分路器", "Receiver Splitter"],
-    messageId: "app.device.index.group.receiverSplitter",
-    defaultMessage: "Receiver Splitter",
-  },
-  {
-    values: ["带通双工器", "Bandpass Duplexer"],
-    messageId: "app.device.index.group.bandpassDuplexer",
-    defaultMessage: "Bandpass Duplexer",
-  },
-  {
-    values: ["上行信号剥离器", "Uplink Signal Stripper"],
-    messageId: "app.device.index.group.uplinkStripper",
-    defaultMessage: "Uplink Signal Stripper",
-  },
-  {
-    values: ["下行信号剥离器", "Downlink Signal Stripper"],
-    messageId: "app.device.index.group.downlinkStripper",
-    defaultMessage: "Downlink Signal Stripper",
-  },
-  {
-    values: ["数字近端机", "Digital Near-end Unit"],
-    messageId: "app.device.index.group.digitalNearEnd",
-    defaultMessage: "Digital Near-end Unit",
-  },
-  {
-    values: ["数字远端机", "Digital Remote Unit"],
-    messageId: "app.device.index.group.digitalRemote",
-    defaultMessage: "Digital Remote Unit",
-  },
-  {
-    values: ["模拟近端机", "Analog Near-end Unit"],
-    messageId: "app.device.index.group.analogNearEnd",
-    defaultMessage: "Analog Near-end Unit",
-  },
-  {
-    values: ["模拟远端机", "Analog Remote Unit"],
-    messageId: "app.device.index.group.analogRemote",
-    defaultMessage: "Analog Remote Unit",
-  },
-  {
-    values: ["干线放大器", "Trunk Amplifier"],
-    messageId: "app.device.index.group.trunkAmplifier",
-    defaultMessage: "Trunk Amplifier",
-  },
-  {
-    values: ["功率采集网关", "Power Collection Gateway"],
-    messageId: "app.device.index.group.powerCollectionGateway",
-    defaultMessage: "Power Collection Gateway",
-  },
-] as const
-
-const DEVICE_GROUP_ORDER = DEVICE_GROUP_DEFINITIONS.reduce<Record<string, number>>(
-  (acc, group, index) => {
-    group.values.forEach((value) => {
-      acc[value] = index
-    })
-    return acc
-  },
-  {},
-)
+const DEVICE_GROUP_ORDER = [
+  "transmitterMixer",
+  "receiverSplitter",
+  "bandpassDuplexer",
+  "uplinkStripper",
+  "downlinkStripper",
+  "digitalNearEnd",
+  "digitalRemote",
+  "analogNearEnd",
+  "analogRemote",
+  "trunkAmplifier",
+  "powerCollectionGateway",
+].reduce<Record<string, number>>((acc, group, index) => {
+  acc[group] = index
+  return acc
+}, {})
 
 // 配置类型映射
 const CONFIG_TYPE_MAP = {
@@ -208,51 +160,45 @@ const DeviceIndex: React.FC = () => {
     [intl],
   )
   const formatBackendLabel = useMemo(() => createBackendLabelFormatter(t), [t])
-  const deviceGroupLabelMap = useMemo(
-    () =>
-      DEVICE_GROUP_DEFINITIONS.reduce<Record<string, string>>((acc, item) => {
-        const label = t(item.messageId, item.defaultMessage)
-        item.values.forEach((value) => {
-          acc[value] = label
-        })
-        return acc
-      }, {}),
-    [t],
-  )
   const deviceGroupOptions = useMemo(() => {
-    const groups =
-      allDeviceTypes.length > 0
-        ? allDeviceTypes
-            .map((item) => item.group)
-            .filter((group): group is string => Boolean(group))
-        : DEVICE_GROUP_DEFINITIONS.map((group) => group.values[0])
+    const groupMap = allDeviceTypes.reduce<Record<string, { value: string; label: string }>>(
+      (acc, item) => {
+        if (!item.groupCode) {
+          return acc
+        }
+        acc[item.groupCode] = {
+          value: item.groupCode,
+          label: formatBackendLabel(item.group, item.group),
+        }
+        return acc
+      },
+      {},
+    )
 
-    return Array.from(new Set(groups))
+    return Object.entries(groupMap)
       .sort((prev, next) => {
-        const prevOrder = DEVICE_GROUP_ORDER[prev] ?? Number.MAX_SAFE_INTEGER
-        const nextOrder = DEVICE_GROUP_ORDER[next] ?? Number.MAX_SAFE_INTEGER
+        const prevOrder = DEVICE_GROUP_ORDER[prev[0]] ?? Number.MAX_SAFE_INTEGER
+        const nextOrder = DEVICE_GROUP_ORDER[next[0]] ?? Number.MAX_SAFE_INTEGER
 
         if (prevOrder !== nextOrder) {
           return prevOrder - nextOrder
         }
-        return prev.localeCompare(next)
+        return prev[1].label.localeCompare(next[1].label)
       })
-      .map((value) => ({
-        value,
-        label: deviceGroupLabelMap[value] || formatBackendLabel(value),
-      }))
-  }, [allDeviceTypes, deviceGroupLabelMap, formatBackendLabel])
+      .map(([, item]) => item)
+  }, [allDeviceTypes, formatBackendLabel])
   const deviceTypeTreeData = useMemo<DeviceTypeTreeNode[]>(() => {
     const groupedTypes = allDeviceTypes.reduce<Record<string, DeviceTypeOption[]>>((acc, item) => {
-      if (!acc[item.group]) {
-        acc[item.group] = []
+      const groupCode = item.groupCode || item.group
+      if (!acc[groupCode]) {
+        acc[groupCode] = []
       }
-      acc[item.group].push(item)
+      acc[groupCode].push(item)
       return acc
     }, {})
 
     return Object.entries(groupedTypes).map(([group, types]) => ({
-      title: deviceGroupLabelMap[group] || formatBackendLabel(group),
+      title: formatBackendLabel(types[0]?.group || group),
       value: `group-${group}`,
       selectable: false,
       disabled: true,
@@ -261,7 +207,7 @@ const DeviceIndex: React.FC = () => {
         value: type.value,
       })),
     }))
-  }, [allDeviceTypes, deviceGroupLabelMap, formatBackendLabel])
+  }, [allDeviceTypes, formatBackendLabel])
 
   const getDeviceTypes = useCallback(async () => {
     // 如果已经有数据，直接返回
@@ -278,8 +224,15 @@ const DeviceIndex: React.FC = () => {
           .filter((item) => item != null && item.id != null)
           .map((item) => ({
             value: item.id,
-            label: formatBackendLabel(item.device_type_alias || item.device_type),
+            label: formatBackendLabel(
+              {
+                key: item.device_type_alias_key,
+                fallback: item.device_type_alias || item.device_type,
+              },
+              item.device_type_alias || item.device_type,
+            ),
             group: item.device_type_group,
+            groupCode: getDeviceGroupKey(item.device_type_group_key || item.device_type_group),
           }))
         setAllDeviceTypes(formattedTypes)
         return formattedTypes
@@ -302,8 +255,15 @@ const DeviceIndex: React.FC = () => {
             .filter((item) => item != null && item.id != null)
             .map((item) => ({
               value: item.id,
-              label: formatBackendLabel(item.device_type_alias || item.device_type),
+              label: formatBackendLabel(
+                {
+                  key: item.device_type_alias_key,
+                  fallback: item.device_type_alias || item.device_type,
+                },
+                item.device_type_alias || item.device_type,
+              ),
               group: item.device_type_group,
+              groupCode: getDeviceGroupKey(item.device_type_group_key || item.device_type_group),
             }))
           setAllDeviceTypes(formattedTypes)
         }
@@ -341,9 +301,11 @@ const DeviceIndex: React.FC = () => {
     (record: Columns | null = null) => {
       setCurrentDevice(record)
       if (record) {
-        setDeviceTypes(allDeviceTypes.filter((item) => item.group == record.device_type_group))
+        const groupCode = getDeviceGroupKey(record.device_type_group_key || record.device_type_group)
+        setDeviceTypes(allDeviceTypes.filter((item) => item.groupCode == groupCode))
         form.setFieldsValue({
           ...record,
+          device_type_group: groupCode,
         })
       } else {
         form.resetFields()
@@ -434,12 +396,10 @@ const DeviceIndex: React.FC = () => {
     try {
       return await Services.api.postDeviceSyncPanel({}).then((ret) => {
         message.success(
-          t(
-            "app.device.index.syncSummary",
-            `Panel sync succeeded: ${ret.res.success_count}, failed: ${ret.res.fail_count}`,
-          )
-            .replace("${success}", String(ret.res.success_count))
-            .replace("${failed}", String(ret.res.fail_count)),
+          formatMessageWith(t, "app.device.index.syncSummary", "Panel sync succeeded: ${success}, failed: ${failed}", {
+            success: ret.res.success_count,
+            failed: ret.res.fail_count,
+          }),
           2,
           actionRef.current?.reload,
         )
@@ -460,9 +420,17 @@ const DeviceIndex: React.FC = () => {
     try {
       const values = await form.validateFields()
       setSubmitLoading(true)
-      const res = await Services.api.postDeviceSave(values)
+      const submitValues = {
+        id: values.id || 0,
+        ip: values.ip,
+        name: values.name,
+        device_type_id: values.device_type_id,
+        position: values.position,
+        is_maintaining: Boolean(values.is_maintaining),
+      }
+      const res = await Services.api.postDeviceSave(submitValues)
       message.success(
-        res?.msg ||
+        formatApiResponseMessage(res) ||
           (currentDevice
             ? t("app.device.index.updateSuccess", "Device updated successfully")
             : t("app.device.index.createSuccess", "Device created successfully")),
@@ -491,7 +459,8 @@ const DeviceIndex: React.FC = () => {
         }
         const res = await Services.api.postToggleMaintaining(data)
         message.success(
-          res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"),
+          formatApiResponseMessage(res) ||
+            t("app.device.index.updateSuccess", "Device updated successfully"),
         )
         actionRef.current?.reload()
       } catch (error: any) {
@@ -509,9 +478,13 @@ const DeviceIndex: React.FC = () => {
         return
       }
       Modal.confirm({
-        title: t("app.device.index.deleteConfirm", "Confirm deleting ${group}(${name})?")
-          .replace("${group}", formatBackendLabel(record.device_type_group))
-          .replace("${name}", record.name),
+        title: formatMessageWith(t, "app.device.index.deleteConfirm", "Confirm deleting ${group}(${name})?", {
+          group: formatBackendLabel({
+            key: record.device_type_group_key,
+            fallback: record.device_type_group,
+          }),
+          name: record.name,
+        }),
         onOk: async () => {
           try {
             const data = {
@@ -519,7 +492,8 @@ const DeviceIndex: React.FC = () => {
             }
             const res = await Services.api.postDeleteDevice(data)
             message.success(
-              res?.msg || t("app.device.index.updateSuccess", "Device updated successfully"),
+              formatApiResponseMessage(res) ||
+                t("app.device.index.updateSuccess", "Device updated successfully"),
             )
             actionRef.current?.reload()
           } catch (error: any) {
@@ -543,7 +517,10 @@ const DeviceIndex: React.FC = () => {
           device_id: record.id,
           direction,
         })
-        message.success(res?.msg || t("app.device.index.moveSuccess", "Device moved successfully"))
+        message.success(
+          formatApiResponseMessage(res) ||
+            t("app.device.index.moveSuccess", "Device moved successfully"),
+        )
         actionRef.current?.reload()
       } catch (error: any) {
         if (error?.errorFields) {
@@ -604,7 +581,7 @@ const DeviceIndex: React.FC = () => {
           rf_config_type: configType,
         })
         message.success(
-          res?.msg ||
+          formatApiResponseMessage(res) ||
             `${getConfigLabel(configType)} ${t(
               "app.device.index.configSaved",
               "saved successfully",
@@ -657,7 +634,8 @@ const DeviceIndex: React.FC = () => {
         align: "center",
         dataIndex: "device_type_group",
         hideInSearch: true,
-        renderText: (value) => formatBackendLabel(value),
+        renderText: (value, record) =>
+          formatBackendLabel({ key: record.device_type_group_key, fallback: value }, value),
         width: 200,
       },
       {
@@ -714,7 +692,8 @@ const DeviceIndex: React.FC = () => {
         dataIndex: "status_text",
         key: "status_text",
         hideInSearch: true,
-        renderText: (value) => formatBackendLabel(value),
+        renderText: (value, record) =>
+          formatBackendLabel({ key: record.status_key, fallback: value || String(record.status) }),
         width: 200,
       },
       {
@@ -938,7 +917,8 @@ const DeviceIndex: React.FC = () => {
           }
 
           // 需要显示设置按钮的设备类型组
-          const showSettingButton = isRfSettingDeviceGroup(record.device_type_group)
+          const groupValue = record.device_type_group_key || record.device_type_group
+          const showSettingButton = isRfSettingDeviceGroup(groupValue)
 
           const actionItems = [
             ...(showSettingButton
@@ -1180,7 +1160,7 @@ const DeviceIndex: React.FC = () => {
               options={deviceGroupOptions}
               onChange={(item) => {
                 form.setFieldValue("device_type_id", undefined)
-                setDeviceTypes(allDeviceTypes.filter((types) => types.group == item))
+                setDeviceTypes(allDeviceTypes.filter((types) => types.groupCode == item))
               }}
             />
           </Form.Item>
@@ -1232,8 +1212,12 @@ const DeviceIndex: React.FC = () => {
       >
         <Form form={rfConfigForm}>
           {!(
-            isNearEndDeviceGroup(currentDevice?.device_type_group) ||
-            isSplitterDeviceGroup(currentDevice?.device_type_group)
+            isNearEndDeviceGroup(
+              currentDevice?.device_type_group_key || currentDevice?.device_type_group,
+            ) ||
+            isSplitterDeviceGroup(
+              currentDevice?.device_type_group_key || currentDevice?.device_type_group,
+            )
           ) && (
             <Form.Item
               label={t("app.device.index.uplinkPowerShort", "Uplink Power")}
@@ -1278,7 +1262,9 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
-          {!isNearEndDeviceGroup(currentDevice?.device_type_group) && (
+          {!isNearEndDeviceGroup(
+            currentDevice?.device_type_group_key || currentDevice?.device_type_group,
+          ) && (
             <Form.Item
               label={t("app.device.index.downlinkPowerShort", "Downlink Power")}
               labelCol={{ span: 6 }}
@@ -1322,8 +1308,12 @@ const DeviceIndex: React.FC = () => {
               </Button>
             </Space>
           </Form.Item>
-          {(isRemoteDeviceGroup(currentDevice?.device_type_group) ||
-            isAmplifierDeviceGroup(currentDevice?.device_type_group)) && (
+          {(isRemoteDeviceGroup(
+            currentDevice?.device_type_group_key || currentDevice?.device_type_group,
+          ) ||
+            isAmplifierDeviceGroup(
+              currentDevice?.device_type_group_key || currentDevice?.device_type_group,
+            )) && (
             <>
               <Form.Item
                 label={t("app.device.index.sameFrequencyForward", "Same Frequency Forward")}

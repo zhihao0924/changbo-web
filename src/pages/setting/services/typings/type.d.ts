@@ -10,6 +10,7 @@ declare namespace API_PostSystemConfig {
     system_logo: string
     dots_per_second: number
     refresh_interval: number
+    report_locale: "en-US" | "zh-CN"
     email_config: EmailConfig
   }
 

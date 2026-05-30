@@ -2,7 +2,6 @@ import type { ActionType, ProColumns } from "@ant-design/pro-components"
 import { PageContainer, ProTable } from "@ant-design/pro-components"
 import React, { useCallback, useMemo, useRef } from "react"
 import Services from "@/pages/device/services"
-import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { DownloadOutlined } from "@ant-design/icons"
 import { Button, Space } from "antd"
@@ -124,20 +123,15 @@ const DailyXlsx: React.FC = () => {
         hideInSearch: true,
       },
       {
-        title: t("app.device.backup.createdAt", "Created At"),
+        title: t("app.device.backup.date", "Date"),
         align: "center",
-        dataIndex: "created_at",
+        dataIndex: "file_date_range",
         valueType: "dateRange",
-        render: (_, row: API_PostDailyXlsxList.List) => {
-          return [
-            <div key="created_at">{moment(row.created_at).format("YYYY-MM-DD HH:mm:ss")}</div>,
-          ]
-        },
         hideInTable: true,
         search: {
           transform: (value) => ({
-            begin_at: value[0] + " 00:00:00",
-            end_at: value[1] + " 23:59:59",
+            begin_at: value[0],
+            end_at: value[1],
           }),
         },
       },

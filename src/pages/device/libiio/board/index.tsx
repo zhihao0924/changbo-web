@@ -124,7 +124,7 @@ const isModuleOffline = (module: BoardModule) => {
     return isOfflineValue(onlineValue)
   }
 
-  const statusText = module.status_text?.trim().toLowerCase()
+  const statusText = (module.status || module.status_key || module.status_text)?.trim().toLowerCase()
   if (statusText) {
     return statusText.includes("offline") || statusText.includes("离线")
   }
@@ -190,7 +190,13 @@ const FrequencyBoardPage: React.FC = () => {
   const getMetricLabel = useCallback(
     (module: BoardModule) => {
       const metricLabel =
-        formatBackendLabel(module.metric_label, t) ||
+        formatBackendLabel(
+          {
+            key: module.metric_label_key || module.metric_key,
+            fallback: module.metric_label,
+          },
+          t,
+        ) ||
         (module.direction === "tx"
           ? t("app.device.libiio.txMonitorPowerWithUnit", "Power (W)")
           : t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"))
@@ -324,7 +330,8 @@ const FrequencyBoardPage: React.FC = () => {
             device,
             direction: module.direction,
             directionLabel:
-              formatBackendLabel(module.title, t) || directionLabelMap[module.direction],
+              formatBackendLabel({ key: module.title_key, fallback: module.title }, t) ||
+              directionLabelMap[module.direction],
             moduleIp: module.ip,
             metricLabel: getMetricLabel(module),
             metricUnit: getMetricUnit(module),

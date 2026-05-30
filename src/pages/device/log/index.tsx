@@ -5,10 +5,15 @@ import Services from "@/pages/device/services"
 import moment from "moment"
 import DeviceNameSelect from "@/components/DeviceNameSelect"
 import { useIntl } from "umi"
-import { createBackendLabelFormatter, isRecoveryLog } from "@/utils/i18n"
+import { createBackendLabelFormatter, formatBackendKeyedValue, isRecoveryLog } from "@/utils/i18n"
 import "./index.less"
 
-type Columns = API_PostDeviceList.List
+type Columns = API_PostLogList.List
+
+const formatLogTime = (value: number | string) => {
+  const numericValue = typeof value === "number" ? value : Number(value)
+  return moment(Number.isFinite(numericValue) ? numericValue : value).format("YYYY-MM-DD HH:mm:ss")
+}
 
 const DeviceLog: React.FC = () => {
   const intl = useIntl()
@@ -50,7 +55,10 @@ const DeviceLog: React.FC = () => {
         if (item && item.id) {
           enums.push({
             value: item.id,
-            label: formatBackendLabel(item.device_type_alias || item.device_type),
+            label: formatBackendLabel({
+              key: item.device_type_alias_key,
+              fallback: item.device_type_alias || item.device_type,
+            }),
           })
         }
       })
@@ -74,7 +82,10 @@ const DeviceLog: React.FC = () => {
         valueType: "select",
         request: getDeviceTypes,
         render: (_, row) => {
-          return formatBackendLabel(row.device_type_alias || row.device_type)
+          return formatBackendLabel({
+            key: row.device_type_alias_key,
+            fallback: row.device_type_alias || row.device_type,
+          })
         },
         fieldProps: {
           showSearch: true,
@@ -104,6 +115,15 @@ const DeviceLog: React.FC = () => {
         align: "center",
         dataIndex: "content",
         hideInSearch: true,
+        renderText: (_value, record) =>
+          formatBackendKeyedValue(
+            {
+              key: record.event_code,
+              params: record.event_params,
+              fallback: record.content,
+            },
+            t,
+          ) || record.content,
       },
       {
         title: t("app.device.log.time", "Time"),
@@ -111,9 +131,7 @@ const DeviceLog: React.FC = () => {
         dataIndex: "created_at",
         valueType: "dateTimeRange",
         render: (_, row: API_PostLogList.List) => {
-          return [
-            <div key="created_at">{moment(row.created_at).format("YYYY-MM-DD HH:mm:ss")}</div>,
-          ]
+          return [<div key="created_at">{formatLogTime(row.created_at)}</div>]
         },
         search: {
           transform: (value) => ({
@@ -130,7 +148,7 @@ const DeviceLog: React.FC = () => {
       <ProTable<Columns>
         actionRef={actionRef}
         rowClassName={(record) => {
-          return isRecoveryLog(record.content) ? "status-recovery" : "status-alarm"
+          return isRecoveryLog(record.event_code || record.content) ? "status-recovery" : "status-alarm"
         }}
         formRef={formRef}
         columns={columns}

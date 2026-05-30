@@ -1,7 +1,17 @@
 declare namespace API_PostDeviceList {
+  export interface ApiEnvelope<T> {
+    err: number
+    msg: string
+    msg_key?: string
+    res_key?: string
+    res: T
+  }
+
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: Res
   }
 
@@ -18,11 +28,14 @@ declare namespace API_PostDeviceList {
     name: string
     position: string
     device_type_group: string
+    device_type_group_key?: string
     device_type_id: number
     device_type: string
     device_type_alias: string
-    status: bigint
-    status_text: string
+    device_type_alias_key?: string
+    status: string | bigint
+    status_key?: string
+    status_text?: string
     tag_color: string
     is_maintaining: boolean
     is_alarm: boolean
@@ -30,12 +43,14 @@ declare namespace API_PostDeviceList {
     is_online: boolean
     metric_items: MetricItems[]
     alarm_items: AlarmItems[]
+    panel_info?: Record<string, any>
   }
 
   export interface MetricItems {
     //
     config_type: number
     config_type_name: string
+    config_type_key?: string
     current_val: number | boolean
     current_val_type: string
     is_set_current_val: boolean
@@ -52,8 +67,11 @@ declare namespace API_PostDeviceList {
   export interface AlarmItems {
     config_type: number
     config_type_name: string
+    config_type_key?: string
     current_val: number
     is_alarm: boolean
+    suggested_action?: string
+    suggested_action_key?: string
   }
 }
 
@@ -79,6 +97,7 @@ declare namespace API_PostLibiioDeviceList {
   export interface List {
     id: number
     ip?: string
+    direction?: string
     type?: number
     center_freq: number
     sampling_rate: number
@@ -209,11 +228,15 @@ declare namespace API_PostLibiioBoardList {
     direction: ModuleDirection
     ip?: string
     title?: string
+    title_key?: string
     metric_key?: string
     metric_label?: string
+    metric_label_key?: string
     metric_unit?: string
     is_online?: number | string | boolean
     online?: number | string | boolean
+    status?: string
+    status_key?: string
     status_text?: string
     channels: Channel[]
   }
@@ -298,6 +321,8 @@ declare namespace API_PostDeviceTypes {
   export interface Result {
     err: number
     msg: string
+    msg_key?: string
+    res_key?: string
     res: Res
   }
 
@@ -309,8 +334,10 @@ declare namespace API_PostDeviceTypes {
   export interface List {
     id: number
     device_type_group: string
+    device_type_group_key?: string
     device_type: string
     device_type_alias: string
+    device_type_alias_key?: string
     configs: Configs[]
     alarms: Alarms[]
     shows: Shows[]
@@ -318,8 +345,13 @@ declare namespace API_PostDeviceTypes {
   export interface Configs {
     config_type: number
     config_type_name: string
+    config_type_key?: string
     alarm_operator: string
     val: number
+    alarm_min?: number | null
+    alarm_max?: number | null
+    show_min?: number | null
+    show_max?: number | null
     min: number
     max: number
     unit: string
@@ -330,11 +362,13 @@ declare namespace API_PostDeviceTypes {
   export interface Alarms {
     config_type: number
     config_type_name: string
+    config_type_key?: string
     is_selected: boolean
   }
   export interface Shows {
     config_type: number
     config_type_name: string
+    config_type_key?: string
     is_show_in_list: boolean
     is_show_in_detail: boolean
   }
@@ -418,8 +452,17 @@ declare namespace API_PostLogList {
 
   export interface List {
     id: number
+    device_id: number
+    device_type_id: number
+    device_name: string
+    device_type: string
+    device_type_alias: string
+    device_type_alias_key?: string
+    status: number
     content: string
-    created_at: string
+    event_code?: string
+    event_params?: Record<string, string | number | boolean | null | undefined>
+    created_at: number | string
   }
 }
 
@@ -438,8 +481,10 @@ declare namespace API_PostDailyXlsxList {
 
   export interface List {
     id: number
-    content: string
-    created_at: string
+    device_id: number
+    device_name: string
+    file_date: string
+    file_name: string
   }
 }
 

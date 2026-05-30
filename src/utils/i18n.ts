@@ -13,6 +13,13 @@ export type BackendI18nPayload = {
 
 export type BackendI18nValue = string | BackendI18nPayload | null | undefined
 
+export type BackendKeyedValue = {
+  key?: string | null
+  code?: string | null
+  params?: BackendMessageParams | null
+  fallback?: string | null
+}
+
 export type Translate = (id: string, defaultMessage: string, values?: MessageValues) => string
 
 export const DEFAULT_LOCALE = "en-US"
@@ -29,9 +36,12 @@ const RUNTIME_MESSAGES: Record<string, Record<string, string>> = {
     "app.system.defaultName": "Private Network Communication Intelligent NMS",
     "app.common.refresh": "Refresh",
     "app.common.requesting": "Loading...",
+    "app.common.deleteSuccess": "Deleted successfully",
+    "app.common.saveSuccess": "Saved successfully",
     "app.common.serviceError": "Service error",
     "app.common.unknownError": "Unknown error",
     "app.common.tokenExpired": "Token expired. Please sign in again.",
+    "app.dashboard.action.pleaseContactAdministrator": "Please contact the administrator",
     "app.global.offline": "You are offline",
     "app.global.updateAvailable": "New content available",
     "app.global.updateDescription": "Click Refresh or reload the page manually.",
@@ -41,9 +51,12 @@ const RUNTIME_MESSAGES: Record<string, Record<string, string>> = {
     "app.system.defaultName": "专网通信智能网管平台",
     "app.common.refresh": "刷新",
     "app.common.requesting": "数据请求中...",
+    "app.common.deleteSuccess": "删除成功",
+    "app.common.saveSuccess": "保存成功",
     "app.common.serviceError": "服务错误",
     "app.common.unknownError": "未知错误",
     "app.common.tokenExpired": "token失效，请重新登陆！",
+    "app.dashboard.action.pleaseContactAdministrator": "请联系管理员",
     "app.global.offline": "当前处于离线状态",
     "app.global.updateAvailable": "有新内容",
     "app.global.updateDescription": "请点击“刷新”按钮或者手动刷新页面",
@@ -545,9 +558,21 @@ const BACKEND_LABEL_KEYS: Record<string, [string, string]> = {
 }
 
 const BACKEND_CODE_KEYS: Record<string, [string, string]> = {
+  "message.deleted_successfully": ["app.common.deleteSuccess", "Deleted successfully"],
+  "message.saved_successfully": ["app.common.saveSuccess", "Saved successfully"],
+  "message.please_contact_the_administrator": [
+    "app.dashboard.action.pleaseContactAdministrator",
+    "Please contact the administrator",
+  ],
   "dashboard.total": ["app.dashboard.total", "Total"],
   "dashboard.deviceTotal": ["app.dashboard.deviceTotal", "Total Devices"],
   "dashboard.healthRate": ["app.dashboard.healthRate", "Health Rate"],
+  "dashboard.stat.total": ["app.dashboard.total", "Total"],
+  "dashboard.stat.online": ["app.dashboard.online", "Online"],
+  "dashboard.stat.offline": ["app.dashboard.offline", "Offline"],
+  "dashboard.stat.alarm": ["app.dashboard.alarm", "Alarm"],
+  "dashboard.stat.healthy": ["app.dashboard.healthy", "Healthy"],
+  "dashboard.stat.unhealthy": ["app.dashboard.unhealthy", "Unhealthy"],
   "dashboard.healthy": ["app.dashboard.healthy", "Healthy"],
   "dashboard.unhealthy": ["app.dashboard.unhealthy", "Unhealthy"],
   "dashboard.online": ["app.dashboard.online", "Online"],
@@ -639,6 +664,44 @@ const BACKEND_CODE_KEYS: Record<string, [string, string]> = {
   "dashboard.status.isNormal": ["app.dashboard.status.isNormal", "Normal"],
   "dashboard.status.isHigh": ["app.dashboard.status.isHigh", "High"],
   "dashboard.status.isLow": ["app.dashboard.status.isLow", "Low"],
+  "device.group.transmitter_mixer": [
+    "app.device.index.group.transmitterMixer",
+    "Transmitter Combiner",
+  ],
+  "device.group.splitter": ["app.device.index.group.receiverSplitter", "Splitter"],
+  "device.group.bandpass_duplexer": [
+    "app.device.index.group.bandpassDuplexer",
+    "Bandpass Duplexer",
+  ],
+  "device.group.uplink_stripper": [
+    "app.device.index.group.uplinkStripper",
+    "Uplink Signal Stripper",
+  ],
+  "device.group.downlink_stripper": [
+    "app.device.index.group.downlinkStripper",
+    "Downlink Signal Stripper",
+  ],
+  "device.group.digital_near_end": [
+    "app.device.index.group.digitalNearEnd",
+    "Digital Near-end Unit",
+  ],
+  "device.group.digital_far_end": ["app.device.index.group.digitalRemote", "Digital Remote Unit"],
+  "device.group.power_collection_gateway": [
+    "app.device.index.group.powerCollectionGateway",
+    "Power Collection Gateway",
+  ],
+  "device.group.analog_near_end": [
+    "app.device.index.group.analogNearEnd",
+    "Analog Near-end Unit",
+  ],
+  "device.group.analog_far_end": ["app.device.index.group.analogRemote", "Analog Remote Unit"],
+  "device.group.trunk_amplifier": ["app.device.index.group.trunkAmplifier", "Trunk Amplifier"],
+  "device.status.device_online": ["app.device.status.online", "Online"],
+  "device.status.device_offline": ["app.device.status.offline", "Offline"],
+  "device.status.maintaining": ["app.device.index.maintaining", "Maintaining"],
+  "device.status.err": ["app.device.status.inAlarm", "In Alarm"],
+  "device.status.online": ["app.device.status.online", "Online"],
+  "device.status.offline": ["app.device.status.offline", "Offline"],
   "device.index.group.transmitterMixer": [
     "app.device.index.group.transmitterMixer",
     "Transmitter Mixer",
@@ -679,10 +742,9 @@ const BACKEND_CODE_KEYS: Record<string, [string, string]> = {
     "app.device.index.group.powerCollectionGateway",
     "Power Collection Gateway",
   ],
-  "device.status.online": ["app.device.status.online", "Online"],
-  "device.status.offline": ["app.device.status.offline", "Offline"],
   "device.status.inAlarm": ["app.device.status.inAlarm", "In Alarm"],
   "device.status.moduleOffline": ["app.device.status.moduleOffline", "Module Offline"],
+  "device.config.device_offline": ["app.device.status.offline", "Offline"],
   "device.libiio.module.rx": ["app.device.libiio.module.rx", "RX Module"],
   "device.libiio.module.tx": ["app.device.libiio.module.tx", "TX Module"],
   "device.libiio.module.rxOffline": ["app.device.libiio.module.rxOffline", "RX Module Offline"],
@@ -706,39 +768,63 @@ const BACKEND_CODE_KEYS: Record<string, [string, string]> = {
   ],
   "device.libiio.txPowerOffsetDb": ["app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"],
   "device.libiio.rxRssiOffsetDb": ["app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"],
+  "libiio.module.tx": ["app.device.libiio.module.tx", "TX Module"],
+  "libiio.module.rx": ["app.device.libiio.module.rx", "RX Module"],
+  "libiio.module.status.offline": ["app.device.status.moduleOffline", "Module Offline"],
+  "libiio.module.status.normal": ["app.device.libiio.board.statusNormal", "Normal"],
+  "libiio.module.status.abnormal": ["app.device.libiio.board.statusAbnormal", "Abnormal"],
+  "libiio.metric.power_w": ["app.device.libiio.txMonitorPowerWithUnit", "Power (W)"],
+  "libiio.metric.rssi_dbm": ["app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"],
+  "libiio.config.tx_module_offline": ["app.device.libiio.module.txOffline", "TX Module Offline"],
+  "libiio.config.rx_module_offline": ["app.device.libiio.module.rxOffline", "RX Module Offline"],
+  "libiio.config.rx_frequency_abnormal": [
+    "app.device.libiio.board.statusAbnormal",
+    "Abnormal",
+  ],
 }
 
 const DEVICE_GROUP_KEYS: Record<string, string> = {
+  transmitter_mixer: "transmitterMixer",
   发射合路器: "transmitterMixer",
   "transmitter mixer": "transmitterMixer",
+  "transmitter combiner": "transmitterMixer",
   mixer: "transmitterMixer",
+  splitter: "receiverSplitter",
   接收分路器: "receiverSplitter",
   "receiver splitter": "receiverSplitter",
   receiver: "receiverSplitter",
-  splitter: "receiverSplitter",
   分路器: "receiverSplitter",
+  bandpass_duplexer: "bandpassDuplexer",
   带通双工器: "bandpassDuplexer",
   "bandpass duplexer": "bandpassDuplexer",
+  uplink_stripper: "uplinkStripper",
   上行信号剥离器: "uplinkStripper",
   "uplink signal stripper": "uplinkStripper",
+  downlink_stripper: "downlinkStripper",
   下行信号剥离器: "downlinkStripper",
   "downlink signal stripper": "downlinkStripper",
+  digital_near_end: "digitalNearEnd",
   数字近端机: "digitalNearEnd",
   "digital near-end unit": "digitalNearEnd",
   "near-end unit": "digitalNearEnd",
   "near end unit": "digitalNearEnd",
   "near-end": "digitalNearEnd",
   "near end": "digitalNearEnd",
+  analog_near_end: "analogNearEnd",
   模拟近端机: "analogNearEnd",
   "analog near-end unit": "analogNearEnd",
+  digital_far_end: "digitalRemote",
   数字远端机: "digitalRemote",
   "digital remote unit": "digitalRemote",
   "remote unit": "digitalRemote",
   remote: "digitalRemote",
+  analog_far_end: "analogRemote",
   模拟远端机: "analogRemote",
   "analog remote unit": "analogRemote",
+  trunk_amplifier: "trunkAmplifier",
   干线放大器: "trunkAmplifier",
   "trunk amplifier": "trunkAmplifier",
+  power_collection_gateway: "powerCollectionGateway",
   功率采集网关: "powerCollectionGateway",
   "power collection gateway": "powerCollectionGateway",
 }
@@ -1180,13 +1266,71 @@ export const formatBackendLabel = (value?: BackendI18nValue, t?: Translate) => {
   return formatBackendStringLabel(fallback, t) || fallback
 }
 
+export const formatBackendKeyedValue = (
+  value?: BackendKeyedValue | null,
+  t?: Translate,
+): string => {
+  if (!value) {
+    return ""
+  }
+
+  return formatBackendLabel(
+    {
+      key: value.key,
+      code: value.code,
+      params: value.params,
+      fallback: value.fallback,
+    },
+    t,
+  )
+}
+
+export const formatApiResponseMessage = (
+  response?: {
+    msg?: string | null
+    msg_key?: string | null
+    res_key?: string | null
+    event_code?: string | null
+    event_params?: BackendMessageParams | null
+  },
+  fallback = "",
+  t?: Translate,
+) => {
+  if (!response) {
+    return fallback
+  }
+
+  return (
+    formatBackendKeyedValue(
+    {
+      key: response.res_key || response.msg_key || response.event_code,
+      params: response.event_params,
+      fallback: response.msg || fallback,
+    },
+    t,
+    ) ||
+    response.msg ||
+    fallback
+  )
+}
+
 export const getDeviceGroupKey = (value?: string | null) => {
   const trimmedValue = value?.trim()
   if (!trimmedValue) {
     return ""
   }
 
-  return DEVICE_GROUP_KEYS[trimmedValue] || DEVICE_GROUP_KEYS[trimmedValue.toLowerCase()] || ""
+  const normalizedValue = trimmedValue.startsWith("device.group.")
+    ? trimmedValue.replace("device.group.", "")
+    : trimmedValue
+
+  return (
+    DEVICE_GROUP_KEYS[trimmedValue] ||
+    DEVICE_GROUP_KEYS[trimmedValue.toLowerCase()] ||
+    DEVICE_GROUP_KEYS[normalizedValue] ||
+    DEVICE_GROUP_KEYS[normalizedValue.toLowerCase()] ||
+    ""
+  )
 }
 
 export const isNearEndDeviceGroup = (value?: string | null) =>

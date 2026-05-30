@@ -47,6 +47,18 @@ const getBackendValueKey = (value: BackendI18nValue, fallback = "") => {
   )
 }
 
+const getBackendFallbackText = (value: BackendI18nValue, fallback = "") => {
+  if (typeof value === "string") {
+    return value || fallback
+  }
+
+  if (!value) {
+    return fallback
+  }
+
+  return value.fallback || value.defaultMessage || value.value || value.code || fallback
+}
+
 // 常量配置
 const DASHBOARD_CONFIG = {
   refreshInterval: () => {
@@ -252,7 +264,7 @@ const usePieConfig = (
     const sourceData = Array.isArray(data) ? data : data ? [data] : []
     const chartData = sourceData.map((item: any) => ({
       ...item,
-      type: formatBackendLabel(item.type),
+      type: formatBackendLabel({ key: item.type_key, fallback: item.type }),
     }))
 
     return {
@@ -336,7 +348,7 @@ const useLineConfig = (
   return useMemo(() => {
     const chartData = (data || []).map((item) => ({
       ...item,
-      type: formatBackendLabel(item.type),
+      type: formatBackendLabel({ key: item.type_key, fallback: item.type }),
     }))
 
     return {
@@ -362,7 +374,7 @@ const useLineConfig = (
 
 const Dashboard: React.FC = () => {
   const intl = useIntl()
-  const [dashboardData, setDashboardData] = useState<API_PostDashboard.Result>()
+  const [dashboardData, setDashboardData] = useState<API_PostDashboard.Res>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isFirstRender, setIsFirstRender] = useState(true)
@@ -951,8 +963,14 @@ const Dashboard: React.FC = () => {
                           }}
                         >
                           <span style={{ color: "#222222", fontSize: "12px" }}>
-                            {formatBackendLabel(item.device_type_group)}（{item.device_name}）
-                            {formatBackendLabel(item.alarm_item.config_type_name)}{" "}
+                            {formatBackendLabel({
+                              key: item.device_type_group_key,
+                              fallback: item.device_type_group,
+                            })}（{item.device_name}）
+                            {formatBackendLabel({
+                              key: item.alarm_item.config_type_key,
+                              fallback: item.alarm_item.config_type_name,
+                            })}{" "}
                             {t("app.dashboard.alarm", "Alarm")}
                           </span>
                         </div>
@@ -968,7 +986,11 @@ const Dashboard: React.FC = () => {
                         >
                           <span style={{ color: "#808080", fontSize: "10px" }}>
                             {formatBackendLabel(
-                              item.alarm_item.suggested_action || item.alarm_item.alarm_text,
+                              {
+                                key: item.alarm_item.suggested_action_key,
+                                fallback:
+                                  item.alarm_item.suggested_action || item.alarm_item.alarm_text,
+                              },
                             )}
                           </span>
                           <span style={{ color: "#808080", fontSize: "10px" }}>
@@ -988,12 +1010,23 @@ const Dashboard: React.FC = () => {
         {dashboardData?.type_statistic && dashboardData?.type_statistic.length > 0 && (
           <Row gutter={24} style={{ marginBottom: 16 }}>
             {dashboardData?.type_statistic.map((item: any, index) => (
-              <Col key={getBackendValueKey(item.name, String(index))} xs={12} sm={8} md={6} lg={4}>
+              <Col
+                key={item.name_key || getBackendValueKey(item.name, String(index))}
+                xs={12}
+                sm={8}
+                md={6}
+                lg={4}
+              >
                 <Card
                   title={
                     <Space>
                       <ProductOutlined style={{ color: "#0083FF" }} />
-                      <span>{formatBackendLabel(item.name)}</span>
+                      <span>
+                        {formatBackendLabel({
+                          key: item.name_key,
+                          fallback: getBackendFallbackText(item.name),
+                        })}
+                      </span>
                     </Space>
                   }
                   loading={loading}

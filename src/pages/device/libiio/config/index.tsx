@@ -28,6 +28,7 @@ import type {
   API_PostLibiioDeviceConfigList,
   API_PostLibiioDeviceConfigSave,
 } from "@/pages/device/services/typings/device"
+import { formatApiResponseMessage } from "@/utils/i18n"
 import "./index.less"
 
 type FrequencyConfigPageProps = {
@@ -228,7 +229,11 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
         return
       }
       message.error(
-        error?.msg || t("app.device.libiio.config.saveFailed", "Failed to save frequency config"),
+        formatApiResponseMessage(
+          error,
+          t("app.device.libiio.config.saveFailed", "Failed to save frequency config"),
+          t,
+        ),
       )
     } finally {
       setSubmitLoading(false)

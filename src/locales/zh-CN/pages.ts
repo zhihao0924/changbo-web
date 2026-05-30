@@ -9,7 +9,7 @@ export default {
   "pages.login.form.kicker": "账户访问",
   "pages.login.form.title": "安全登录",
   "pages.login.form.subtitle": "请使用分配的账号进入管理平台。",
-  "pages.login.username.placeholder": "用户名: admin or user",
+  "pages.login.username.placeholder": "用户名: admin or operator",
   "pages.login.username.required": "用户名是必填项！",
   "pages.login.password.placeholder": "密码: password",
   "pages.login.password.required": "密码是必填项！",

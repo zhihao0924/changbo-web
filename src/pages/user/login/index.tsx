@@ -8,7 +8,7 @@ import {
 } from "@/constants"
 import Services from "@/pages/user/services"
 import { postSystemConfig } from "@/pages/setting/services/api"
-import { resolveSystemDisplayName } from "@/utils/i18n"
+import { formatApiResponseMessage, resolveSystemDisplayName } from "@/utils/i18n"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { ProForm, ProFormText } from "@ant-design/pro-form"
 import { Alert, message, Tabs } from "antd"
@@ -126,12 +126,18 @@ const Login: React.FC = () => {
 
         setUserLoginState("error")
         message.error(
-          res.msg || formatMessage("pages.login.failure", "Login failed, please try again!"),
+          formatApiResponseMessage(
+            res,
+            formatMessage("pages.login.failure", "Login failed, please try again!"),
+          ),
         )
       } catch (error) {
         setUserLoginState("error")
         message.error(
-          formatMessage("app.login.exception", "A login error occurred. Please try again."),
+          formatApiResponseMessage(
+            error as any,
+            formatMessage("app.login.exception", "A login error occurred. Please try again."),
+          ),
         )
       }
     },

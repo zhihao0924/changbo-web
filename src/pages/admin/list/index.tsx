@@ -6,6 +6,7 @@ import { PlusOutlined } from "@ant-design/icons"
 import Services from "@/pages/admin/services"
 import { USER_INFO } from "@/constants"
 import { useIntl } from "umi"
+import { formatApiResponseMessage } from "@/utils/i18n"
 
 type Columns = API_PostAdminList.List
 
@@ -13,9 +14,11 @@ type CreateFormValues = {
   account: string
   name: string
   email: string
-  role: string
+  role: "admin" | "operator" | "user"
   password: string
 }
+
+const normalizeAdminRole = (role?: string) => (role === "user" ? "operator" : role)
 
 // 权限检查函数
 const canOperateAdmin = (record: Columns, currentUser?: API_USER.Res) => {
@@ -43,11 +46,13 @@ const UserIndex: React.FC = () => {
   // 统一错误处理
   const handleApiError = useCallback(
     (error: any, operation: string) => {
+      const fallback = t("app.admin.operationFailed", "Operation failed. Please try again later.").replace(
+        "${operation}",
+        operation,
+      )
+
       message.error(
-        t("app.admin.operationFailed", "Operation failed. Please try again later.").replace(
-          "${operation}",
-          operation,
-        ),
+        formatApiResponseMessage(error, fallback, t),
         1,
       )
     },
@@ -75,7 +80,7 @@ const UserIndex: React.FC = () => {
         account: record.account,
         name: record.name,
         email: record.email,
-        role: record.role,
+        role: normalizeAdminRole(record.role) as CreateFormValues["role"],
       })
       setUpdateModalVisible(true)
     },
@@ -93,12 +98,20 @@ const UserIndex: React.FC = () => {
         setLoading(true)
         const res = await apiCall
         if (res.err === 0) {
-          message.success(successMessage, 1, () => {
+          message.success(formatApiResponseMessage(res, successMessage, t), 1, () => {
             actionRef.current?.reload()
           })
 
           return true
         }
+
+        message.error(
+          formatApiResponseMessage(
+            res,
+            t("app.admin.operationFailed", "Operation failed. Please try again later."),
+            t,
+          ),
+        )
       } catch (error) {
         handleApiError(error, t("app.admin.operation", "Operation"))
       } finally {
@@ -112,8 +125,14 @@ const UserIndex: React.FC = () => {
   const handleUpdateModalSubmit = useCallback(async () => {
     try {
       const values = await updateAdminForm.validateFields()
+      const { name, email, role } = values
       const success = await handleApiCall(
-        Services.api.postAdminUpdate({ id: currentRecord?.id, ...values }),
+        Services.api.postAdminUpdate({
+          id: currentRecord?.id,
+          name,
+          email,
+          role: normalizeAdminRole(role),
+        }),
         t("app.admin.updateSuccess", "User updated successfully"),
       )
       if (success) {
@@ -175,7 +194,7 @@ const UserIndex: React.FC = () => {
         label: t("app.admin.role.superAdmin", "Super Admin"),
         disabled: userInfo?.account !== "admin",
       },
-      { value: "user", label: t("app.admin.role.admin", "Admin") },
+      { value: "operator", label: t("app.admin.role.admin", "Admin") },
     ]
   }, [t])
 
@@ -183,7 +202,10 @@ const UserIndex: React.FC = () => {
     try {
       const values = await createAdminForm.validateFields()
       const success = await handleApiCall(
-        Services.api.postAdminCreate(values),
+        Services.api.postAdminCreate({
+          ...values,
+          role: normalizeAdminRole(values.role),
+        }),
         t("app.admin.createSuccess", "User created successfully"),
       )
       if (success) {
@@ -273,7 +295,8 @@ const UserIndex: React.FC = () => {
         align: "center",
         dataIndex: "role",
         render: (val: string) => {
-          return getRoles().find((item) => item.value === val)?.label
+          const normalizedRole = normalizeAdminRole(val)
+          return getRoles().find((item) => item.value === normalizedRole)?.label || val
         },
       },
       {

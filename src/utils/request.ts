@@ -17,7 +17,7 @@ import { removeUserInfo } from "@/utils/biz"
 import { history } from "umi"
 import { stringify } from "querystring"
 import { refreshToken } from "@/pages/user/services/api"
-import { formatRuntimeMessage, getRuntimeLocale } from "@/utils/i18n"
+import { formatApiResponseMessage, formatRuntimeMessage, getRuntimeLocale } from "@/utils/i18n"
 
 // params 仅仅包含常用 url method headers description
 
@@ -109,14 +109,19 @@ export const request = async (
 ) => {
   let headers: Partial<RequestHeaderInfo> = {}
 
+  const rawUrl = url
   const gateway = extParams?.gateway || "/api/"
   url =
     process.env.NODE_ENV === "development"
-      ? gateway + url
-      : (process.env.BUILD_ENV && proxy[process.env.BUILD_ENV][gateway].target) + url
+      ? gateway + rawUrl
+      : (process.env.BUILD_ENV && proxy[process.env.BUILD_ENV][gateway].target) + rawUrl
 
   // 检查并刷新token（排除刷新token接口本身）
-  if (url !== "/api/admin/refreshToken" && url !== "/api/system/config" && !extParams?.gateway) {
+  if (
+    rawUrl !== "admin/refreshToken" &&
+    rawUrl !== "system/config" &&
+    !extParams?.gateway
+  ) {
     const now = Date.now()
     // 添加防抖机制，避免频繁调用刷新token
     if (now - lastRefreshTime > REFRESH_DEBOUNCE_TIME) {
@@ -135,7 +140,7 @@ export const request = async (
     }
 
     // 对于不需要认证的接口（如/system/config），不添加Authorization头
-    if (url !== "/api/system/config" && !url.endsWith("/system/config")) {
+    if (rawUrl !== "system/config" && !url.endsWith("/system/config")) {
       headers.Authorization =
         "Bearer " +
         (extParams?.gateway && process.env.BUILD_ENV
@@ -251,7 +256,7 @@ export const request = async (
             }
 
             // 刷新成功后重新发送原始请求
-            return request(url, params, extParams, ctx)
+            return request(rawUrl, params, extParams, ctx)
           }
         } catch (refreshError) {
           // 刷新失败，清除用户信息并跳转到登录页
@@ -304,7 +309,8 @@ export const request = async (
 
             if (typeof csv === "string") {
               const jsonData = JSON.parse(csv)
-              extParams.showToast && message.error(jsonData.msg)
+              extParams.showToast &&
+                message.error(formatApiResponseMessage(jsonData, jsonData.msg))
             }
           }
           fileReader.readAsText(info)
@@ -316,7 +322,10 @@ export const request = async (
 
     if (typeof document !== "undefined") {
       extParams.showLoading && message.destroy()
-      let errorInfo = info.msg || formatRuntimeMessage("app.common.unknownError", "Unknown error")
+      let errorInfo = formatApiResponseMessage(
+        info,
+        formatRuntimeMessage("app.common.unknownError", "Unknown error"),
+      )
       extParams.showToast && message.error(errorInfo)
 
       if (info.err == -999999) {
