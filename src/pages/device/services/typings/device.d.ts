@@ -104,7 +104,9 @@ declare namespace API_PostLibiioDeviceList {
     fft_size: number
     full_scale_power_dbm?: number
     tx_power_offset_db?: number
+    tx_hardware_gain_db?: number
     rx_rssi_offset_db?: number
+    rx_hardware_gain_db?: number
     rx_ip?: string
     rx_center_freq?: number
     rx_sampling_rate?: number
@@ -274,7 +276,9 @@ declare namespace API_PostLibiioDeviceSave {
     fft_size: number
     full_scale_power_dbm?: number
     tx_power_offset_db?: number
+    tx_hardware_gain_db?: number
     rx_rssi_offset_db?: number
+    rx_hardware_gain_db?: number
     rx_ip?: string
     rx_center_freq?: number
     rx_sampling_rate?: number

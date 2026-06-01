@@ -56,7 +56,7 @@ export default defineConfig({
     "https://sf3-cn.feishucdn.com/obj/feishu-static/lark/passport/qrcode/LarkSSOSDKWebQRCode-1.0.2.js",
   ],
   locale: {
-    default: "en-US",
+    default: baseFeatureConfig.locale,
     antd: true,
     // default true, when it is true, will use `navigator.language` overwrite default
     baseNavigator: false,

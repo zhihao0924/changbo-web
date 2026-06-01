@@ -31,7 +31,9 @@ type EditFormValues = {
   ip: string
   full_scale_power_dbm?: number
   tx_power_offset_db?: number
+  tx_hardware_gain_db?: number
   rx_rssi_offset_db?: number
+  rx_hardware_gain_db?: number
   rx_ip?: string
   rx_center_freq?: number
   rx_sampling_rate?: number
@@ -148,7 +150,9 @@ const DeviceLibiio: React.FC = () => {
         ip: device.ip || module?.ip || "",
         full_scale_power_dbm: module?.full_scale_power_dbm,
         tx_power_offset_db: module?.tx_power_offset_db,
+        tx_hardware_gain_db: module?.tx_hardware_gain_db,
         rx_rssi_offset_db: module?.rx_rssi_offset_db,
+        rx_hardware_gain_db: module?.rx_hardware_gain_db,
         tx_ip: module?.tx_ip || "",
         tx_center_freq: module?.tx_center_freq ?? module?.center_freq,
         tx_sampling_rate: module?.tx_sampling_rate ?? module?.sampling_rate,
@@ -189,7 +193,9 @@ const DeviceLibiio: React.FC = () => {
         fft_size: editingModule?.fft_size ?? rxFftSize,
         full_scale_power_dbm: values.full_scale_power_dbm,
         tx_power_offset_db: values.tx_power_offset_db,
+        tx_hardware_gain_db: values.tx_hardware_gain_db,
         rx_rssi_offset_db: values.rx_rssi_offset_db,
+        rx_hardware_gain_db: values.rx_hardware_gain_db,
         tx_ip: values.tx_ip,
         tx_center_freq: values.tx_center_freq,
         tx_sampling_rate: values.tx_sampling_rate,
@@ -268,6 +274,10 @@ const DeviceLibiio: React.FC = () => {
                   t("app.device.libiio.txPowerOffsetDb", "TX Power Offset (dB)"),
                   module.tx_power_offset_db,
                 )}
+                {renderModuleField(
+                  t("app.device.libiio.txHardwareGainDb", "Hardware Gain (dB)"),
+                  module.tx_hardware_gain_db,
+                )}
               </>
             ) : (
               <>
@@ -288,6 +298,10 @@ const DeviceLibiio: React.FC = () => {
                 {renderModuleField(
                   t("app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)"),
                   module.rx_rssi_offset_db,
+                )}
+                {renderModuleField(
+                  t("app.device.libiio.rxHardwareGainDb", "Hardware Gain (dB)"),
+                  module.rx_hardware_gain_db,
                 )}
               </>
             )}
@@ -516,6 +530,12 @@ const DeviceLibiio: React.FC = () => {
               >
                 <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dB" />
               </Form.Item>
+              <Form.Item
+                name="tx_hardware_gain_db"
+                label={t("app.device.libiio.txHardwareGainDb", "Hardware Gain (dB)")}
+              >
+                <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dB" />
+              </Form.Item>
             </div>
           </div>
 
@@ -583,6 +603,12 @@ const DeviceLibiio: React.FC = () => {
               <Form.Item
                 name="rx_rssi_offset_db"
                 label={t("app.device.libiio.rxRssiOffsetDb", "RX RSSI Offset (dB)")}
+              >
+                <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dB" />
+              </Form.Item>
+              <Form.Item
+                name="rx_hardware_gain_db"
+                label={t("app.device.libiio.rxHardwareGainDb", "Hardware Gain (dB)")}
               >
                 <InputNumber style={{ width: "100%" }} precision={2} addonAfter="dB" />
               </Form.Item>
