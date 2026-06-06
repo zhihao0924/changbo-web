@@ -336,6 +336,35 @@ const BACKEND_CODE_KEYS: Record<string, [string, string]> = {
 }
 
 const DEVICE_GROUP_KEYS: Record<string, string> = {
+  "device.group.transmitter_mixer": "transmitterMixer",
+  "device.group.transmitter_combiner": "transmitterMixer",
+  "device.group.splitter": "receiverSplitter",
+  "device.group.bandpass_duplexer": "bandpassDuplexer",
+  "device.group.uplink_stripper": "uplinkStripper",
+  "device.group.downlink_stripper": "downlinkStripper",
+  "device.group.near_end": "digitalNearEnd",
+  "device.group.digital_near_end": "digitalNearEnd",
+  "device.group.remote": "digitalRemote",
+  "device.group.digital_remote": "digitalRemote",
+  "device.group.digital_far_end": "digitalRemote",
+  "device.group.analog_near_end": "analogNearEnd",
+  "device.group.analog_remote": "analogRemote",
+  "device.group.analog_far_end": "analogRemote",
+  "device.group.trunk_amplifier": "trunkAmplifier",
+  "device.group.power_collection_gateway": "powerCollectionGateway",
+  "device.index.group.transmitterMixer": "transmitterMixer",
+  "device.index.group.receiverSplitter": "receiverSplitter",
+  "device.index.group.bandpassDuplexer": "bandpassDuplexer",
+  "device.index.group.uplinkStripper": "uplinkStripper",
+  "device.index.group.downlinkStripper": "downlinkStripper",
+  "device.index.group.nearEnd": "digitalNearEnd",
+  "device.index.group.digitalNearEnd": "digitalNearEnd",
+  "device.index.group.remote": "digitalRemote",
+  "device.index.group.digitalRemote": "digitalRemote",
+  "device.index.group.analogNearEnd": "analogNearEnd",
+  "device.index.group.analogRemote": "analogRemote",
+  "device.index.group.trunkAmplifier": "trunkAmplifier",
+  "device.index.group.powerCollectionGateway": "powerCollectionGateway",
   mixer: "transmitterMixer",
   splitter: "receiverSplitter",
   receiver: "receiverSplitter",
@@ -838,15 +867,9 @@ export const getDeviceGroupKey = (value?: string | null) => {
     return ""
   }
 
-  const normalizedValue = trimmedValue.startsWith("device.group.")
-    ? trimmedValue.replace("device.group.", "")
-    : trimmedValue
-
   return (
     DEVICE_GROUP_KEYS[trimmedValue] ||
     DEVICE_GROUP_KEYS[trimmedValue.toLowerCase()] ||
-    DEVICE_GROUP_KEYS[normalizedValue] ||
-    DEVICE_GROUP_KEYS[normalizedValue.toLowerCase()] ||
     ""
   )
 }

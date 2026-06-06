@@ -57,10 +57,10 @@ const getUrlPathname = (url: string) => {
 }
 
 const hasGatewayPrefix = (target: string, gateway: string) => {
-  const normalizedTargetPath = `/${getUrlPathname(target).replace(/^\/+|\/+$/g, "")}`
-  const normalizedGateway = `/${gateway.replace(/^\/+|\/+$/g, "")}`
+  const targetPath = `/${getUrlPathname(target).replace(/^\/+|\/+$/g, "")}`
+  const gatewayPath = `/${gateway.replace(/^\/+|\/+$/g, "")}`
 
-  return normalizedTargetPath === normalizedGateway || normalizedTargetPath.startsWith(`${normalizedGateway}/`)
+  return targetPath === gatewayPath || targetPath.startsWith(`${gatewayPath}/`)
 }
 
 const resolveRequestUrl = (rawUrl: string, gateway: string) => {

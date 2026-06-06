@@ -18,7 +18,7 @@ type CreateFormValues = {
   password: string
 }
 
-const normalizeAdminRole = (role?: string) => (role === "user" ? "operator" : role)
+const getAdminRoleValue = (role?: string) => (role === "user" ? "operator" : role)
 
 // 权限检查函数
 const canOperateAdmin = (record: Columns, currentUser?: API_USER.Res) => {
@@ -80,7 +80,7 @@ const UserIndex: React.FC = () => {
         account: record.account,
         name: record.name,
         email: record.email,
-        role: normalizeAdminRole(record.role) as CreateFormValues["role"],
+        role: getAdminRoleValue(record.role) as CreateFormValues["role"],
       })
       setUpdateModalVisible(true)
     },
@@ -131,7 +131,7 @@ const UserIndex: React.FC = () => {
           id: currentRecord?.id,
           name,
           email,
-          role: normalizeAdminRole(role),
+          role: getAdminRoleValue(role),
         }),
         t("app.admin.updateSuccess", "User updated successfully"),
       )
@@ -204,7 +204,7 @@ const UserIndex: React.FC = () => {
       const success = await handleApiCall(
         Services.api.postAdminCreate({
           ...values,
-          role: normalizeAdminRole(values.role),
+          role: getAdminRoleValue(values.role),
         }),
         t("app.admin.createSuccess", "User created successfully"),
       )
@@ -295,8 +295,8 @@ const UserIndex: React.FC = () => {
         align: "center",
         dataIndex: "role",
         render: (val: string) => {
-          const normalizedRole = normalizeAdminRole(val)
-          return getRoles().find((item) => item.value === normalizedRole)?.label || val
+          const roleValue = getAdminRoleValue(val)
+          return getRoles().find((item) => item.value === roleValue)?.label || val
         },
       },
       {
