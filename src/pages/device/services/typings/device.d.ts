@@ -246,6 +246,14 @@ declare namespace API_PostLibiioBoardList {
   export interface List {
     device_id: number
     ip?: string
+    isolation_db?: number | string | null
+    isolation_db_alarm_min?: number | string | null
+    isolation_db_alarm_max?: number | string | null
+    isolation_db_is_alarm?: number | string | boolean | null
+    tx_vswr?: number | string | null
+    tx_vswr_alarm_min?: number | string | null
+    tx_vswr_alarm_max?: number | string | null
+    tx_vswr_is_alarm?: number | string | boolean | null
     modules: Module[]
   }
 

@@ -449,6 +449,28 @@ export default {
   "app.device.libiio.board.channel": "Channel",
   "app.device.libiio.board.channelWithNumber": "Channel {number}",
   "app.device.libiio.board.empty": "No frequency data",
+  "app.device.libiio.board.name": "Name",
+  "app.device.libiio.board.measuredValue": "Measured Value",
+  "app.device.libiio.board.txVswr": "TX VSWR",
+  "app.device.libiio.board.isolation": "Isolation",
+  "app.device.libiio.board.sequence": "No.",
+  "app.device.libiio.board.currentAlarmSummary": "Current Alarm Summary",
+  "app.device.libiio.board.troubleshooting": "Troubleshooting",
+  "app.device.libiio.board.noCurrentAlarm": "No current alarms",
+  "app.device.libiio.board.noTroubleshootingRequired": "No action required",
+  "app.device.libiio.board.txChannelPowerAbnormal":
+    "TX module channel {number} power abnormal",
+  "app.device.libiio.board.rxChannelRssiAbnormal": "RX module channel {number} RSSI abnormal",
+  "app.device.libiio.board.txVswrAbnormal": "TX VSWR abnormal",
+  "app.device.libiio.board.isolationAbnormal": "Isolation abnormal",
+  "app.device.libiio.board.checkChannelPowerAndFrequency":
+    "Check channel power, frequency, and cable connection.",
+  "app.device.libiio.board.checkChannelRssiAndAntenna":
+    "Check channel RSSI, frequency, and antenna connection.",
+  "app.device.libiio.board.checkTxCableAntennaDistance":
+    "Check feeder, antenna, and TX/RX antenna installation distance.",
+  "app.device.libiio.board.checkAntennaIsolationDistance":
+    "Check TX/RX antenna installation distance and surrounding reflection environment.",
   "layout.user.link.help": "Help",
   "layout.user.link.privacy": "Privacy",
   "layout.user.link.terms": "Terms",
