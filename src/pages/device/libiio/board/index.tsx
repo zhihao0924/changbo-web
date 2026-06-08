@@ -340,50 +340,39 @@ const FrequencyBoardPage: React.FC = () => {
   )
 
   const buildDerivedMetricRows = useCallback(
-    (device: BoardDevice): DerivedMetricRow[] => [
-      {
-        key: "tx_vswr",
-        label: t("app.device.libiio.board.txVswr", "TX VSWR"),
-        value: formatBoardNumber(device.tx_vswr),
-        status: getAlarmFlag(
-          device.tx_vswr_is_alarm,
-          device.tx_vswr,
-          device.tx_vswr_alarm_min,
-          device.tx_vswr_alarm_max,
-        )
-          ? t("app.device.libiio.board.statusAbnormal", "Abnormal")
-          : t("app.device.libiio.board.statusNormal", "Normal"),
-        statusTone: getAlarmFlag(
-          device.tx_vswr_is_alarm,
-          device.tx_vswr,
-          device.tx_vswr_alarm_min,
-          device.tx_vswr_alarm_max,
-        )
-          ? "abnormal"
-          : "normal",
-      },
-      {
-        key: "isolation_db",
-        label: t("app.device.libiio.board.isolation", "Isolation"),
-        value: formatBoardNumber(device.isolation_db, "dB"),
-        status: getAlarmFlag(
-          device.isolation_db_is_alarm,
-          device.isolation_db,
-          device.isolation_db_alarm_min,
-          device.isolation_db_alarm_max,
-        )
-          ? t("app.device.libiio.board.statusAbnormal", "Abnormal")
-          : t("app.device.libiio.board.statusNormal", "Normal"),
-        statusTone: getAlarmFlag(
-          device.isolation_db_is_alarm,
-          device.isolation_db,
-          device.isolation_db_alarm_min,
-          device.isolation_db_alarm_max,
-        )
-          ? "abnormal"
-          : "normal",
-      },
-    ],
+    (device: BoardDevice): DerivedMetricRow[] => {
+      const txVswrIsAlarm = getAlarmFlag(
+        device.tx_vswr_is_alarm,
+        device.tx_vswr,
+        device.tx_vswr_alarm_min,
+        device.tx_vswr_alarm_max,
+      )
+      const isolationIsAlarm = getAlarmFlag(
+        device.isolation_db_is_alarm,
+        device.isolation_db,
+        device.isolation_db_alarm_min,
+        device.isolation_db_alarm_max,
+      )
+      const getDerivedStatus = (isAlarm: boolean) => ({
+        status: isAlarm ? t("app.device.libiio.board.statusAbnormal", "Abnormal") : "-",
+        statusTone: (isAlarm ? "abnormal" : "none") as StatusTone,
+      })
+
+      return [
+        {
+          key: "tx_vswr",
+          label: t("app.device.libiio.board.txVswr", "TX VSWR"),
+          value: formatBoardNumber(device.tx_vswr),
+          ...getDerivedStatus(txVswrIsAlarm),
+        },
+        {
+          key: "isolation_db",
+          label: t("app.device.libiio.board.isolation", "Isolation"),
+          value: formatBoardNumber(device.isolation_db, "dB"),
+          ...getDerivedStatus(isolationIsAlarm),
+        },
+      ]
+    },
     [t],
   )
 
