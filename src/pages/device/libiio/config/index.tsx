@@ -210,6 +210,7 @@ const FrequencyConfigPage: React.FC<FrequencyConfigPageProps> = (props) => {
 
       await Services.api.postLibiioDeviceConfigSave(
         {
+          device_id: deviceId,
           direction,
           list: configs.map((item) => ({
             ...buildConfigPayloadByDirection(item, direction),

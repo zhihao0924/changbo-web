@@ -181,6 +181,7 @@ declare namespace API_PostLibiioDeviceConfigSave {
   }
 
   export interface BatchParams {
+    device_id: number
     direction?: "rx" | "tx"
     list: ConfigItem[]
   }
