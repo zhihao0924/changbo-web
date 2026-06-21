@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useIntl } from "umi"
 import Services from "@/pages/device/services"
 import type { API_PostLibiioBoardList } from "@/pages/device/services/typings/device"
-import { formatBackendLabel } from "@/utils/i18n"
 import "./index.less"
 
 type ModuleDirection = "rx" | "tx"
@@ -17,8 +16,6 @@ type BoardSection = {
   direction: ModuleDirection
   directionLabel: string
   moduleIp?: string
-  metricLabel: string
-  metricUnit: string
   isOffline: boolean
   chunks: FrequencyChunk<BoardChannel>[]
 }
@@ -35,7 +32,7 @@ const CHANNEL_COLUMNS = Array.from({ length: CHANNELS_PER_ROW }, (_, index) => i
 const MAX_CHANNEL_COUNT = 20
 const BOARD_POLLING_INTERVAL = 3000
 const BOARD_MODULE_ORDER: ModuleDirection[] = ["tx", "rx"]
-const ALARM_DISABLED_VALUE = -1
+const ALARM_DISABLED_VALUE = 0
 type FrequencyChunk<T> = { key: string; channelOffset: number; items: T[] }
 type StatusTone = "normal" | "abnormal" | "none"
 type DisplayRow = { label: string; values: string[]; statusTones?: StatusTone[] }
@@ -153,9 +150,15 @@ const fillMissingChannels = (channels: BoardChannel[] = []) => {
   })
 }
 
-const getChannelMetricValue = (channel: BoardChannel, direction: ModuleDirection) =>
+const getChannelPowerWValue = (channel: BoardChannel) =>
+  toFiniteNumberOrNull(channel.power_w)
+
+const getChannelRssiDbmValue = (channel: BoardChannel) =>
+  toFiniteNumberOrNull(channel.rssi_dbm ?? channel.metric_value)
+
+const getChannelAlarmMetricValue = (channel: BoardChannel, direction: ModuleDirection) =>
   direction === "tx"
-    ? toFiniteNumberOrNull(channel.power_w)
+    ? toFiniteNumberOrNull(channel.power_w ?? channel.metric_value)
     : toFiniteNumberOrNull(channel.rssi_dbm ?? channel.metric_value)
 
 const isChannelAbnormal = (channel: BoardChannel, direction: ModuleDirection) => {
@@ -163,7 +166,7 @@ const isChannelAbnormal = (channel: BoardChannel, direction: ModuleDirection) =>
     return false
   }
 
-  const metricValue = getChannelMetricValue(channel, direction)
+  const metricValue = getChannelAlarmMetricValue(channel, direction)
   if (metricValue === null) {
     return false
   }
@@ -206,7 +209,7 @@ const buildBoardDevices = (devices: BoardDevice[]): BoardDevice[] =>
     ...device,
     modules: (device.modules || []).map((module) => ({
       ...module,
-      metric_unit: module.metric_unit || (module.direction === "tx" ? "W" : "dBm"),
+      metric_unit: module.direction === "tx" ? "W" : module.metric_unit || "dBm",
       channels: (module.channels || []).slice(0, MAX_CHANNEL_COUNT),
     })),
   }))
@@ -251,42 +254,13 @@ const FrequencyBoardPage: React.FC = () => {
     [t],
   )
 
-  const getMetricUnit = useCallback(
-    (module: BoardModule) => module.metric_unit || (module.direction === "tx" ? "W" : "dBm"),
-    [],
-  )
-
-  const getMetricLabel = useCallback(
-    (module: BoardModule) => {
-      const metricLabel =
-        formatBackendLabel(
-          {
-            key: module.metric_label_key || module.metric_key,
-            fallback: module.metric_label,
-          },
-          t,
-        ) ||
-        (module.direction === "tx"
-          ? t("app.device.libiio.txMonitorPowerWithUnit", "Power (W)")
-          : t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"))
-      const metricUnit = getMetricUnit(module)
-
-      if (metricUnit && !metricLabel.includes(metricUnit)) {
-        return `${metricLabel} (${metricUnit})`
-      }
-
-      return metricLabel
-    },
-    [getMetricUnit, t],
-  )
-
   const getChannelStatus = useCallback(
     (channel: BoardChannel, direction: ModuleDirection) => {
       if (!channel.configured || !isAlarmEnabled(channel.alarm_enabled ?? channel.is_alarm)) {
         return { text: "-", tone: "none" as StatusTone }
       }
 
-      const metricValue = getChannelMetricValue(channel, direction)
+      const metricValue = getChannelAlarmMetricValue(channel, direction)
       if (metricValue === null) {
         return { text: "-", tone: "none" as StatusTone }
       }
@@ -307,12 +281,7 @@ const FrequencyBoardPage: React.FC = () => {
   )
 
   const buildDisplayRows = useCallback(
-    (
-      direction: ModuleDirection,
-      chunk: BoardChannel[],
-      metricLabel: string,
-      metricUnit: string,
-    ) => {
+    (direction: ModuleDirection, chunk: BoardChannel[]) => {
       const rows: DisplayRow[] = [
         {
           label: t("app.device.libiio.board.frequency", "Frequency"),
@@ -321,9 +290,16 @@ const FrequencyBoardPage: React.FC = () => {
       ]
 
       rows.push({
-        label: metricLabel,
+        label: t("app.device.libiio.txMonitorPowerWithUnit", "Power (W)"),
         values: chunk.map((item) =>
-          formatMetricValue(getChannelMetricValue(item, direction), ` ${metricUnit}`),
+          formatMetricValue(getChannelPowerWValue(item), " W"),
+        ),
+      })
+
+      rows.push({
+        label: t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"),
+        values: chunk.map((item) =>
+          formatMetricValue(getChannelRssiDbmValue(item), " dBm"),
         ),
       })
 
@@ -520,8 +496,6 @@ const FrequencyBoardPage: React.FC = () => {
             direction: module.direction,
             directionLabel: directionLabelMap[module.direction],
             moduleIp: module.ip,
-            metricLabel: getMetricLabel(module),
-            metricUnit: getMetricUnit(module),
             isOffline: isModuleOffline(module),
             chunks: chunkItems(fillMissingChannels(module.channels), CHANNELS_PER_ROW),
           }
@@ -529,7 +503,7 @@ const FrequencyBoardPage: React.FC = () => {
         derivedMetricRows: buildDerivedMetricRows(device),
         alarmRows: buildAlarmRows(device),
       })),
-    [buildAlarmRows, buildDerivedMetricRows, devices, directionLabelMap, getMetricLabel, getMetricUnit],
+    [buildAlarmRows, buildDerivedMetricRows, devices, directionLabelMap],
   )
 
   return (
@@ -553,8 +527,6 @@ const FrequencyBoardPage: React.FC = () => {
                       direction,
                       directionLabel,
                       moduleIp,
-                      metricLabel,
-                      metricUnit,
                       isOffline,
                       chunks,
                     }) => (
@@ -591,12 +563,7 @@ const FrequencyBoardPage: React.FC = () => {
                                       ))}
                                     </tr>
 
-                                    {buildDisplayRows(
-                                      direction,
-                                      chunk.items,
-                                      metricLabel,
-                                      metricUnit,
-                                    ).map((row) => (
+                                    {buildDisplayRows(direction, chunk.items).map((row) => (
                                       <tr
                                         key={`${device.device_id}-${direction}-${chunk.key}-${row.label}`}
                                       >

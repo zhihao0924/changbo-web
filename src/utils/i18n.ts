@@ -311,7 +311,10 @@ const BACKEND_CODE_KEYS: Record<string, [string, string]> = {
   "device.libiio.rxRssi": ["app.device.libiio.rxRssi", "RX RSSI"],
   "device.libiio.rxRssiWithUnit": ["app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"],
   "device.libiio.txPower": ["app.device.libiio.txPower", "TX Power (dBm)"],
-  "device.libiio.txMonitorPowerWithUnit": ["app.device.libiio.txMonitorPowerWithUnit", "Power (W)"],
+  "device.libiio.txMonitorPowerWithUnit": [
+    "app.device.libiio.txMonitorPowerWithUnit",
+    "Power (W)",
+  ],
   "device.libiio.deviceFullScalePower": [
     "app.device.libiio.deviceFullScalePower",
     "Device 0 dBFS Full-scale Power",

@@ -209,7 +209,14 @@ declare namespace API_PostLibiioDeviceConfigDelete {
 declare namespace API_PostLibiioBoardList {
   export type ModuleDirection = "rx" | "tx"
 
-  export type Params = Record<string, never>
+  export interface Params {
+    page?: number
+    limit?: number
+    device_id?: number
+    ip?: string
+    direction?: ModuleDirection
+    type?: ModuleDirection
+  }
 
   export interface Channel {
     channel_no: number

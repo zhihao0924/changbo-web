@@ -52,7 +52,7 @@ const OFFSET_UNIT = "dB"
 const TX_ALARM_VALUE_UNIT = "W"
 const RX_ALARM_VALUE_UNIT = "dBm"
 const ALARM_ENABLED_VALUE = 1
-const ALARM_DISABLED_VALUE = -1
+const ALARM_DISABLED_VALUE = 0
 
 const createEmptyConfigItem = (direction: "rx" | "tx" = "rx"): FrequencyFormItem => ({
   device_id: 0,
