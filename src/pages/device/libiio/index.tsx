@@ -47,7 +47,7 @@ type EditFormValues = {
 const MAX_FETCH_SIZE = 1000
 const LIBIIO_DEVICE_TYPE = "E0"
 const IPV4_REGEXP = /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/
-const FFT_SIZE_OPTIONS = [12, 14, 16, 18, 20].map((power) => ({
+const FFT_SIZE_OPTIONS = [6, 8, 10, 12, 14, 16, 18, 20].map((power) => ({
   label: `${2 ** power}(2^${power})`,
   value: 2 ** power,
 }))

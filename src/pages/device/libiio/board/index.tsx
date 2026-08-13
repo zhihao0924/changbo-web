@@ -289,12 +289,14 @@ const FrequencyBoardPage: React.FC = () => {
         },
       ]
 
-      rows.push({
-        label: t("app.device.libiio.txMonitorPowerWithUnit", "Power (W)"),
-        values: chunk.map((item) =>
-          formatMetricValue(getChannelPowerWValue(item), " W"),
-        ),
-      })
+      if (direction === "tx") {
+        rows.push({
+          label: t("app.device.libiio.txMonitorPowerWithUnit", "Power (W)"),
+          values: chunk.map((item) =>
+            formatMetricValue(getChannelPowerWValue(item), " W"),
+          ),
+        })
+      }
 
       rows.push({
         label: t("app.device.libiio.rxRssiWithUnit", "RSSI (dBm)"),
