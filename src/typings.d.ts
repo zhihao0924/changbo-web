@@ -80,6 +80,7 @@ declare global {
     showToast?: boolean
     description?: string
     finallyCallback?: (...args: any[]) => any
+    timeout?: number
 
     [k: string]: any
   }

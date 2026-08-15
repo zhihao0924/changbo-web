@@ -27,6 +27,11 @@ type LibiioDevice = API_PostDeviceList.List
 
 type LibiioModule = API_PostLibiioDeviceList.List
 
+type ModuleIpEditTarget = {
+  module: LibiioModule
+  direction: "rx" | "tx"
+}
+
 type EditFormValues = {
   ip: string
   full_scale_power_dbm?: number
@@ -76,6 +81,9 @@ const formatFieldValue = (value: any, key?: string) => {
 const omitUndefined = <T extends Record<string, any>>(obj: T) =>
   Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as T
 
+const getModuleIpValue = (module: LibiioModule, direction: "rx" | "tx") =>
+  direction === "tx" ? module.tx_ip || "" : module.rx_ip || ""
+
 const DeviceLibiio: React.FC = () => {
   const intl = useIntl()
   const [loading, setLoading] = useState(false)
@@ -85,7 +93,11 @@ const DeviceLibiio: React.FC = () => {
   const [modules, setModules] = useState<LibiioModule[]>([])
   const [editingDevice, setEditingDevice] = useState<LibiioDevice | null>(null)
   const [editingModule, setEditingModule] = useState<LibiioModule | undefined>()
+  const [moduleIpModalVisible, setModuleIpModalVisible] = useState(false)
+  const [moduleIpSubmitLoading, setModuleIpSubmitLoading] = useState(false)
+  const [moduleIpEditTarget, setModuleIpEditTarget] = useState<ModuleIpEditTarget>()
   const [editForm] = Form.useForm<EditFormValues>()
+  const [moduleIpForm] = Form.useForm<{ ip: string }>()
   const t = useCallback(
     (id: string, defaultMessage: string, values?: Record<string, string | number>) =>
       intl.formatMessage({ id, defaultMessage }, values),
@@ -223,6 +235,61 @@ const DeviceLibiio: React.FC = () => {
     }
   }, [closeEditModal, editForm, editingDevice, editingModule, loadDevices, t])
 
+  const openModuleIpModal = useCallback(
+    (module: LibiioModule, direction: "rx" | "tx") => {
+      setModuleIpEditTarget({ module, direction })
+      moduleIpForm.setFieldsValue({
+        ip: getModuleIpValue(module, direction),
+      })
+      setModuleIpModalVisible(true)
+    },
+    [moduleIpForm],
+  )
+
+  const closeModuleIpModal = useCallback(() => {
+    setModuleIpModalVisible(false)
+    setModuleIpEditTarget(undefined)
+    moduleIpForm.resetFields()
+  }, [moduleIpForm])
+
+  const handleModuleIpSubmit = useCallback(async () => {
+    if (!moduleIpEditTarget) {
+      return
+    }
+
+    try {
+      const values = await moduleIpForm.validateFields()
+      const { module, direction } = moduleIpEditTarget
+      const normalizedIp = values.ip.trim()
+      const currentIp = getModuleIpValue(module, direction).trim()
+
+      if (normalizedIp === currentIp) {
+        message.info(t("app.device.libiio.moduleIpNoChange", "Module IP is unchanged"))
+        return
+      }
+
+      setModuleIpSubmitLoading(true)
+      await Services.api.postLibiioDeviceModuleIPUpdate(
+        {
+          id: module.id,
+          direction,
+          ip: normalizedIp,
+        },
+        { showLoading: false },
+      )
+      message.success(t("app.device.libiio.moduleIpUpdateSuccess", "Module IP updated"))
+      closeModuleIpModal()
+      loadDevices()
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return
+      }
+      message.error(t("app.device.libiio.saveFailed", "Save failed. Please try again later."))
+    } finally {
+      setModuleIpSubmitLoading(false)
+    }
+  }, [closeModuleIpModal, loadDevices, moduleIpEditTarget, moduleIpForm, t])
+
   const renderModuleField = useCallback((label: string, value: any, key?: string) => {
     const displayValue = formatFieldValue(value, key)
 
@@ -238,8 +305,19 @@ const DeviceLibiio: React.FC = () => {
     (title: string, module: LibiioModule | undefined, direction: "rx" | "tx") => (
       <div className="libiio-module-card">
         <div className="libiio-module-card__header">
-          <div>
+          <div className="libiio-module-card__title-row">
             <span className="libiio-module-card__title">{title}</span>
+            {module ? (
+              <Button
+                className="libiio-module-card__ip-button"
+                icon={<EditOutlined />}
+                size="small"
+                type="link"
+                onClick={() => openModuleIpModal(module, direction)}
+              >
+                {t("app.device.libiio.updateModuleIp", "Edit IP")}
+              </Button>
+            ) : null}
           </div>
           {module ? (
             <Button
@@ -313,7 +391,7 @@ const DeviceLibiio: React.FC = () => {
         )}
       </div>
     ),
-    [goToFrequencyConfig, renderModuleField, t],
+    [goToFrequencyConfig, openModuleIpModal, renderModuleField, t],
   )
 
   return (
@@ -614,6 +692,58 @@ const DeviceLibiio: React.FC = () => {
               </Form.Item>
             </div>
           </div>
+        </Form>
+      </Modal>
+
+      <Modal
+        destroyOnClose
+        title={
+          moduleIpEditTarget
+            ? t("app.device.libiio.moduleIpEditTitle", "Edit {module} IP", {
+                module:
+                  moduleIpEditTarget.direction === "tx"
+                    ? t("app.device.libiio.module.tx", "TX Module")
+                    : t("app.device.libiio.module.rx", "RX Module"),
+              })
+            : t("app.device.libiio.updateModuleIp", "Edit IP")
+        }
+        open={moduleIpModalVisible}
+        confirmLoading={moduleIpSubmitLoading}
+        onOk={handleModuleIpSubmit}
+        onCancel={closeModuleIpModal}
+      >
+        <Form className="libiio-module-ip-form" form={moduleIpForm} layout="vertical">
+          <Form.Item
+            name="ip"
+            label={t("app.device.libiio.ipAddress", "IP Address")}
+            rules={[
+              {
+                required: true,
+                whitespace: true,
+                message: t("app.device.libiio.moduleIpRequired", "Please enter module IP"),
+              },
+              {
+                validator(_, value) {
+                  const ip = String(value || "").trim()
+                  if (!ip || IPV4_REGEXP.test(ip)) {
+                    return Promise.resolve()
+                  }
+                  return Promise.reject(
+                    new Error(
+                      t("app.device.libiio.ipInvalid", "Please enter a valid IPv4 address"),
+                    ),
+                  )
+                },
+              },
+            ]}
+          >
+            <Input
+              allowClear
+              autoFocus
+              placeholder={t("app.device.libiio.ipExample", "For example, 192.168.1.20")}
+              onPressEnter={() => handleModuleIpSubmit()}
+            />
+          </Form.Item>
         </Form>
       </Modal>
     </PageContainer>

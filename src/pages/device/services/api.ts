@@ -22,6 +22,7 @@ import type {
   API_PostLibiioDeviceConfigList,
   API_PostLibiioDeviceConfigSave,
   API_PostLibiioDeviceList,
+  API_PostLibiioDeviceModuleIPUpdate,
   API_PostLibiioDeviceSave,
 } from "@/pages/device/services/typings/device"
 
@@ -93,6 +94,21 @@ export async function postLibiioDeviceSave(
 ) {
   const res: API_PostLibiioDeviceSave.Result = await postApi(
     "libiio/device/save",
+    { ...obj },
+    { showLoading: true, showToast: true, ...extParams },
+  ).catch((err) => {
+    throw err
+  })
+
+  return res
+}
+
+export async function postLibiioDeviceModuleIPUpdate(
+  obj: API_PostLibiioDeviceModuleIPUpdate.Params,
+  extParams?: PassExtParamsDescriptorMore,
+) {
+  const res: API_PostLibiioDeviceModuleIPUpdate.Result = await postApi(
+    "libiio/device/moduleIp/update",
     { ...obj },
     { showLoading: true, showToast: true, ...extParams },
   ).catch((err) => {

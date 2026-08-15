@@ -314,6 +314,22 @@ declare namespace API_PostLibiioDeviceSave {
   }
 }
 
+declare namespace API_PostLibiioDeviceModuleIPUpdate {
+  export interface Params {
+    id: number
+    direction: "rx" | "tx"
+    ip: string
+  }
+
+  export interface Result {
+    err: number
+    msg: string
+    res: {
+      id: number
+    }
+  }
+}
+
 declare namespace API_PostDeviceCreate {
   export interface Result {
     err: number
