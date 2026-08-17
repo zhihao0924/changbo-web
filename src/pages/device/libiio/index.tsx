@@ -277,7 +277,12 @@ const DeviceLibiio: React.FC = () => {
         },
         { showLoading: false },
       )
-      message.success(t("app.device.libiio.moduleIpUpdateSuccess", "Module IP updated"))
+      message.success(
+        t(
+          "app.device.libiio.moduleIpUpdateSuccess",
+          "Module IP updated. Power-cycle the device for the IP change to take effect.",
+        ),
+      )
       closeModuleIpModal()
       loadDevices()
     } catch (error: any) {

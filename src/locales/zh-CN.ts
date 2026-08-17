@@ -352,7 +352,7 @@ export default {
   "app.device.libiio.moduleIpRequired": "请输入模块 IP",
   "app.device.libiio.updateModuleIp": "修改IP",
   "app.device.libiio.moduleIpEditTitle": "修改 {module} IP",
-  "app.device.libiio.moduleIpUpdateSuccess": "模块 IP 已更新",
+  "app.device.libiio.moduleIpUpdateSuccess": "模块 IP 已更新，断电重启设备IP生效",
   "app.device.libiio.moduleIpNoChange": "模块 IP 未变化",
   "app.device.libiio.notConfigured": "未配置",
   "app.device.libiio.type": "类型",

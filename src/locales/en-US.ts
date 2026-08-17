@@ -366,7 +366,8 @@ export default {
   "app.device.libiio.moduleIpRequired": "Please enter module IP",
   "app.device.libiio.updateModuleIp": "Edit IP",
   "app.device.libiio.moduleIpEditTitle": "Edit {module} IP",
-  "app.device.libiio.moduleIpUpdateSuccess": "Module IP updated",
+  "app.device.libiio.moduleIpUpdateSuccess":
+    "Module IP updated. Power-cycle the device for the IP change to take effect.",
   "app.device.libiio.moduleIpNoChange": "Module IP is unchanged",
   "app.device.libiio.notConfigured": "Not configured",
   "app.device.libiio.type": "Type",
